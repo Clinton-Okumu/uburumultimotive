@@ -1,13 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto&display=swap");
 @import "tailwindcss";
-
-@layer components {
-  .primary-btn {
-    @apply bg-orange-400 text-white font-bold py-2 px-4 rounded shadow-sm hover:shadow-md;
-  }
-}
-
-body {
-  font-family: "Roboto", sans-serif;
-  margin: 0;
-  padding: 23px;
+@theme {
+  --font-roboto: "Roboto", sans-serif;
 }

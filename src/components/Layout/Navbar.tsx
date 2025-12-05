@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import logo from "../../assets/logo.png";
+import Button from "../shared/Button";
 
 const NavbarLinks = [
     { id: 1, title: "Home", link: "/" },
@@ -14,6 +15,7 @@ const NavbarLinks = [
 const Navbar = () => {
     const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
+    const location = useLocation();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -59,37 +61,45 @@ const Navbar = () => {
                         <Link
                             key={link.id}
                             to={link.link}
-                            className="text-white hover:text-yellow-300 transition-colors duration-200 font-medium relative group"
+                            className={`text-white transition-colors duration-200 font-medium relative group
+        ${location.pathname === link.link ? "text-yellow-300" : "hover:text-yellow-300"}
+    `}
                         >
                             {link.title}
-                            <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-400 transition-all duration-300 group-hover:w-full"></span>
+
+                            {/* underline */}
+                            <span
+                                className={`absolute bottom-0 left-0 h-0.5 bg-yellow-400 transition-all duration-300
+            ${location.pathname === link.link ? "w-full" : "w-0 group-hover:w-full"}
+        `}
+                            />
                         </Link>
+
                     ))}
                 </div>
 
                 {/* Desktop Donate Button */}
                 <div className="hidden lg:block">
-                    <button
-                        className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300 ${scrolled
-                            ? "bg-yellow-400 text-black hover:bg-yellow-300"
-                            : "bg-yellow-300 text-black hover:bg-yellow-400"
-                            }`}
+                    <Button
+                        fullWidth
+                        icon={
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                />
+                            </svg>
+                        }
                     >
                         Donate
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 8l4 4m0 0l-4 4m4-4H3"
-                            />
-                        </svg>
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Mobile Menu Button */}

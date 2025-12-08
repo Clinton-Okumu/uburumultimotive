@@ -21,7 +21,7 @@ const AboutUs = () => {
                 {/* LEFT CONTENT */}
                 <div className="space-y-8">
                     <header>
-                        <p className="inline-block bg-neutral-800 text-white text-sm font-medium px-6 py-2 rounded-full mb-4">About Us</p>
+                        <p className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium mb-6">About Us</p>
 
                         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
                             Committed to Relief, Dedicated to Hope

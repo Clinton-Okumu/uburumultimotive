@@ -53,11 +53,11 @@ const VolunteerTeamSection = () => {
     };
 
     return (
-        <div className="bg-gray-100 py-20 px-4 sm:px-6 lg:px-8">
+        <div className="bg-gray-50 py-20 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="text-center mb-16">
-                    <p className="inline-block bg-neutral-800 text-white text-sm font-medium px-6 py-2 rounded-full mb-4">
+                    <p className="inline-block bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium mb-6">
                         Meet our Volunteers
                     </p>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">

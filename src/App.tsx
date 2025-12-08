@@ -1,25 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router';
+import { BrowserRouter, Route, Routes } from 'react-router';
 import Layout from './components/Layout/Layout';
+import About from './pages/About';
 import Home from './pages/Home';
 
 // Simple placeholder components for other routes
-const About = () => (
-    <div className="min-h-screen flex items-center justify-center bg-white px-6">
-        <div className="text-center max-w-4xl">
-            <h1 className="text-5xl font-bold text-gray-800 mb-6">About Us</h1>
-            <p className="text-xl text-gray-600 mb-8">
-                Learn more about our mission, vision, and the work we do to make a difference in communities.
-            </p>
-            <div className="bg-gray-50 p-8 rounded-lg">
-                <p className="text-gray-600 leading-relaxed">
-                    Our organization is dedicated to creating positive change through innovative programs,
-                    dedicated volunteers, and a commitment to excellence in service.
-                </p>
-            </div>
-        </div>
-    </div>
-);
-
 const Events = () => (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
         <div className="text-center max-w-4xl">
@@ -121,7 +105,7 @@ function App() {
             <Layout>
                 <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/about" element={<About />} />
+                    <Route path="/About" element={<About />} />
                     <Route path="/events" element={<Events />} />
                     <Route path="/blogs" element={<Blogs />} />
                     <Route path="/pages" element={<Pages />} />

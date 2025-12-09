@@ -6,10 +6,10 @@ import Button from "../shared/Button";
 const NavbarLinks = [
     { id: 1, title: "Home", link: "/" },
     { id: 2, title: "About", link: "/about" },
-    { id: 3, title: "Events", link: "/events" },
+    { id: 3, title: "Causes", link: "/causes" },
     { id: 4, title: "Blogs", link: "/blogs" },
-    { id: 5, title: "Pages", link: "/pages" },
-    { id: 6, title: "Causes", link: "/causes" },
+    { id: 5, title: "Contact", link: "/contact" },
+    { id: 6, title: "Donations", link: "/donations" },
 ];
 
 const Navbar = () => {

@@ -1,40 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router';
 import Layout from './components/Layout/Layout';
 import About from './pages/About';
+import Causes from './pages/Causes';
+import Contact from './pages/Contact';
 import Home from './pages/Home';
-
-// Simple placeholder components for other routes
-const Events = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
-        <div className="text-center max-w-4xl">
-            <h1 className="text-5xl font-bold text-gray-800 mb-6">Events</h1>
-            <p className="text-xl text-gray-600 mb-8">
-                Join us at our upcoming events and be part of the change.
-            </p>
-            <div className="bg-white p-8 rounded-lg shadow-lg">
-                <p className="text-gray-600 leading-relaxed">
-                    Stay tuned for our latest events, workshops, and community gatherings.
-                </p>
-            </div>
-        </div>
-    </div>
-);
-
-const Blogs = () => (
-    <div className="min-h-screen flex items-center justify-center bg-white px-6">
-        <div className="text-center max-w-4xl">
-            <h1 className="text-5xl font-bold text-gray-800 mb-6">Blog</h1>
-            <p className="text-xl text-gray-600 mb-8">
-                Read stories, updates, and insights from our work in the community.
-            </p>
-            <div className="bg-gray-50 p-8 rounded-lg">
-                <p className="text-gray-600 leading-relaxed">
-                    Follow our blog for the latest news, success stories, and ways to get involved.
-                </p>
-            </div>
-        </div>
-    </div>
-);
+import Blog from './pages/Blog';
 
 const Pages = () => (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
@@ -46,22 +16,6 @@ const Pages = () => (
             <div className="bg-white p-8 rounded-lg shadow-lg">
                 <p className="text-gray-600 leading-relaxed">
                     Navigate through our different sections to find the information you need.
-                </p>
-            </div>
-        </div>
-    </div>
-);
-
-const Causes = () => (
-    <div className="min-h-screen flex items-center justify-center bg-white px-6">
-        <div className="text-center max-w-4xl">
-            <h1 className="text-5xl font-bold text-gray-800 mb-6">Our Causes</h1>
-            <p className="text-xl text-gray-600 mb-8">
-                Discover the causes we support and how you can contribute.
-            </p>
-            <div className="bg-gray-50 p-8 rounded-lg">
-                <p className="text-gray-600 leading-relaxed">
-                    Learn about our various initiatives and the impact we're making together.
                 </p>
             </div>
         </div>
@@ -106,10 +60,9 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/About" element={<About />} />
-                    <Route path="/events" element={<Events />} />
-                    <Route path="/blogs" element={<Blogs />} />
-                    <Route path="/pages" element={<Pages />} />
-                    <Route path="/causes" element={<Causes />} />
+                    <Route path="/Causes" element={<Causes />} />
+                    <Route path="/Blogs" element={<Blog />} />
+                    <Route path="/Contact" element={<Contact />} />
                     <Route path="/donate" element={<Donate />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>

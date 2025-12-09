@@ -1,11 +1,12 @@
+
 import { ChevronRight } from "lucide-react";
 import hero from "../../assets/hero.png";
 
 const HeroSection = ({
-    title = "About Us",
+    title = "Blog",
     breadcrumbs = [
         { label: "Home", href: "/" },
-        { label: "About Us", href: "/about" },
+        { label: "Blog", href: "/blogs" },
     ],
     image = hero,
 }) => {

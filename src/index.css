@@ -5,3 +5,19 @@
   --font-inter: "Inter", sans-serif;
   --font-montserrat: "Montserrat", sans-serif;
 }
+
+p {
+  font-family: Inter;
+}
+
+h1 {
+  font-family: Montserrat;
+}
+
+h2 {
+  font-family: Montserrat;
+}
+
+body {
+  font-family: var(--font-inter);
+}

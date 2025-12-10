@@ -1,4 +1,4 @@
-import { Calendar, User, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useState } from "react";
 
 // BlogCard Component
@@ -94,10 +94,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
                     onClick={() => typeof page === 'number' && onPageChange(page)}
                     disabled={page === '...'}
                     className={`min-w-[40px] h-10 rounded-lg font-medium transition-all ${page === currentPage
-                            ? 'bg-yellow-400 text-gray-900'
-                            : page === '...'
-                                ? 'cursor-default'
-                                : 'hover:bg-gray-100 text-gray-700'
+                        ? 'bg-yellow-400 text-gray-900'
+                        : page === '...'
+                            ? 'cursor-default'
+                            : 'hover:bg-gray-100 text-gray-700'
                         }`}
                 >
                     {page}

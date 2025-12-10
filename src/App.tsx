@@ -1,26 +1,10 @@
 import { BrowserRouter, Route, Routes } from 'react-router';
 import Layout from './components/Layout/Layout';
 import About from './pages/About';
+import Blog from './pages/Blog';
 import Causes from './pages/Causes';
 import Contact from './pages/Contact';
 import Home from './pages/Home';
-import Blog from './pages/Blog';
-
-const Pages = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
-        <div className="text-center max-w-4xl">
-            <h1 className="text-5xl font-bold text-gray-800 mb-6">Pages</h1>
-            <p className="text-xl text-gray-600 mb-8">
-                Explore our various pages and learn more about what we do.
-            </p>
-            <div className="bg-white p-8 rounded-lg shadow-lg">
-                <p className="text-gray-600 leading-relaxed">
-                    Navigate through our different sections to find the information you need.
-                </p>
-            </div>
-        </div>
-    </div>
-);
 
 const Donate = () => (
     <div className="min-h-screen flex items-center justify-center bg-white px-6">

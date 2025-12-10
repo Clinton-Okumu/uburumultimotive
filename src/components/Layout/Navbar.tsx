@@ -52,11 +52,11 @@ const Navbar = () => {
                         className={`w-10 h-10 rounded-full object-cover transition-all duration-300 ${scrolled ? "ring-2 ring-yellow-400" : "ring-2 ring-yellow-300"
                             }`}
                     />
-                    <span className="text-white text-2xl font-bold">Uburumultimotive</span>
+                    <span className="text-white text-2xl font-bold font-inter">Uburumultimotive</span>
                 </div>
 
                 {/* Desktop Menu */}
-                <div className="hidden lg:flex items-center gap-8">
+                <div className="font-inter hidden lg:flex items-center gap-8">
                     {NavbarLinks.map((link) => (
                         <Link
                             key={link.id}
@@ -79,7 +79,7 @@ const Navbar = () => {
                 </div>
 
                 {/* Desktop Donate Button */}
-                <div className="hidden lg:block">
+                <div className="font-inter hidden lg:block">
                     <Button
                         fullWidth
                         icon={
@@ -158,7 +158,7 @@ const Navbar = () => {
                             </li>
                         ))}
                         <li className="pt-2">
-                            <button className="w-full bg-yellow-400 hover:bg-yellow-300 px-6 py-3 rounded-full text-black font-semibold transition-all duration-300 flex items-center justify-center gap-2">
+                            <Button>
                                 Donate
                                 <svg
                                     className="w-5 h-5"
@@ -173,7 +173,7 @@ const Navbar = () => {
                                         d="M17 8l4 4m0 0l-4 4m4-4H3"
                                     />
                                 </svg>
-                            </button>
+                            </Button>
                         </li>
                     </ul>
                 </div>

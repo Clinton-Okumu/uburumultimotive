@@ -8,9 +8,9 @@ const Footer = () => {
             title: "Company",
             links: [
                 { name: "About Us", url: "#" },
-                { name: "Our Team", url: "#" },
-                { name: "Careers", url: "#" },
-                { name: "Press", url: "#" },
+                { name: "Causes", url: "#" },
+                { name: "Blog", url: "#" },
+                { name: "Contact", url: "#" },
             ],
         },
         {
@@ -114,7 +114,7 @@ const Footer = () => {
                                 <a
                                     key={index}
                                     href={social.url}
-                                    className="bg-gray-800 text-gray-400 hover:text-white hover:bg-orange-500 p-2 rounded-full transition-colors duration-300"
+                                    className="bg-gray-800 text-gray-400 hover:text-white hover:bg-yellow-500 p-2 rounded-full transition-colors duration-300"
                                     aria-label={social.name}
                                 >
                                     {social.icon}
@@ -132,7 +132,7 @@ const Footer = () => {
                                     <li key={linkIndex}>
                                         <a
                                             href={link.url}
-                                            className="text-gray-400 hover:text-orange-400 transition-colors duration-300"
+                                            className="text-gray-400 hover:text-yellow-400 transition-colors duration-300"
                                         >
                                             {link.name}
                                         </a>
@@ -151,8 +151,7 @@ const Footer = () => {
                                 Join Our Newsletter
                             </h3>
                             <p className="text-gray-400">
-                                Subscribe to get the latest fitness tips, promotions, and
-                                updates.
+                                Subscribe to get the latest news and updates of our initiatives and causes in the community.
                             </p>
                         </div>
                         <div>
@@ -160,11 +159,11 @@ const Footer = () => {
                                 <input
                                     type="email"
                                     placeholder="Your email address"
-                                    className="px-4 py-2 bg-gray-800 text-white rounded-l-lg w-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                    className="px-4 py-2 bg-gray-800 text-white rounded-l-lg w-full focus:outline-none focus:ring-2 focus:ring-yellow-500"
                                 />
                                 <button
                                     type="submit"
-                                    className="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-r-lg font-medium transition-colors duration-300"
+                                    className="bg-yellow-500 hover:bg-yellow-600 px-6 py-2 rounded-r-lg font-medium transition-colors duration-300"
                                 >
                                     Subscribe
                                 </button>

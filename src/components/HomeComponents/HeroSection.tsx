@@ -20,7 +20,7 @@ const HeroSection = () => {
             <div className="relative z-10 max-w-7xl mx-auto px-6 h-full flex flex-col justify-center">
 
                 {/* Title */}
-                <h1 className="text-white font-extrabold leading-[1.05] mt-10">
+                <h1 className="font-inter text-white font-extrabold leading-[1.05] mt-10">
                     <span className="text-4xl md:text-5xl uppercase tracking-wider block text-yellow-400">
                         Uburu Multimove
                     </span>

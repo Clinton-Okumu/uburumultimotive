@@ -116,9 +116,10 @@ const ContactFormSection = () => {
                             </div>
 
                             {/* Map */}
+
                             <div className="w-full h-[500px] bg-gradient-to-br from-teal-100 via-blue-50 to-blue-100 relative">
                                 <iframe
-                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15955.839061827877!2d36.89692451053871!3d-1.1886469776264585!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f3e5442ecd4c7%3A0x7e1a974a8545538f!2sKahawa%20West%2C%20Githurai!5e0!3m2!1sen!2ske!4v1765262671911!5m2!1sen!2ske" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15955.839061827877!2d36.89692451053871!3d-1.1886469776264585!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x182f3e5442ecd4c7%3A0x7e1a974a8545538f!2sKahawa%20West%2C%20Githurai!5e0!3m2!1sen!2ske!4v1765262671911!5m2!1sen!2ske"
                                     width="100%"
                                     height="100%"
                                     style={{ border: 0 }}
@@ -130,6 +131,7 @@ const ContactFormSection = () => {
                             </div>
                         </div>
                     </div>
+
 
                     {/* Form Side */}
                     <div>
@@ -147,7 +149,7 @@ const ContactFormSection = () => {
                             </p>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-6 font-bold">
                             {/* Name Fields */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <input
@@ -171,7 +173,7 @@ const ContactFormSection = () => {
                             </div>
 
                             {/* Email and Amount */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
                                 <input
                                     type="email"
                                     name="email"
@@ -181,33 +183,7 @@ const ContactFormSection = () => {
                                     required
                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
                                 />
-                                <input
-                                    type="text"
-                                    name="amount"
-                                    value={formData.amount}
-                                    onChange={handleChange}
-                                    placeholder="Amount: $*"
-                                    required
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                                />
                             </div>
-
-                            {/* Donation To Dropdown */}
-                            <select
-                                name="donationTo"
-                                value={formData.donationTo}
-                                onChange={handleChange}
-                                required
-                                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all text-gray-700"
-                            >
-                                <option value="">Donation To</option>
-                                <option value="education">Education</option>
-                                <option value="health">Health Care</option>
-                                <option value="water">Clean Water</option>
-                                <option value="housing">Housing</option>
-                                <option value="environment">Environment</option>
-                                <option value="general">General Fund</option>
-                            </select>
 
                             {/* Message Field */}
                             <textarea

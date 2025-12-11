@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
 import Button from "../shared/Button";
 
@@ -9,7 +9,7 @@ const NavbarLinks = [
     { id: 3, title: "Causes", link: "/causes" },
     { id: 4, title: "Blogs", link: "/blogs" },
     { id: 5, title: "Contact", link: "/contact" },
-    { id: 6, title: "Donations", link: "/donations" },
+    { id: 6, title: "Donations", link: "/donate" },
 ];
 
 const Navbar = () => {
@@ -25,7 +25,6 @@ const Navbar = () => {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    // Close mobile menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: any) => {
             if (isMobileMenuOpen && !event.target.closest(".nav-container")) {
@@ -44,6 +43,7 @@ const Navbar = () => {
                 }`}
         >
             <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+
                 {/* Logo */}
                 <div className="flex items-center gap-3">
                     <img
@@ -52,7 +52,9 @@ const Navbar = () => {
                         className={`w-10 h-10 rounded-full object-cover transition-all duration-300 ${scrolled ? "ring-2 ring-yellow-400" : "ring-2 ring-yellow-300"
                             }`}
                     />
-                    <span className="text-white text-2xl font-bold font-inter">Uburumultimotive</span>
+                    <span className="text-white text-2xl font-bold font-inter">
+                        Uburumultimotive
+                    </span>
                 </div>
 
                 {/* Desktop Menu */}
@@ -61,45 +63,52 @@ const Navbar = () => {
                         <Link
                             key={link.id}
                             to={link.link}
-                            className={`text-white transition-colors duration-200 font-medium relative group
-        ${location.pathname === link.link ? "text-yellow-300" : "hover:text-yellow-300"}
-    `}
+                            className={`text-white transition-colors duration-200 font-medium relative group 
+                                ${location.pathname === link.link
+                                    ? "text-yellow-300"
+                                    : "hover:text-yellow-300"
+                                }
+                            `}
                         >
                             {link.title}
 
                             {/* underline */}
                             <span
-                                className={`absolute bottom-0 left-0 h-0.5 bg-yellow-400 transition-all duration-300
-            ${location.pathname === link.link ? "w-full" : "w-0 group-hover:w-full"}
-        `}
+                                className={`absolute bottom-0 left-0 h-0.5 bg-yellow-400 transition-all duration-300 
+                                    ${location.pathname === link.link
+                                        ? "w-full"
+                                        : "w-0 group-hover:w-full"
+                                    }
+                                `}
                             />
                         </Link>
-
                     ))}
                 </div>
 
                 {/* Desktop Donate Button */}
                 <div className="font-inter hidden lg:block">
-                    <Button
-                        fullWidth
-                        icon={
-                            <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                                />
-                            </svg>
-                        }
-                    >
-                        Donate
-                    </Button>
+                    <Link to="/donate">
+                        <Button
+                            fullWidth
+                            icon={
+                                <svg
+                                    className="w-5 h-5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                    />
+                                </svg>
+                            }
+                        >
+                            Donate
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -157,23 +166,27 @@ const Navbar = () => {
                                 </Link>
                             </li>
                         ))}
+
+                        {/* Mobile Donate Button */}
                         <li className="pt-2">
-                            <Button>
-                                Donate
-                                <svg
-                                    className="w-5 h-5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M17 8l4 4m0 0l-4 4m4-4H3"
-                                    />
-                                </svg>
-                            </Button>
+                            <Link to="/donate" onClick={() => setMobileMenuOpen(false)}>
+                                <Button>
+                                    Donate
+                                    <svg
+                                        className="w-5 h-5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                        />
+                                    </svg>
+                                </Button>
+                            </Link>
                         </li>
                     </ul>
                 </div>

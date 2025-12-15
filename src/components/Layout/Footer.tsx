@@ -106,8 +106,9 @@ const Footer = () => {
                             </span>
                         </div>
                         <p className="text-gray-400 mb-6 max-w-xs">
-                            Empowering individuals to take control of their fitness journey
-                            through personalized tracking, motivation, and community support.
+                            We provide safe shelter, warm meals, and compassionate support to individuals
+                            and families experiencing homelessness, helping them rebuild their lives
+                            with dignity and hope.
                         </p>
                         <div className="flex space-x-4">
                             {socialLinks.map((social, index) => (

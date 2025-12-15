@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import img1 from '../../assets/pic9.png';
 
 const MissionVisionSection = () => {
     const [activeTab, setActiveTab] = useState('mission');
@@ -17,7 +18,7 @@ const MissionVisionSection = () => {
                     <div className="relative">
                         <div className="overflow-hidden rounded-2xl shadow-lg">
                             <img
-                                src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800"
+                                src={img1}
                                 alt="Volunteers working together at community center"
                                 className="w-full h-[500px] object-cover"
                             />

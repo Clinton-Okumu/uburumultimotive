@@ -1,4 +1,7 @@
 import { Check } from 'lucide-react';
+import img2 from '../../assets/hero.png';
+import img3 from '../../assets/pic11.png';
+import img1 from '../../assets/pic8.png';
 
 const AboutSection = () => {
     return (
@@ -27,7 +30,7 @@ const AboutSection = () => {
                     {/* Left Image */}
                     <div className="relative overflow-hidden rounded-lg h-[400px]">
                         <img
-                            src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800"
+                            src={img1}
                             alt="Volunteers organizing donation boxes with food and supplies"
                             className="w-full h-full object-cover"
                         />
@@ -36,7 +39,7 @@ const AboutSection = () => {
                     {/* Right Image */}
                     <div className="relative overflow-hidden rounded-lg h-[400px]">
                         <img
-                            src="https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?w=800"
+                            src={img2}
                             alt="Happy volunteer in green shirt celebrating at donation center"
                             className="w-full h-full object-cover"
                         />
@@ -45,7 +48,7 @@ const AboutSection = () => {
                     {/* Bottom Image */}
                     <div className="relative overflow-hidden rounded-lg h-[300px] md:col-span-1">
                         <img
-                            src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800"
+                            src={img3}
                             alt="Volunteers working together at donation center"
                             className="w-full h-full object-cover"
                         />

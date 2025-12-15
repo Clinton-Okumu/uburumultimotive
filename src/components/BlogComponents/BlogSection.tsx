@@ -1,8 +1,17 @@
 import { ArrowRight, Calendar, ChevronLeft, ChevronRight, User } from "lucide-react";
 import { useState } from "react";
 
+interface BlogCardProps {
+    image: string;
+    date: string;
+    author: string;
+    title: string;
+    description: string;
+    slug: string;
+}
+
 // BlogCard Component
-const BlogCard = ({ image, date, author, title, description, slug }) => {
+const BlogCard = ({ image, date, author, title, description, slug }: BlogCardProps) => {
     return (
         <article className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group">
             {/* Image */}
@@ -47,8 +56,14 @@ const BlogCard = ({ image, date, author, title, description, slug }) => {
     );
 };
 
+interface PaginationProps {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+}
+
 // Pagination Component
-const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
     const renderPageNumbers = () => {
         const pages = [];
 
@@ -203,7 +218,7 @@ const BlogSection = () => {
     const indexOfFirstPost = indexOfLastPost - postsPerPage;
     const currentPosts = blogPosts.slice(indexOfFirstPost, indexOfLastPost);
 
-    const handlePageChange = (pageNumber) => {
+    const handlePageChange = (pageNumber: number) => {
         setCurrentPage(pageNumber);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };

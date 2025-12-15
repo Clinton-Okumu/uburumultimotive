@@ -2,8 +2,16 @@ import { ArrowRight, Mail, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
 import Button from "../shared/Button";
 
+interface ContactInfoCardProps {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    title: string;
+    details: string[];
+    bgColor?: string;
+}
+
 // ContactInfoCard Component
-const ContactInfoCard = ({ icon: Icon, label, title, details, bgColor = "bg-black" }) => {
+const ContactInfoCard = ({ icon: Icon, label, title, details, bgColor = "bg-black" }: ContactInfoCardProps) => {
     return (
         <div className="bg-gray-50 rounded-2xl p-8 hover:shadow-lg transition-all duration-300">
             <div className="flex items-start gap-4 mb-6">
@@ -17,7 +25,7 @@ const ContactInfoCard = ({ icon: Icon, label, title, details, bgColor = "bg-blac
             </div>
             <div className="w-12 h-1 bg-yellow-400 mb-6" />
             <div className="space-y-2">
-                {details.map((detail, index) => (
+                {details.map((detail: string, index: number) => (
                     <p key={index} className="text-gray-700">
                         {detail}
                     </p>
@@ -77,12 +85,12 @@ const ContactFormSection = () => {
         message: "",
     });
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         console.log("Form submitted:", formData);
         alert("Thank you for reaching out! We'll get back to you soon.");
@@ -123,7 +131,7 @@ const ContactFormSection = () => {
                                     width="100%"
                                     height="100%"
                                     style={{ border: 0 }}
-                                    allowFullScreen=""
+                                     allowFullScreen={true}
                                     loading="lazy"
                                     referrerPolicy="no-referrer-when-downgrade"
                                     title="Los Angeles Map"
@@ -149,59 +157,59 @@ const ContactFormSection = () => {
                             </p>
                         </div>
 
-                        <div className="space-y-6 font-bold">
-                            {/* Name Fields */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <input
-                                    type="text"
-                                    name="firstName"
-                                    value={formData.firstName}
-                                    onChange={handleChange}
-                                    placeholder="First Name*"
-                                    required
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                                />
-                                <input
-                                    type="text"
-                                    name="lastName"
-                                    value={formData.lastName}
-                                    onChange={handleChange}
-                                    placeholder="Last Name*"
-                                    required
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                                />
-                            </div>
+                         <form onSubmit={handleSubmit} className="space-y-6 font-bold">
+                             {/* Name Fields */}
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <input
+                                     type="text"
+                                     name="firstName"
+                                     value={formData.firstName}
+                                     onChange={handleChange}
+                                     placeholder="First Name*"
+                                     required
+                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                                 />
+                                 <input
+                                     type="text"
+                                     name="lastName"
+                                     value={formData.lastName}
+                                     onChange={handleChange}
+                                     placeholder="Last Name*"
+                                     required
+                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                                 />
+                             </div>
 
-                            {/* Email and Amount */}
-                            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    placeholder="Email Address*"
-                                    required
-                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                                />
-                            </div>
+                             {/* Email and Amount */}
+                             <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                                 <input
+                                     type="email"
+                                     name="email"
+                                     value={formData.email}
+                                     onChange={handleChange}
+                                     placeholder="Email Address*"
+                                     required
+                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                                 />
+                             </div>
 
-                            {/* Message Field */}
-                            <textarea
-                                name="message"
-                                value={formData.message}
-                                onChange={handleChange}
-                                placeholder="How can we help you?*"
-                                required
-                                rows="5"
-                                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
-                            />
+                             {/* Message Field */}
+                             <textarea
+                                 name="message"
+                                 value={formData.message}
+                                 onChange={handleChange}
+                                 placeholder="How can we help you?*"
+                                 required
+                                 rows={5}
+                                 className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
+                             />
 
-                            {/* Submit Button */}
-                            <Button>
-                                Send Now
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                        </div>
+                             {/* Submit Button */}
+                             <Button type="submit">
+                                 Send Now
+                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                             </Button>
+                         </form>
                     </div>
                 </div>
             </div>

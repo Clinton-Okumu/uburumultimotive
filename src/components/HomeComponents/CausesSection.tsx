@@ -1,45 +1,43 @@
+import causesImg1 from "../../assets/pic5.png";
+import causesImg2 from "../../assets/pic6.png";
+import causesImg3 from "../../assets/pic7.png";
+
 const CausesSection = () => {
     const causes = [
         {
             id: 1,
-            image: "https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=800&q=80",
+            image: causesImg1,
             percentage: 16,
             raised: 13000,
             goal: 85000,
-            category: "Disasters",
-            title: "Medical And Assistance",
-            description: "Access healthcare becomes a lifeline in times of crisis. We offer medical support, mobile clinics, & mental."
+            category: "Healthcare",
+            title: "Medical Care & Mental Health Support",
+            description:
+                "Access to healthcare is critical for people experiencing homelessness. We provide basic medical care, mental health support, and referrals to help individuals recover and regain stability."
         },
         {
             id: 2,
-            image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&q=80",
+            image: causesImg2,
             percentage: 28,
             raised: 26000,
             goal: 90000,
-            category: "Disasters",
-            title: "Hunger Relief and Food",
-            description: "In the aftermath of a disaster access to nutritious food is often disrupted. We work provide emergency meals."
+            category: "Food Security",
+            title: "Daily Meals & Hunger Relief",
+            description:
+                "No one can rebuild their life on an empty stomach. We provide consistent, nutritious meals to individuals and families staying at the shelter or living on the streets."
         },
         {
             id: 3,
-            image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&q=80",
+            image: causesImg3,
             percentage: 24,
             raised: 13701,
             goal: 60000,
-            category: "Disasters",
-            title: "Shelter and Housing",
-            description: "Rebuilding home & shelter essential for recovery. We help restore safe living conditions by offering."
+            category: "Shelter",
+            title: "Emergency Shelter & Safe Housing",
+            description:
+                "Safe shelter is the first step off the streets. We offer temporary housing, clean facilities, and a secure environment where people can rest, recover, and plan their next steps."
         }
     ];
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
 
     return (
         <div className="bg-gray-50 py-16 px-4 sm:px-6 lg:px-8">
@@ -47,15 +45,15 @@ const CausesSection = () => {
                 {/* Header */}
                 <div className="text-center mb-12">
                     <p className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium mb-6">
-                        Causes
+                        Our Work
                     </p>
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                        Our Latest Causes
+                        How We Make an Impact
                     </h2>
                     <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                        Long-term recovery requires sustainable livelihoods.
+                        Ending homelessness requires more than a bed for the night.
                         <br />
-                        We support individuals & families in rebuilding.
+                        We focus on safety, dignity, and long-term stability.
                     </p>
                 </div>
 
@@ -77,31 +75,6 @@ const CausesSection = () => {
 
                             {/* Content */}
                             <div className="p-6">
-                                {/* Progress */}
-                                <div className="mb-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-2xl font-bold text-gray-900">
-                                            {cause.percentage}%
-                                        </span>
-                                    </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                                        <div
-                                            className="bg-emerald-600 h-2 rounded-full transition-all duration-500"
-                                            style={{ width: `${cause.percentage}%` }}
-                                        ></div>
-                                    </div>
-                                    <div className="flex justify-between text-sm text-gray-600">
-                                        <span>
-                                            <span className="font-semibold text-gray-900">Raised:</span>{' '}
-                                            {formatCurrency(cause.raised)}
-                                        </span>
-                                        <span>
-                                            <span className="font-semibold text-gray-900">Goal:</span>{' '}
-                                            {formatCurrency(cause.goal)}
-                                        </span>
-                                    </div>
-                                </div>
-
                                 {/* Category Badge */}
                                 <div className="mb-4">
                                     <span className="inline-block bg-emerald-600 text-white text-sm font-semibold px-4 py-1.5 rounded">

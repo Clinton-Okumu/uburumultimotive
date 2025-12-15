@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { useState } from 'react';
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { useState } from "react";
 
 const TestimonialsSection = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -8,26 +8,23 @@ const TestimonialsSection = () => {
         {
             id: 1,
             rating: 5,
-            text: "My family and I were able to rebuild not only our home but also a sense of security and future. We are forever grateful to the volunteers & donors who made this possible.",
-            name: "Sharon McClure",
-            role: "Volunteer",
-            image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80"
+            text: "When I had nowhere to go, this shelter gave me more than a bed. I was treated with respect, fed every day, and helped find my footing again.",
+            name: "Sharon M.",
+            role: "Former Shelter Resident"
         },
         {
             id: 2,
             rating: 5,
-            text: "The support we received after the disaster was nothing short of life-changing. When everything we had was lost, the kindness and quick response from this organization.",
-            name: "Johnnie Lind",
-            role: "Volunteer",
-            image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80"
+            text: "The staff listened without judgment. Having a safe place to sleep changed everything for me and gave me the strength to start over.",
+            name: "John L.",
+            role: "Shelter Guest"
         },
         {
             id: 3,
             rating: 5,
-            text: "The support we received after the disaster was nothing short of life-changing. When everything we had was lost, the kindness and quick response from this organization.",
-            name: "Johnnie Lind",
-            role: "Volunteer",
-            image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&q=80"
+            text: "Volunteering here showed me what real impact looks like. This shelter restores dignity and hope, one person at a time.",
+            name: "Daniel K.",
+            role: "Volunteer"
         }
     ];
 
@@ -58,15 +55,14 @@ const TestimonialsSection = () => {
                 {/* Header */}
                 <div className="text-center mb-16">
                     <div className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium mb-6">
-                        Testimonial
+                        Testimonials
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        Stories from the Heart
+                        Voices from Our Community
                     </h2>
                     <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-                        Long-term recovery requires sustainable livelihoods.
-                        <br />
-                        We support individuals & families in rebuilding.
+                        Real stories from people whose lives have been touched by
+                        safety, care, and compassion.
                     </p>
                 </div>
 
@@ -108,31 +104,24 @@ const TestimonialsSection = () => {
 
                                 {/* Testimonial Text */}
                                 <p className="text-gray-300 text-base leading-relaxed mb-8">
-                                    "{testimonial.text}"
+                                    “{testimonial.text}”
                                 </p>
 
                                 {/* Divider */}
-                                <div className="border-t border-gray-700 mb-6"></div>
+                                <div className="border-t border-gray-700 mb-6" />
 
-                                {/* Author Info */}
+                                {/* Author Info (no image) */}
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <img
-                                            src={testimonial.image}
-                                            alt={testimonial.name}
-                                            className="w-12 h-12 rounded-full object-cover"
-                                        />
-                                        <div>
-                                            <h4 className="text-white font-semibold text-base">
-                                                {testimonial.name}
-                                            </h4>
-                                            <p className="text-gray-400 text-sm">
-                                                {testimonial.role}
-                                            </p>
-                                        </div>
+                                    <div>
+                                        <h4 className="text-white font-semibold text-base">
+                                            {testimonial.name}
+                                        </h4>
+                                        <p className="text-gray-400 text-sm">
+                                            {testimonial.role}
+                                        </p>
                                     </div>
 
-                                    {/* Quote Icon */}
+                                    {/* Quote Mark */}
                                     <div className="text-yellow-500 text-5xl font-serif leading-none">
                                         ,,
                                     </div>

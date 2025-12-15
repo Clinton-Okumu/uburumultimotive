@@ -9,7 +9,7 @@ const MissionSection = () => {
                     <div className="relative">
                         <div className="overflow-hidden rounded-2xl shadow-lg">
                             <img
-                                src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800"
+                                src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=900&q=80"
                                 alt="Woman holding donation box in community center"
                                 className="w-full h-[500px] object-cover"
                             />

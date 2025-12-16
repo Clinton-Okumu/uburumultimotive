@@ -42,21 +42,21 @@ const ContactInfoSection = () => {
             icon: Phone,
             label: "24/7 Service",
             title: "Call Us Today",
-            details: ["+00 123 456 789", "+00 987 654 321"],
+            details: ["+25418421205"],
             bgColor: "bg-black",
         },
         {
             icon: Mail,
             label: "Drop Line",
             title: "Mail Information",
-            details: ["info@charity.com", "Infocharity@gmail.com"],
+            details: ["uburumultimotive@gmail.com"],
             bgColor: "bg-yellow-400",
         },
         {
             icon: MapPin,
             label: "Address",
             title: "Our Location",
-            details: ["8708 Technology Forest Pl Suite 125-G, The Woodlands, TX 77381"],
+            details: ["Outer Ring Road, Nairobi, Kenya"],
             bgColor: "bg-black",
         },
     ];
@@ -131,7 +131,7 @@ const ContactFormSection = () => {
                                     width="100%"
                                     height="100%"
                                     style={{ border: 0 }}
-                                     allowFullScreen={true}
+                                    allowFullScreen={true}
                                     loading="lazy"
                                     referrerPolicy="no-referrer-when-downgrade"
                                     title="Los Angeles Map"
@@ -157,59 +157,59 @@ const ContactFormSection = () => {
                             </p>
                         </div>
 
-                         <form onSubmit={handleSubmit} className="space-y-6 font-bold">
-                             {/* Name Fields */}
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                 <input
-                                     type="text"
-                                     name="firstName"
-                                     value={formData.firstName}
-                                     onChange={handleChange}
-                                     placeholder="First Name*"
-                                     required
-                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                                 />
-                                 <input
-                                     type="text"
-                                     name="lastName"
-                                     value={formData.lastName}
-                                     onChange={handleChange}
-                                     placeholder="Last Name*"
-                                     required
-                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                                 />
-                             </div>
+                        <form onSubmit={handleSubmit} className="space-y-6 font-bold">
+                            {/* Name Fields */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <input
+                                    type="text"
+                                    name="firstName"
+                                    value={formData.firstName}
+                                    onChange={handleChange}
+                                    placeholder="First Name*"
+                                    required
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                                />
+                                <input
+                                    type="text"
+                                    name="lastName"
+                                    value={formData.lastName}
+                                    onChange={handleChange}
+                                    placeholder="Last Name*"
+                                    required
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                                />
+                            </div>
 
-                             {/* Email and Amount */}
-                             <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-                                 <input
-                                     type="email"
-                                     name="email"
-                                     value={formData.email}
-                                     onChange={handleChange}
-                                     placeholder="Email Address*"
-                                     required
-                                     className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
-                                 />
-                             </div>
+                            {/* Email and Amount */}
+                            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder="Email Address*"
+                                    required
+                                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all"
+                                />
+                            </div>
 
-                             {/* Message Field */}
-                             <textarea
-                                 name="message"
-                                 value={formData.message}
-                                 onChange={handleChange}
-                                 placeholder="How can we help you?*"
-                                 required
-                                 rows={5}
-                                 className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
-                             />
+                            {/* Message Field */}
+                            <textarea
+                                name="message"
+                                value={formData.message}
+                                onChange={handleChange}
+                                placeholder="How can we help you?*"
+                                required
+                                rows={5}
+                                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition-all resize-none"
+                            />
 
-                             {/* Submit Button */}
-                             <Button type="submit">
-                                 Send Now
-                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                             </Button>
-                         </form>
+                            {/* Submit Button */}
+                            <Button type="submit">
+                                Send Now
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </Button>
+                        </form>
                     </div>
                 </div>
             </div>

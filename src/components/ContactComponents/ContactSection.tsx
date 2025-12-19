@@ -1,5 +1,4 @@
 import { ArrowRight, Mail, MapPin, Phone, Send } from "lucide-react";
-import { useState } from "react";
 import Button from "../shared/Button";
 
 interface ContactInfoCardProps {
@@ -41,17 +40,6 @@ const ContactInfoCard = ({ icon: Icon, label, title, details, isPrimary = false 
 };
 
 const ContactFormSection = () => {
-    const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        message: "",
-    });
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-    };
 
     return (
         <section className="py-24 px-4 bg-white">

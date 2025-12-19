@@ -20,12 +20,12 @@ const HeroSection = () => {
             <div className="relative z-10 max-w-7xl mx-auto px-6 h-full flex flex-col justify-center">
 
                 {/* Title */}
-                <h1 className="font-inter text-white font-extrabold leading-[1.05] mt-10">
+                <h1 className="text-4xl md:text-5xl font-extrabold leading-[1.1] mb-6 tracking-tight">
                     <span className="text-4xl md:text-5xl uppercase tracking-wider block text-yellow-400">
                         Uburu Multimove
                     </span>
 
-                    <span className="text-5xl md:text-6xl block max-w-2xl drop-shadow-xl">
+                    <span className="text-5xl text-white md:text-6xl block max-w-2xl drop-shadow-xl">
                         Homeless Shelter NGO
                     </span>
                 </h1>

@@ -1,6 +1,7 @@
-import { ArrowRight, Heart, Users } from "lucide-react";
+import { ArrowRight, Heart, Home } from "lucide-react";
 import type { ReactNode } from "react";
 import potraitImg from "../../assets/pic4.png";
+import img1 from "../../assets/pic7.png";
 import Button from "../shared/Button";
 
 interface FeatureCardProps {
@@ -10,14 +11,16 @@ interface FeatureCardProps {
 }
 
 const FeatureCard = ({ icon: Icon, title, children }: FeatureCardProps) => (
-    <div className="bg-white rounded-xl p-6 shadow-md">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
         <div className="flex items-start space-x-4">
-            <Icon className="w-8 h-8 text-gray-800" />
+            <div className="bg-yellow-50 p-3 rounded-lg">
+                <Icon className="w-6 h-6 text-yellow-600" />
+            </div>
             <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-gray-900 mb-1">
                     {title}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-600 leading-relaxed text-sm">
                     {children}
                 </p>
             </div>
@@ -27,82 +30,85 @@ const FeatureCard = ({ icon: Icon, title, children }: FeatureCardProps) => (
 
 const AboutUs = () => {
     return (
-        <section className="bg-white py-16 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <section className="bg-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
                 {/* LEFT CONTENT */}
                 <div className="space-y-8">
-                    <header>
-                        <p className="inline-block bg-gray-100 text-gray-700 px-4 py-2 rounded-md text-sm font-medium mb-6">
-                            About Us
-                        </p>
+                    <div>
+                        <span className="inline-block bg-yellow-100 text-yellow-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+                            About Our Mission
+                        </span>
 
-                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-6">
-                            A Safe Place to Rest, Recover, and Rebuild
-                        </h1>
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-[1.1] mb-6 tracking-tight">
+                            Rest, Recover, and <span className="text-yellow-500">Rebuild.</span>
+                        </h2>
 
-                        <p className="text-lg text-gray-600">
-                            At Uburu Multimove Homeless Shelter, we provide safe shelter,
-                            warm meals, and compassionate support to individuals and
-                            families experiencing homelessness. Our work focuses on
-                            restoring dignity today while helping people move toward
-                            stability and independence.
+                        <p className="text-lg text-gray-600 leading-relaxed">
+                            We provide safe shelter, warm meals, and the compassionate support
+                            needed to help individuals and families move from the streets
+                            toward lasting independence.
                         </p>
-                    </header>
+                    </div>
 
                     <div className="space-y-4">
                         <FeatureCard
-                            icon={Users}
-                            title="Safe shelter and essential support"
+                            icon={Home}
+                            title="Safe Haven"
                         >
-                            We offer a secure place to sleep, nutritious meals, clean
-                            facilities, and a supportive environment where people can
-                            rest, recover, and feel human again.
+                            Secure beds, nutritious meals, and clean facilities
+                            to help you find your footing again.
                         </FeatureCard>
 
                         <FeatureCard
                             icon={Heart}
-                            title="Care rooted in dignity and respect"
+                            title="Dignity First"
                         >
-                            Everyone deserves compassion. We meet people where they are,
-                            offering help without judgment and support that respects
-                            their dignity and lived experience.
+                            Compassionate care without judgment, meeting every
+                            individual exactly where they are.
                         </FeatureCard>
                     </div>
                 </div>
 
-                {/* RIGHT CONTENT */}
-                <div className="space-y-6">
-                    <div className="rounded-xl overflow-hidden shadow-lg">
-                        <img
-                            src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=900&q=80"
-                            alt="Community support at the shelter"
-                            className="w-full h-96 object-cover"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="bg-white rounded-xl p-6 shadow-md flex flex-col justify-between">
-                            <p className="text-gray-700 text-sm leading-relaxed mb-4">
-                                Our mission is to move people off the streets and into
-                                safety—providing immediate shelter while supporting
-                                pathways toward long-term housing, stability, and hope.
-                            </p>
-
-                            <Button>
-                                <span>Volunteer</span>
-                                <ArrowRight className="w-5 h-5" />
-                            </Button>
-                        </div>
-
-                        <div className="rounded-xl overflow-hidden shadow-lg">
+                {/* RIGHT CONTENT - VISUAL GRID */}
+                <div className="relative">
+                    <div className="space-y-6">
+                        <div className="rounded-3xl overflow-hidden shadow-2xl transform lg:rotate-2 hover:rotate-0 transition-transform duration-500">
                             <img
-                                src={potraitImg}
-                                alt="Person supported by the shelter"
-                                className="w-full h-full object-cover"
+                                src={img1}
+                                alt="Community support"
+                                className="w-full h-80 object-cover"
                             />
                         </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div className="bg-neutral-900 rounded-3xl p-8 shadow-xl flex flex-col justify-between">
+                                <div>
+                                    <h4 className="text-yellow-400 font-bold uppercase text-xs tracking-widest mb-3">Our Goal</h4>
+                                    <p className="text-white text-sm leading-relaxed mb-6 font-medium">
+                                        To provide immediate safety
+                                        while creating clear pathways toward long-term housing.
+                                    </p>
+                                </div>
+
+                                <Button className="bg-yellow-500 text-black hover:bg-yellow-400 border-none w-full justify-center text-xs font-bold uppercase">
+                                    <span>Volunteer</span>
+                                    <ArrowRight className="w-4 h-4 ml-2" />
+                                </Button>
+                            </div>
+
+                            <div className="rounded-3xl overflow-hidden shadow-lg transform lg:-translate-y-4">
+                                <img
+                                    src={potraitImg}
+                                    alt="Person supported"
+                                    className="w-full h-full object-cover min-h-[200px]"
+                                />
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Decorative Background Element */}
+                    <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-yellow-100 rounded-full -z-10 blur-3xl opacity-60"></div>
                 </div>
 
             </div>

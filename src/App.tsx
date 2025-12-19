@@ -29,7 +29,6 @@ function App() {
                     <Route path="/Blogs" element={<Blog />} />
                     <Route path="/Contact" element={<Contact />} />
                     <Route path="/donate" element={<Donate />} />
-                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

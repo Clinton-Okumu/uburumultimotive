@@ -7,6 +7,7 @@ interface ButtonProps {
     icon?: ReactNode;
     fullWidth?: boolean;
     type?: "button" | "submit" | "reset";
+    disabled?: boolean;
 }
 
 const Button = ({
@@ -16,17 +17,20 @@ const Button = ({
     icon,
     fullWidth = false,
     type = "button",
+    disabled = false,
 }: ButtonProps) => {
     const baseStyles =
-        "bg-yellow-200 hover:bg-yellow-300 px-6 py-3 rounded-full text-black font-semibold transition-all duration-300 flex items-center justify-center gap-2";
+        "bg-yellow-500 hover:bg-yellow-300 px-6 py-3 rounded-full text-black font-bold text-black transition-all duration-300 flex items-center justify-center gap-2";
 
     const widthStyle = fullWidth ? "w-full" : "";
+    const disabledStyle = disabled ? "opacity-50 cursor-not-allowed hover:bg-yellow-500" : "";
 
     return (
         <button
             type={type}
             onClick={onClick}
-            className={`${baseStyles} ${widthStyle} ${className}`}
+            disabled={disabled}
+            className={`${baseStyles} ${widthStyle} ${disabledStyle} ${className}`}
         >
             {children}
             {icon}

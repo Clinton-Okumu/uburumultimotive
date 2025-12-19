@@ -1,254 +1,137 @@
-import { ArrowRight, Calendar, ChevronLeft, ChevronRight, User } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, ChevronLeft, ChevronRight, Newspaper, User } from "lucide-react";
+import img3 from "../../assets/pic6.png";
+import img2 from "../../assets/pic7.png";
+import img1 from "../../assets/pic9.png";
 
-interface BlogCardProps {
-    image: string;
-    date: string;
-    author: string;
-    title: string;
-    description: string;
-    slug: string;
-}
-
-// BlogCard Component
-const BlogCard = ({ image, date, author, title, description, slug }: BlogCardProps) => {
-    return (
-        <article className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group">
-            {/* Image */}
-            <div className="relative h-64 overflow-hidden">
-                <img
-                    src={image || "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800"}
-                    alt={title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                {/* Date & Author Badge */}
-                <div className="absolute bottom-4 left-4 right-4">
-                    <div className="bg-white rounded-lg px-4 py-2 inline-flex items-center gap-4 shadow-lg">
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                            <Calendar className="w-4 h-4" />
-                            <span>{date}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                            <User className="w-4 h-4" />
-                            <span>{author}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                    {title}
-                </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {description}
-                </p>
-                <a
-                    href={`/blog/${slug}`}
-                    className="inline-flex items-center gap-2 text-gray-900 font-semibold hover:text-blue-600 transition-colors group/link"
-                >
-                    Read More
-                    <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                </a>
-            </div>
-        </article>
-    );
-};
-
-interface PaginationProps {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
-}
-
-// Pagination Component
-const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
-    const renderPageNumbers = () => {
-        const pages = [];
-
-        // Always show first page
-        pages.push(1);
-
-        // Show current page and neighbors
-        if (currentPage > 3) {
-            pages.push('...');
-        }
-
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-            pages.push(i);
-        }
-
-        // Show last page
-        if (currentPage < totalPages - 2) {
-            pages.push('...');
-        }
-        if (totalPages > 1) {
-            pages.push(totalPages);
-        }
-
-        return pages;
-    };
-
-    return (
-        <div className="flex items-center justify-center gap-2 mt-12">
-            {/* Previous Button */}
-            <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Previous page"
-            >
-                <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            {/* Page Numbers */}
-            {renderPageNumbers().map((page, index) => (
-                <button
-                    key={index}
-                    onClick={() => typeof page === 'number' && onPageChange(page)}
-                    disabled={page === '...'}
-                    className={`min-w-[40px] h-10 rounded-lg font-medium transition-all ${page === currentPage
-                        ? 'bg-yellow-400 text-gray-900'
-                        : page === '...'
-                            ? 'cursor-default'
-                            : 'hover:bg-gray-100 text-gray-700'
-                        }`}
-                >
-                    {page}
-                </button>
-            ))}
-
-            {/* Next Button */}
-            <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                aria-label="Next page"
-            >
-                <ChevronRight className="w-5 h-5" />
-            </button>
-        </div>
-    );
-};
-
-// Main BlogSection Component
 const BlogSection = () => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const postsPerPage = 6;
-
-    const blogPosts = [
+    const displayPosts = [
         {
             id: 1,
-            image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800",
-            date: "16 October 2025",
+            image: img1,
+            date: "16 Oct 2025",
             author: "Kyle Miller",
-            title: "Stories from the Field: Firsthand Accounts of Disaster Relief",
-            description: "Get inside look at the real-life experiences of our teams ground from emergency response.",
-            slug: "stories-from-the-field",
+            title: "Stories from the Field: Accounts of Disaster Relief",
+            description: "Get an inside look at the real-life experiences of our teams on the ground during emergency responses.",
         },
         {
             id: 2,
-            image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800",
-            date: "16 October 2025",
-            author: "Kyle Miller",
-            title: "Tips for Disaster Preparedness: How to Stay Safe and Ready",
-            description: "Disasters strike unexpectedly you prepared? Explore practical tips and guides to protect.",
-            slug: "disaster-preparedness-tips",
+            image: img2,
+            date: "12 Oct 2025",
+            author: "Sarah J.",
+            title: "Tips for Disaster Preparedness: Staying Safe",
+            description: "Disasters strike unexpectedly. Explore practical tips and guides to protect your community.",
         },
         {
             id: 3,
-            image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800",
-            date: "16 October 2025",
+            image: img3,
+            date: "08 Oct 2025",
+            author: "Michael C.",
+            title: "The Power of Collaboration in Crisis Relief",
+            description: "Relief efforts are most effective when organizations and communities work together in harmony.",
+        },
+        {
+            id: 1,
+            image: img1,
+            date: "16 Oct 2025",
             author: "Kyle Miller",
-            title: "Partnering for Good: The Role of Collaboration in Crisis Relief",
-            description: "Relief effort most effective we organization governments, & communities work together.",
-            slug: "partnering-for-good",
+            title: "Stories from the Field: Accounts of Disaster Relief",
+            description: "Get an inside look at the real-life experiences of our teams on the ground during emergency responses.",
         },
         {
-            id: 4,
-            image: "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800",
-            date: "16 October 2025",
-            author: "Kyle Miller",
-            title: "Inspiring Change: Stories of Hope, Impact, and Compassion",
-            description: "At the core of our work lies the incredible stories of individuals, families, communities.",
-            slug: "inspiring-change-stories",
+            id: 2,
+            image: img2,
+            date: "12 Oct 2025",
+            author: "Sarah J.",
+            title: "Tips for Disaster Preparedness: Staying Safe",
+            description: "Disasters strike unexpectedly. Explore practical tips and guides to protect your community.",
         },
         {
-            id: 5,
-            image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800",
-            date: "16 October 2025",
-            author: "Kyle Miller",
-            title: "Building a Better Future: The Power of Giving and Community Support",
-            description: "At the core of every successful community is the power of giving, whether through time.",
-            slug: "building-better-future",
-        },
-        {
-            id: 6,
-            image: "https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=800",
-            date: "16 October 2025",
-            author: "Kyle Miller",
-            title: "Empowering Change: Stories, Insights, and Updates from Our Mission",
-            description: "Welcome to our blog, where every story and update is a testament to the difference.",
-            slug: "empowering-change",
-        },
-        // Add more posts for pagination demo
-        {
-            id: 7,
-            image: "https://images.unsplash.com/photo-1497375530661-5770c4f49eac?w=800",
-            date: "15 October 2025",
-            author: "Sarah Johnson",
-            title: "Educational Initiatives: Empowering the Next Generation",
-            description: "Discover how education transforms communities and creates lasting positive change.",
-            slug: "educational-initiatives",
-        },
-        {
-            id: 8,
-            image: "https://images.unsplash.com/photo-1536623975707-c4b3b2af565d?w=800",
-            date: "14 October 2025",
-            author: "Michael Chen",
-            title: "Clean Water Projects: Transforming Lives One Well at a Time",
-            description: "Learn about our clean water initiatives and their impact on rural communities.",
-            slug: "clean-water-projects",
-        },
+            id: 3,
+            image: img3,
+            date: "08 Oct 2025",
+            author: "Michael C.",
+            title: "The Power of Collaboration in Crisis Relief",
+            description: "Relief efforts are most effective when organizations and communities work together in harmony.",
+        }
+
     ];
 
-    const totalPages = Math.ceil(blogPosts.length / postsPerPage);
-    const indexOfLastPost = currentPage * postsPerPage;
-    const indexOfFirstPost = indexOfLastPost - postsPerPage;
-    const currentPosts = blogPosts.slice(indexOfFirstPost, indexOfLastPost);
-
-    const handlePageChange = (pageNumber: number) => {
-        setCurrentPage(pageNumber);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
     return (
-        <section className="py-16 px-4 bg-white">
+        <section className="py-24 px-4 bg-white">
             <div className="container mx-auto max-w-7xl">
-                {/* Header */}
-                <div className="text-center mb-12">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-                        Latest News & Stories
-                    </h2>
-                    <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+
+                {/* Section Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+                    <div className="max-w-2xl">
+                        <span className="inline-flex items-center gap-2 bg-neutral-900 text-yellow-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
+                            <Newspaper className="w-3 h-3" />
+                            The Newsroom
+                        </span>
+                        <h2 className="text-5xl md:text-6xl font-black text-gray-900 tracking-tighter leading-[0.9]">
+                            Latest News <br /> <span className="text-yellow-500">& Stories</span>
+                        </h2>
+                    </div>
+                    <p className="text-lg text-gray-500 max-w-sm font-medium leading-snug">
                         Stay updated with our latest initiatives, success stories, and insights from the field.
                     </p>
                 </div>
 
                 {/* Blog Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {currentPosts.map((post) => (
-                        <BlogCard key={post.id} {...post} />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    {displayPosts.map((post) => (
+                        <article key={post.id} className="group bg-white flex flex-col h-full border border-neutral-100 hover:border-yellow-400/50 transition-all duration-500 rounded-[2.5rem] overflow-hidden">
+                            {/* Image Container */}
+                            <div className="relative h-72 overflow-hidden">
+                                <img
+                                    src={post.image}
+                                    alt={post.title}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                />
+                                {/* Date Badge - Fixed Top Right */}
+                                <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm text-black text-[10px] font-black px-4 py-2 rounded-xl shadow-lg uppercase tracking-widest">
+                                    {post.date}
+                                </div>
+                            </div>
+
+                            {/* Content Body */}
+                            <div className="p-8 flex flex-col flex-grow">
+                                <div className="flex items-center gap-2 mb-4 text-yellow-600">
+                                    <User className="w-4 h-4" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{post.author}</span>
+                                </div>
+
+                                <h3 className="text-2xl font-black text-gray-900 mb-4 leading-tight tracking-tight uppercase italic">
+                                    {post.title}
+                                </h3>
+
+                                <p className="text-gray-500 font-medium text-sm mb-8 line-clamp-3 leading-relaxed">
+                                    {post.description}
+                                </p>
+
+                                <div className="mt-auto pt-6 border-t border-neutral-100">
+                                    <div className="flex items-center justify-between group/link cursor-pointer">
+                                        <span className="text-xs font-black uppercase tracking-[0.2em] text-black group-hover/link:text-yellow-600 transition-colors">Read Article</span>
+                                        <div className="w-12 h-12 rounded-2xl bg-neutral-900 flex items-center justify-center group-hover/link:bg-yellow-400 transition-all duration-300">
+                                            <ArrowRight className="w-5 h-5 text-white group-hover/link:text-black group-hover/link:translate-x-1 transition-all" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
                     ))}
                 </div>
 
-                {/* Pagination */}
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                />
+                {/* Static Pagination UI */}
+                <div className="flex items-center justify-center gap-3 mt-20">
+                    <div className="w-12 h-12 rounded-2xl border border-neutral-200 flex items-center justify-center text-neutral-300 cursor-not-allowed">
+                        <ChevronLeft className="w-5 h-5" />
+                    </div>
+                    <div className="w-12 h-12 rounded-2xl bg-yellow-400 text-black font-black flex items-center justify-center shadow-lg shadow-yellow-100">1</div>
+                    <div className="w-12 h-12 rounded-2xl border border-neutral-200 text-black font-black flex items-center justify-center hover:border-black cursor-pointer transition-all">2</div>
+                    <div className="w-12 h-12 rounded-2xl border border-neutral-200 flex items-center justify-center hover:bg-black hover:text-white cursor-pointer transition-all">
+                        <ChevronRight className="w-5 h-5" />
+                    </div>
+                </div>
             </div>
         </section>
     );

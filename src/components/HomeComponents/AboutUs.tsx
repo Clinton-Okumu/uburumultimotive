@@ -78,6 +78,7 @@ const AboutUs = () => {
                                 src={img1}
                                 alt="Community support"
                                 className="w-full h-80 object-cover"
+                                loading="lazy"
                             />
                         </div>
 
@@ -102,6 +103,7 @@ const AboutUs = () => {
                                     src={potraitImg}
                                     alt="Person supported"
                                     className="w-full h-full object-cover min-h-[200px]"
+                                    loading="lazy"
                                 />
                             </div>
                         </div>

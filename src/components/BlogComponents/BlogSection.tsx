@@ -86,6 +86,7 @@ const BlogSection = () => {
                                     src={post.image}
                                     alt={post.title}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    loading="lazy"
                                 />
                                 {/* Date Badge - Fixed Top Right */}
                                 <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-sm text-black text-[10px] font-black px-4 py-2 rounded-xl shadow-lg uppercase tracking-widest">

@@ -48,7 +48,7 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
                     <div className="col-span-1 lg:col-span-2">
                         <div className="flex items-center gap-3 mb-6">
-                            <img src={logo} alt="UburuMultimotive logo" className="w-12 h-12 object-contain" />
+                            <img src={logo} alt="UburuMultimotive logo" className="w-12 h-12 object-contain" loading="lazy" />
                             <span className="font-black text-2xl tracking-tighter">
                                 UBURU<span className="text-yellow-400">MULTIMOTIVE</span>
                             </span>

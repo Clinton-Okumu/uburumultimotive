@@ -41,6 +41,7 @@ const MissionVisionSection = () => {
                                 src={img1}
                                 alt="Community impact"
                                 className="w-full h-[550px] object-cover transition-transform duration-1000 group-hover:scale-110"
+                                loading="lazy"
                             />
                         </div>
                         {/* Decorative Background Blob */}

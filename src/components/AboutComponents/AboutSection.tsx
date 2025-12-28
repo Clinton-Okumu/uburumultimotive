@@ -27,6 +27,7 @@ const AboutSection = () => {
                                     src={img1}
                                     alt="Volunteers organizing donation boxes"
                                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                                    loading="lazy"
                                 />
                             </div>
                             <div className="relative overflow-hidden rounded-[2rem] h-[200px] border-4 border-white shadow-xl">
@@ -34,6 +35,7 @@ const AboutSection = () => {
                                     src={img3}
                                     alt="Community working together"
                                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                                    loading="lazy"
                                 />
                             </div>
                         </div>
@@ -43,6 +45,7 @@ const AboutSection = () => {
                                     src={img2}
                                     alt="Happy volunteer celebrating"
                                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                                    loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-yellow-400/10 group-hover:bg-transparent transition-colors" />
                             </div>

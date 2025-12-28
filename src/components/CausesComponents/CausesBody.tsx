@@ -64,6 +64,7 @@ const CausesBody = () => {
                                         src={cause.image}
                                         alt={cause.title}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                        loading="lazy"
                                     />
                                     {/* Brand Overlay */}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />

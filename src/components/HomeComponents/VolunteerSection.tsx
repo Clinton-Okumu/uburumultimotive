@@ -45,6 +45,7 @@ const GallerySection = () => {
                                 src={image.src}
                                 alt={image.alt}
                                 className="w-full h-[400px] object-cover transition-transform duration-1000 group-hover:scale-110"
+                                loading="lazy"
                             />
 
                             {/* Yellow Hover Overlay */}

@@ -1,6 +1,6 @@
 import { Eye, History, Rocket } from 'lucide-react';
 import { useState } from 'react';
-import img1 from '../../assets/pic9.png';
+import img1 from '../../assets/pic9.webp';
 
 const MissionVisionSection = () => {
     const [activeTab, setActiveTab] = useState('mission');

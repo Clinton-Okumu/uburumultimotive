@@ -1,5 +1,5 @@
 import { ArrowRight, Facebook, Instagram, Linkedin, Twitter } from "lucide-react";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.webp";
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();

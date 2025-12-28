@@ -1,9 +1,9 @@
 import { Camera } from "lucide-react";
-import testimonialImg1 from "../../assets/pic2.png";
-import testimonialImg2 from "../../assets/pic3.png";
-import testimonialImg3 from "../../assets/pic4.png";
-import testimonialImg4 from "../../assets/pic5.png";
-import testimonialImg5 from "../../assets/pic8.png";
+import testimonialImg1 from "../../assets/pic2.webp";
+import testimonialImg2 from "../../assets/pic3.webp";
+import testimonialImg3 from "../../assets/pic4.webp";
+import testimonialImg4 from "../../assets/pic5.webp";
+import testimonialImg5 from "../../assets/pic8.webp";
 
 const GallerySection = () => {
     const galleryImages = [

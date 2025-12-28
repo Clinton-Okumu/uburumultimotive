@@ -1,7 +1,7 @@
 import { Check, Heart } from 'lucide-react';
-import img2 from '../../assets/hero.png';
-import img3 from '../../assets/pic11.png';
-import img1 from '../../assets/pic8.png';
+import img2 from '../../assets/hero.webp';
+import img3 from '../../assets/pic11.webp';
+import img1 from '../../assets/pic8.webp';
 
 const AboutSection = () => {
     return (

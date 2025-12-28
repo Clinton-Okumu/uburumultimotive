@@ -1,7 +1,7 @@
 import { ArrowRight, Heart, Home, Sparkles, Users } from "lucide-react";
-import img1 from "../../assets/pic5.png";
-import img2 from "../../assets/pic6.png";
-import img3 from "../../assets/pic7.png";
+import img1 from "../../assets/pic5.webp";
+import img2 from "../../assets/pic6.webp";
+import img3 from "../../assets/pic7.webp";
 import Button from "../shared/Button";
 
 const CausesBody = () => {

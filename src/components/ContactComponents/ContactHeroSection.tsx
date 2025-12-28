@@ -1,5 +1,5 @@
 import { ChevronRight } from "lucide-react";
-import hero from "../../assets/hero.png";
+import hero from "../../assets/hero.webp";
 
 const HeroSection = ({
     title = "Contact Us",

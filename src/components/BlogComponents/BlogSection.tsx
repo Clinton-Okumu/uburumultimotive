@@ -1,7 +1,7 @@
 import { ArrowRight, ChevronLeft, ChevronRight, Newspaper, User } from "lucide-react";
-import img3 from "../../assets/pic6.png";
-import img2 from "../../assets/pic7.png";
-import img1 from "../../assets/pic9.png";
+import img3 from "../../assets/pic6.webp";
+import img2 from "../../assets/pic7.webp";
+import img1 from "../../assets/pic9.webp";
 
 const BlogSection = () => {
     const displayPosts = [

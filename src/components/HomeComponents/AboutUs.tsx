@@ -1,7 +1,7 @@
 import { ArrowRight, Heart, Home } from "lucide-react";
 import type { ReactNode } from "react";
-import potraitImg from "../../assets/pic4.png";
-import img1 from "../../assets/pic7.png";
+import potraitImg from "../../assets/pic4.webp";
+import img1 from "../../assets/pic7.webp";
 import Button from "../shared/Button";
 
 interface FeatureCardProps {

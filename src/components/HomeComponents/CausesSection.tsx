@@ -1,6 +1,6 @@
-import causesImg1 from "../../assets/pic5.png";
-import causesImg2 from "../../assets/pic6.png";
-import causesImg3 from "../../assets/pic7.png";
+import causesImg1 from "../../assets/pic5.webp";
+import causesImg2 from "../../assets/pic6.webp";
+import causesImg3 from "../../assets/pic7.webp";
 
 const CausesSection = () => {
     const causes = [

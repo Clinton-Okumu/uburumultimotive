@@ -33,7 +33,7 @@ const HeroSection = () => {
 
                 {/* Description */}
                 <p className="text-white/80 max-w-xl mt-4">
-                    “Touching one homeless person at a time”
+                    “A home where there is no home”
                 </p>
 
                 {/* CTA Button */}

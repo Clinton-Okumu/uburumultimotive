@@ -1,4 +1,4 @@
-import { Heart, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.png";
@@ -83,8 +83,21 @@ const Navbar = () => {
                         <Button
                             className="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-8 border-none shadow-lg shadow-yellow-500/20 flex items-center gap-2"
                         >
-                            <Heart className="w-4 h-4 fill-current" />
-                            Donate Now
+                            Donate
+                            <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                                />
+                            </svg>
+
                         </Button>
                     </a>
                 </div>

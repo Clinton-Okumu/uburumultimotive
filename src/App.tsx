@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import About from './pages/About';
 import Blog from './pages/Blog';
@@ -6,6 +6,7 @@ import Causes from './pages/Causes';
 import Contact from './pages/Contact';
 import Donate from './pages/Donate';
 import Home from './pages/Home';
+import Therapy from './pages/Therapy';
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
                     <Route path="/Blogs" element={<Blog />} />
                     <Route path="/Contact" element={<Contact />} />
                     <Route path="/donate" element={<Donate />} />
+                    <Route path="/get/therapy" element={<Therapy />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

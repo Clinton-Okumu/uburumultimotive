@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.webp";
 import Button from "../shared/Button";
+import DropdownMenu, { getDropdownItems } from "./DropdownMenu";
 
 const donateUrl =
   "https://shop.directpay.online/paymybills/UBURUMULTIMOVEHOMELESSSHELTER?utm_source=ig&utm_medium=social&utm_content=link_in_bio";
@@ -17,13 +18,13 @@ const NavbarLinks: NavLink[] = [
   { id: 1, title: "Home", link: "/" },
   { id: 2, title: "About", link: "/about" },
   { id: 3, title: "Causes", link: "/causes" },
-  { id: 4, title: "Therapy Services", link: "/get/therapy" },
-  { id: 5, title: "Blogs", link: "/blogs" },
-  { id: 6, title: "Contact", link: "/contact" },
+  { id: 4, title: "Blogs", link: "/blogs" },
+  { id: 5, title: "Contact", link: "/contact" },
 ];
 
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isGetDropdownOpen, setIsGetDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
 
@@ -35,6 +36,7 @@ const Navbar = () => {
 
   useEffect(() => {
     setMobileMenuOpen(false);
+    setIsGetDropdownOpen(false);
   }, [location]);
 
   return (
@@ -78,6 +80,19 @@ const Navbar = () => {
               />
             </Link>
           ))}
+
+          <DropdownMenu
+            title="Get"
+            icon={getDropdownItems[0].icon}
+            items={getDropdownItems.map((item, index) => ({
+              ...item,
+              index,
+              isOpen: isGetDropdownOpen,
+            }))}
+            isOpen={isGetDropdownOpen}
+            onToggle={() => setIsGetDropdownOpen(!isGetDropdownOpen)}
+            onClose={() => setIsGetDropdownOpen(false)}
+          />
         </div>
 
         {/* Desktop Donate Button */}
@@ -118,7 +133,7 @@ const Navbar = () => {
       {/* Mobile Menu Overlay */}
       <div
         className={`lg:hidden absolute top-full left-0 right-0 bg-neutral-900 border-t border-neutral-800 transition-all duration-300 ease-in-out overflow-hidden shadow-2xl ${
-          isMobileMenuOpen ? "max-h-[450px] opacity-100" : "max-h-0 opacity-0"
+          isMobileMenuOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="p-8 space-y-6">
@@ -135,14 +150,44 @@ const Navbar = () => {
               {link.title}
             </Link>
           ))}
-          <div className="pt-6 border-t border-neutral-800">
+          <div className="pt-6 border-t border-neutral-800 space-y-6">
+            <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 rounded-2xl p-5 border border-yellow-500/20">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="bg-yellow-500 p-2 rounded-lg">
+                  <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </div>
+                <p className="text-yellow-400 font-bold text-base uppercase tracking-wider">Get Support</p>
+              </div>
+              {getDropdownItems.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.href}
+                  className="flex items-center gap-4 p-4 bg-neutral-800/80 hover:bg-yellow-500/20 rounded-xl transition-all duration-300 mb-3 last:mb-0 group"
+                >
+                  <div className="bg-yellow-100 p-3 rounded-xl group-hover:bg-yellow-200 transition-colors flex-shrink-0">
+                    <item.icon className="w-6 h-6 text-yellow-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-base mb-1 group-hover:text-yellow-400 transition-colors">{item.label}</p>
+                    {item.description && (
+                      <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{item.description}</p>
+                    )}
+                  </div>
+                  <svg className="w-5 h-5 text-gray-500 group-hover:text-yellow-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              ))}
+            </div>
             <a
               href={donateUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full"
             >
-              <Button fullWidth className="py-4">
+              <Button fullWidth className="py-4 text-lg">
                 Make a Donation
               </Button>
             </a>

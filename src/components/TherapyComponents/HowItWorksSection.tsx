@@ -32,7 +32,7 @@ const StepCard = ({
 
 const HowItWorksSection = () => {
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <span className="inline-block bg-yellow-100 text-yellow-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
@@ -42,7 +42,8 @@ const HowItWorksSection = () => {
             How It Works
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Getting started with therapy is easy. Follow these simple steps to begin your journey to better mental health.
+            Getting started with therapy is easy. Follow these simple steps to
+            begin your journey to better mental health.
           </p>
         </div>
 

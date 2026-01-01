@@ -1,9 +1,11 @@
+import { ArrowRight } from "lucide-react";
 import hero from "../../assets/hero.webp";
-import { getDropdownItems } from "../Layout/DropdownMenu";
 import Button from "../shared/Button";
-import ButtonDropdown from "../shared/ButtonDropdown";
 
 const HeroSection = () => {
+  const donateUrl =
+    "https://shop.directpay.online/paymybills/UBURUMULTIMOVEHOMELESSSHELTER?utm_source=ig&utm_medium=social&utm_content=link_in_bio";
+
   return (
     <section className=" mx-auto  relative w-screen h-[80vh] overflow-hidden">
       {/* Background Image */}
@@ -31,14 +33,15 @@ const HeroSection = () => {
         </h1>
 
         {/* Description */}
-        <p className="text-white/80 max-w-xl mt-1">
+        <p className="text-white/80 max-w-xl mt-1 font-bold italic">
           “A home where there is no home”
         </p>
 
         {/* CTA Button */}
-        <div className="flex gap-3 mt-1 z-10">
-          <Button>Donate</Button>
-          <ButtonDropdown items={getDropdownItems}>Get</ButtonDropdown>
+        <div className="mt-5">
+          <a href={donateUrl} target="_blank" rel="noopener noreferrer">
+            <Button icon={<ArrowRight />}>Join our cause today</Button>
+          </a>
         </div>
       </div>
     </section>

@@ -3,10 +3,10 @@ import { ChevronRight } from "lucide-react";
 import hero from "../../assets/hero.webp";
 
 const HeroSection = ({
-    title = "Blog",
+    title = "Gallery",
     breadcrumbs = [
         { label: "Home", href: "/" },
-        { label: "Blog", href: "/blogs" },
+        { label: "Gallery", href: "/gallery" },
     ],
     image = hero,
 }) => {

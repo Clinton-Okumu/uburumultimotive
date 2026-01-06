@@ -19,7 +19,7 @@ function App() {
                     <Route path="/Causes" element={<Causes />} />
                     <Route path="/Gallery" element={<Gallery />} />
                     <Route path="/Contact" element={<Contact />} />
-                    <Route path="/donate" element={<Donate />} />
+                    <Route path="/donate/money" element={<Donate />} />
                     <Route path="/get/therapy" element={<Therapy />} />
                 </Routes>
             </Layout>

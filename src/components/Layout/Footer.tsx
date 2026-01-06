@@ -18,7 +18,7 @@ const Footer = () => {
       title: "Get Involved",
       links: [
         { name: "Volunteer", url: "#" },
-        { name: "Donate Now", url: "#" },
+        { name: "Donate Now", url: "/donate/money" },
         { name: "Partner With Us", url: "#" },
         { name: "FAQ", url: "#" },
       ],

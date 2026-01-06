@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
+    "@paystack/inline-js": "^2.22.7",
     "@tailwindcss/vite": "^4.1.17",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.555.0",

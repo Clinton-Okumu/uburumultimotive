@@ -1,4 +1,5 @@
-import { ArrowRight, Mail, MapPin, Phone, Send } from "lucide-react";
+import { ArrowRight, Mail, MapPin, Phone, Send, Utensils, Shirt, MessageCircle, Package, Truck, Clock } from "lucide-react";
+import { useState } from "react";
 import Button from "../shared/Button";
 
 interface ContactInfoCardProps {
@@ -40,6 +41,21 @@ const ContactInfoCard = ({ icon: Icon, label, title, details, isPrimary = false 
 };
 
 const ContactFormSection = () => {
+    const [purpose, setPurpose] = useState<"contact" | "donate">("contact");
+    const [donationCategory, setDonationCategory] = useState<"food" | "clothing">("food");
+    const [donationType, setDonationType] = useState<"pickup" | "delivery">("pickup");
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (purpose === "donate") {
+            console.log("Donation submission:", {
+                category: donationCategory,
+                deliveryMethod: donationType,
+            });
+        } else {
+            console.log("Contact submission");
+        }
+    };
 
     return (
         <section className="py-24 px-4 bg-white">
@@ -57,11 +73,41 @@ const ContactFormSection = () => {
                                 Ready to <span className="text-yellow-500">Make</span> <br /> A Difference?
                             </h1>
                             <p className="text-gray-500 text-lg font-medium max-w-md">
-                                We're here to answer questions, provide information about our work, and help you find ways to get involved.
+                                {purpose === 'donate'
+                                    ? "Simple and easy - just let us know what you'd like to donate and how you'd like to get it to us."
+                                    : "We're here to answer questions, provide information about our work, and help you find ways to get involved."
+                                }
                             </p>
                         </div>
 
-                        <form className="space-y-4">
+                        <form onSubmit={handleFormSubmit} className="space-y-6">
+                            {/* Purpose Selector */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setPurpose('contact')}
+                                    className={`py-4 px-6 rounded-[1.5rem] font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${
+                                        purpose === 'contact'
+                                            ? 'bg-black text-white'
+                                            : 'bg-neutral-50 text-gray-600 hover:bg-neutral-100'
+                                    }`}
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                    Contact Us
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setPurpose('donate')}
+                                    className={`py-4 px-6 rounded-[1.5rem] font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${
+                                        purpose === 'donate'
+                                            ? 'bg-yellow-400 text-black'
+                                            : 'bg-neutral-50 text-gray-600 hover:bg-neutral-100'
+                                    }`}
+                                >
+                                    <Package className="w-5 h-5" />
+                                    Donate Items
+                                </button>
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <input
                                     type="text"
@@ -82,14 +128,108 @@ const ContactFormSection = () => {
                                 placeholder="Email Address*"
                                 className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                             />
-                            <textarea
-                                name="message"
-                                placeholder="How can we help you?*"
-                                rows={4}
-                                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all resize-none"
-                            />
+
+                            {/* Donation-specific fields */}
+                            {purpose === 'donate' && (
+                                <>
+                                    {/* Donation Category Selector */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setDonationCategory('food')}
+                                            className={`py-5 px-6 rounded-[1.5rem] font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-3 ${
+                                                donationCategory === 'food'
+                                                    ? 'bg-yellow-400 text-black'
+                                                    : 'bg-neutral-50 text-gray-600 hover:bg-neutral-100'
+                                            }`}
+                                        >
+                                            <Utensils className="w-6 h-6" />
+                                            Food
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDonationCategory('clothing')}
+                                            className={`py-5 px-6 rounded-[1.5rem] font-bold uppercase tracking-wide transition-all flex items-center justify-center gap-3 ${
+                                                donationCategory === 'clothing'
+                                                    ? 'bg-yellow-400 text-black'
+                                                    : 'bg-neutral-50 text-gray-600 hover:bg-neutral-100'
+                                            }`}
+                                        >
+                                            <Shirt className="w-6 h-6" />
+                                            Clothing
+                                        </button>
+                                    </div>
+
+                                    {/* Pickup vs Delivery */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => setDonationType('pickup')}
+                                            className={`py-4 px-4 rounded-[1.5rem] font-bold uppercase text-sm tracking-wide transition-all flex items-center justify-center gap-2 ${
+                                                donationType === 'pickup'
+                                                    ? 'bg-yellow-400 text-black'
+                                                    : 'bg-neutral-50 text-gray-600 hover:bg-neutral-100'
+                                            }`}
+                                        >
+                                            <Truck className="w-5 h-5" />
+                                            We'll Pick Up
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDonationType('delivery')}
+                                            className={`py-4 px-4 rounded-[1.5rem] font-bold uppercase text-sm tracking-wide transition-all flex items-center justify-center gap-2 ${
+                                                donationType === 'delivery'
+                                                    ? 'bg-yellow-400 text-black'
+                                                    : 'bg-neutral-50 text-gray-600 hover:bg-neutral-100'
+                                            }`}
+                                        >
+                                            <Package className="w-5 h-5" />
+                                            I'll Deliver
+                                        </button>
+                                    </div>
+
+                                    {/* Info cards based on selection */}
+                                    {donationType === 'pickup' && (
+                                        <div className="p-5 bg-yellow-50 border-2 border-yellow-200 rounded-2xl">
+                                            <div className="flex items-start gap-3">
+                                                <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-900 mb-1">Pickup Information</p>
+                                                    <p className="text-xs text-gray-600 leading-relaxed">
+                                                        Our team will contact you within 24 hours to schedule a convenient pickup time and location.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {donationType === 'delivery' && (
+                                        <div className="p-5 bg-green-50 border-2 border-green-200 rounded-2xl">
+                                            <div className="flex items-start gap-3">
+                                                <MapPin className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-900 mb-1">Delivery Information</p>
+                                                    <p className="text-xs text-gray-600 leading-relaxed">
+                                                        Please deliver your donation to our main center at Outer Ring Road, Nairobi. We're open Mon-Sat, 8am-6pm.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* Contact-specific field */}
+                            {purpose === 'contact' && (
+                                <textarea
+                                    name="message"
+                                    placeholder="How can we help you?*"
+                                    rows={4}
+                                    className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all resize-none"
+                                />
+                            )}
                             <Button className="w-full py-6 bg-black text-black-400 hover:bg-neutral-800 rounded-[1.5rem] text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                                Send Message
+                                {purpose === 'donate' ? 'Submit Donation' : 'Send Message'}
                                 <ArrowRight className="w-5 h-5" />
                             </Button>
                         </form>

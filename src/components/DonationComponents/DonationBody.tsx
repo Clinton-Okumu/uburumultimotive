@@ -94,7 +94,7 @@ const DonationBody = () => {
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="Enter amount"
                         disabled={isFormDisabled}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                     />
                 </div>
 
@@ -105,7 +105,7 @@ const DonationBody = () => {
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                             placeholder="Your name"
                             disabled={isFormDisabled}
                         />
@@ -117,7 +117,7 @@ const DonationBody = () => {
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
                             placeholder="you@email.com"
                             disabled={isFormDisabled}
                         />

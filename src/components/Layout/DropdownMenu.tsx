@@ -197,13 +197,13 @@ export const donateDropdownItems = [
     icon: Heart,
     label: "Clothes",
     description: "Clothing donations",
-    href: "/donate/clothes",
+    href: "/contact",
   },
   {
     icon: ShoppingBag,
     label: "Food Items",
     description: "Food donations",
-    href: "/donate/food",
+    href: "/contact",
   },
 ];
 

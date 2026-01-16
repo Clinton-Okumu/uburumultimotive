@@ -195,14 +195,8 @@ export const donateDropdownItems = [
   },
   {
     icon: Heart,
-    label: "Clothes",
-    description: "Clothing donations",
-    href: "/contact",
-  },
-  {
-    icon: ShoppingBag,
-    label: "Food Items",
-    description: "Food donations",
+    label: "Food & Clothing",
+    description: "Clothing & food donations",
     href: "/contact",
   },
 ];
@@ -210,19 +204,19 @@ export const donateDropdownItems = [
 export const getDropdownItems = [
   {
     icon: Brain,
-    label: "Affordable Therapy",
+    label: "Uburu Therapy",
     description: "Professional mental health support",
     href: "/get/therapy",
   },
   {
     icon: ShoppingBag,
-    label: "Purchase for a cause",
+    label: "Uburu Home",
     description: "Shop for a cause",
     href: "/contact",
   },
   {
     icon: ShoppingBag,
-    label: "Book for recreation",
+    label: "Uburu Village",
     description: "Book for recreation",
     href: "/contact",
   },

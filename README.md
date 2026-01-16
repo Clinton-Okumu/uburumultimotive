@@ -26,6 +26,34 @@ A modern, responsive website for Uburu Multimove, a non-profit organization dedi
 
 ## 📦 Installation
 
+## 🚀 Deploy to Truehost (shared hosting)
+
+1. Build the frontend locally:
+```bash
+npm run build
+```
+
+2. Upload the Vite build output (`dist/`) into your Truehost `public_html/` directory.
+
+3. Upload the PHP API endpoints into `public_html/api/dpo/`:
+- `public/api/dpo/create-token.php`
+- `public/api/dpo/verify-token.php`
+
+4. Place `dpo_config.php` outside `public_html` (recommended), then set an environment variable in Truehost:
+```
+DPO_CONFIG_PATH=/home/youruser/dpo_config.php
+```
+
+5. Ensure `.htaccess` is in `public_html/` and contains the API bypass rule so PHP endpoints are not rewritten.
+
+6. Update `redirect_url` and `back_url` in `dpo_config.php` to your live HTTPS domain:
+```
+https://yourdomain.com/donate/return
+```
+
+7. Ask DPO to whitelist your hosting server IP if requests are blocked.
+
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>

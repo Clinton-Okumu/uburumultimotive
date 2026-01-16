@@ -1,5 +1,6 @@
 
 import { ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import hero from "../../assets/hero.webp";
 
 const HeroSection = ({
@@ -36,12 +37,12 @@ const HeroSection = ({
                                 <li key={index} className="flex items-center">
                                     {!isLast ? (
                                         <>
-                                            <a
-                                                href={crumb.href}
+                                            <Link
+                                                to={crumb.href}
                                                 className="text-white/90 hover:text-white transition-colors"
                                             >
                                                 {crumb.label}
-                                            </a>
+                                            </Link>
                                             <ChevronRight className="mx-2 w-4 h-4 text-white/60" />
                                         </>
                                     ) : (

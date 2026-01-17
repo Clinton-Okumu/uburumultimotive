@@ -45,11 +45,16 @@ if (empty($config['company_token'])) {
 }
 
 $amount = (float)$amount;
-$minAmount = (float)($config['min_amount'] ?? 1);
+$minAmount = 1.0;
 $maxAmount = (float)($config['max_amount'] ?? 10000000);
 if ($amount < $minAmount || $amount > $maxAmount) {
     http_response_code(400);
-    echo json_encode(['error' => 'Amount out of range']);
+    echo json_encode([
+        'error' => sprintf(
+            'Donation amount must be at least %s.',
+            rtrim(rtrim(number_format($minAmount, 2, '.', ''), '0'), '.')
+        ),
+    ]);
     exit;
 }
 

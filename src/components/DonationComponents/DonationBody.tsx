@@ -11,9 +11,56 @@ const DonationBody = () => {
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const getFriendlyErrorMessage = (message: string) => {
+    const trimmedMessage = message.trim();
+    if (trimmedMessage.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(trimmedMessage) as { error?: string };
+        if (parsed?.error) {
+          return getFriendlyErrorMessage(parsed.error);
+        }
+      } catch {
+        // Fall through to default handling.
+      }
+    }
+
+    const normalizedMessage = trimmedMessage.toLowerCase();
+    if (normalizedMessage.includes("amount out of range")) {
+      return "Donation amount must be at least 1.";
+    }
+    if (normalizedMessage.includes("invalid amount")) {
+      return "Please enter a valid donation amount.";
+    }
+    if (normalizedMessage.includes("unsupported currency")) {
+      return "This currency is not supported for donations.";
+    }
+    if (normalizedMessage.includes("missing payment url")) {
+      return "We could not start the payment. Please try again.";
+    }
+    if (
+      normalizedMessage.includes("invalid response from payment gateway") ||
+      normalizedMessage.includes("empty response from payment gateway")
+    ) {
+      return "Payment service is temporarily unavailable. Please try again.";
+    }
+    if (
+      normalizedMessage.includes("missing company token configuration") ||
+      normalizedMessage.includes("missing api endpoint configuration") ||
+      normalizedMessage.includes("missing pay url configuration") ||
+      normalizedMessage.includes("missing redirect or back url configuration") ||
+      normalizedMessage.includes("invalid redirect or back url configuration") ||
+      normalizedMessage.includes("invalid service type configuration")
+    ) {
+      return "Payment service is unavailable right now. Please try again later.";
+    }
+
+    return trimmedMessage || "Payment failed. Please try again.";
+  };
+
   const handleError = (message: string) => {
-    setErrorMessage(message || "Payment failed. Please try again.");
-    toast.error(message || "Payment failed. Please try again.");
+    const friendlyMessage = getFriendlyErrorMessage(message);
+    setErrorMessage(friendlyMessage);
+    toast.error(friendlyMessage);
     setPaymentStatus("idle");
   };
 
@@ -51,12 +98,13 @@ const DonationBody = () => {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          errorText
-            ? `Unable to start payment. ${errorText}`
-            : "Unable to start payment.",
-        );
+        const contentType = response.headers.get("content-type") || "";
+        const errorPayload = contentType.includes("application/json")
+          ? await response.json()
+          : null;
+        const errorText = !errorPayload ? await response.text() : "";
+        const apiMessage = errorPayload?.error || errorText;
+        throw new Error(apiMessage || "Unable to start payment.");
       }
 
       const data = await response.json();
@@ -95,6 +143,9 @@ const DonationBody = () => {
             <div>
               <h3 className="font-bold text-red-800 mb-1">Payment Failed</h3>
               <p className="text-red-700">{errorMessage}</p>
+              <p className="text-sm text-red-600 mt-1">
+                Please check your amount and try again.
+              </p>
             </div>
           </div>
         )}

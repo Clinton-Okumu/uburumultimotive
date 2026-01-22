@@ -56,7 +56,7 @@ const RequestFormSection = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-5 h-5" />
-                <span>therapy@uburumultimotive.org</span>
+                <span>therapy@uburumultimove.org</span>
               </div>
             </div>
           </div>
@@ -96,7 +96,7 @@ const RequestFormSection = () => {
                   <Mail className="w-5 h-5 text-yellow-600 mt-1" />
                   <div>
                     <p className="font-semibold text-gray-900">Email</p>
-                    <p className="text-gray-600">therapy@uburumultimotive.org</p>
+                    <p className="text-gray-600">therapy@uburumultimove.org</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

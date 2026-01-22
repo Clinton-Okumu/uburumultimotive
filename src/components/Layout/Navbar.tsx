@@ -47,15 +47,15 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
         {/* Logo Section */}
         <Link to="/" className="flex items-center gap-3 group">
-          <img
-            src={logo}
-            alt="Uburumultimotive logo"
-            className="w-10 h-10 rounded-full object-cover ring-2 ring-yellow-400 group-hover:ring-yellow-300 transition-all duration-300 shadow-lg shadow-yellow-500/20"
-          />
-          <span className="text-white text-xl font-bold tracking-tight">
-            Uburu<span className="text-yellow-400">Multimotive</span>
-          </span>
-        </Link>
+            <img
+              src={logo}
+              alt="Uburumultimove logo"
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-yellow-400 group-hover:ring-yellow-300 transition-all duration-300 shadow-lg shadow-yellow-500/20"
+            />
+            <span className="text-white text-xl font-bold tracking-tight">
+              Uburu<span className="text-yellow-400">Multimove</span>
+            </span>
+          </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden lg:flex items-center gap-10">

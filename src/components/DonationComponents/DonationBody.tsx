@@ -4,12 +4,22 @@ import toast from "react-hot-toast";
 
 type PaymentStatus = "idle" | "processing";
 
+type CurrencyCode = "KES" | "USD" | "EUR" | "GBP";
+
 const DonationBody = () => {
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState<CurrencyCode>("KES");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const currencyOptions: { code: CurrencyCode; label: string }[] = [
+    { code: "KES", label: "KES (Kenyan Shilling)" },
+    { code: "USD", label: "USD (US Dollar)" },
+    { code: "EUR", label: "EUR (Euro)" },
+    { code: "GBP", label: "GBP (Pound Sterling)" },
+  ];
 
   const getFriendlyErrorMessage = (message: string) => {
     const trimmedMessage = message.trim();
@@ -88,7 +98,7 @@ const DonationBody = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: numericAmount,
-          currency: "KES",
+          currency,
           customer: {
             name: name.trim(),
             email: email.trim(),
@@ -151,18 +161,40 @@ const DonationBody = () => {
         )}
 
         <div className="mb-8">
-          <label className="block mb-2 text-gray-700 font-medium">
-            Donation Amount
-          </label>
-          <input
-            type="number"
-            min={1}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            disabled={isFormDisabled}
-            className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block mb-2 text-gray-700 font-medium">
+                Currency
+              </label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as CurrencyCode)}
+                disabled={isFormDisabled}
+                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                {currencyOptions.map((option) => (
+                  <option key={option.code} value={option.code}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block mb-2 text-gray-700 font-medium">
+                Donation Amount
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={`Enter amount in ${currency}`}
+                disabled={isFormDisabled}
+                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -197,8 +229,8 @@ const DonationBody = () => {
 
         <div className="mb-10">
           <p className="text-sm text-gray-600 mb-4">
-            You'll be redirected to a secure DPO payment page to choose M-Pesa
-            or Card.
+            You'll be redirected to a secure DPO payment page to complete your
+            donation.
           </p>
         </div>
 

@@ -57,7 +57,7 @@ https://yourdomain.com/donate/return
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd uburumultimotive
+cd uburumultimove
 ```
 
 2. Install dependencies:

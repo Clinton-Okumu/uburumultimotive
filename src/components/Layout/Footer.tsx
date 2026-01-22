@@ -60,12 +60,12 @@ const Footer = () => {
             <div className="flex items-center gap-3 mb-6">
               <img
                 src={logo}
-                alt="UburuMultimotive logo"
+                alt="UburuMultimove logo"
                 className="w-12 h-12 object-contain"
                 loading="lazy"
               />
               <span className="font-black text-2xl tracking-tighter">
-                UBURU<span className="text-yellow-400">MULTIMOTIVE</span>
+                UBURU<span className="text-yellow-400">MULTIMOVE</span>
               </span>
             </div>
             <p className="text-gray-400 mb-8 max-w-sm leading-relaxed text-base">
@@ -146,7 +146,7 @@ const Footer = () => {
           <p className="text-gray-500 text-sm font-medium">
             © {currentYear}{" "}
             <span className="text-neutral-300 font-bold uppercase tracking-wider">
-              UburuMultimotive
+              UburuMultimove
             </span>
             . Empowering change through action.
           </p>

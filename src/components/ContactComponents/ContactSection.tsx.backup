@@ -629,7 +629,7 @@ const ContactInfoSection = () => {
             icon: Mail,
             label: "Drop a Line",
             title: "Email Us",
-            details: ["uburumultimotive@gmail.com"],
+            details: ["uburumultimove@gmail.com"],
             isPrimary: true,
         },
         {

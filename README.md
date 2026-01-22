@@ -1,108 +1,105 @@
 # Uburu Multimove - Homeless Shelter NGO
 
-*"Touching one homeless person at a time"*
+"Touching one homeless person at a time"
 
-A modern, responsive website for Uburu Multimove, a non-profit organization dedicated to helping homeless individuals through shelter, support, and community outreach programs.
+A modern, responsive website for Uburu Multimove, a non-profit organization supporting homeless individuals through shelter, meals, and community outreach.
 
-## 🌟 Features
+## Features
 
-- **Home Page**: Hero section, about overview, causes showcase, testimonials, and volunteer opportunities
-- **About Page**: Organization mission, vision, statistics, and detailed information
-- **Causes Page**: Current initiatives and programs
-- **Blog Page**: News, updates, and stories from the community
-- **Contact Page**: Get in touch with the organization
-- **Donate Page**: Support the cause through donations
-- **Responsive Design**: Mobile-first approach with Tailwind CSS
-- **Modern UI**: Clean, accessible design with smooth animations
+- Home page with hero, causes, testimonials, and volunteer call-to-action
+- About page with mission and impact information
+- Causes, gallery, blog, and contact pages
+- Donations flow (DPO hosted payment page)
+- Responsive UI built with Tailwind CSS
 
-## 🚀 Tech Stack
+## Tech stack
 
-- **Frontend**: React 19 with TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **Routing**: React Router DOM
-- **Icons**: Lucide React
-- **Development**: ESLint, TypeScript
+- React 19 + TypeScript
+- Vite
+- Tailwind CSS
+- React Router
 
-## 📦 Installation
+## Local development
 
-## 🚀 Deploy to Truehost (shared hosting)
+1. Clone and install:
 
-1. Build the frontend locally:
-```bash
-npm run build
-```
-
-2. Upload the Vite build output (`dist/`) into your Truehost `public_html/` directory.
-
-3. Upload the PHP API endpoints into `public_html/api/dpo/`:
-- `public/api/dpo/create-token.php`
-- `public/api/dpo/verify-token.php`
-
-4. Place `dpo_config.php` outside `public_html` (recommended), then set an environment variable in Truehost:
-```
-DPO_CONFIG_PATH=/home/youruser/dpo_config.php
-```
-
-5. Ensure `.htaccess` is in `public_html/` and contains the API bypass rule so PHP endpoints are not rewritten.
-
-6. Update `redirect_url` and `back_url` in `dpo_config.php` to your live HTTPS domain:
-```
-https://yourdomain.com/donate/return
-```
-
-7. Ask DPO to whitelist your hosting server IP if requests are blocked.
-
-
-1. Clone the repository:
 ```bash
 git clone <repository-url>
 cd uburumultimove
-```
-
-2. Install dependencies:
-```bash
 npm install
 ```
 
-3. Start the development server:
+2. Start the dev server:
+
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:5173](http://localhost:5173) in your browser
+Open http://localhost:5173
 
-## 🛠️ Available Scripts
+## Deployment (Truehost shared hosting)
+
+This project is a Vite SPA plus a small set of PHP endpoints used for DPO payments.
+
+1. Build:
+
+```bash
+npm run build
+```
+
+2. Upload frontend:
+
+- Upload `dist/` to `public_html/`
+
+3. Upload payment endpoints:
+
+- Upload `public/api/dpo/create-token.php` to `public_html/api/dpo/create-token.php`
+- Upload `public/api/dpo/verify-token.php` to `public_html/api/dpo/verify-token.php`
+
+4. Ensure rewrites do not break the API:
+
+- Upload `.htaccess` to `public_html/`
+- Confirm it includes an API bypass rule (this repo uses `RewriteRule ^api/ - [L]`)
+
+5. Configure DPO server-side settings (recommended outside `public_html`):
+
+- Copy `dpo_config.example.php` to a secure path, for example:
+  - `/home/<user>/dpo_config.php`
+- Set the hosting environment variable:
+
+```text
+DPO_CONFIG_PATH=/home/<user>/dpo_config.php
+```
+
+- Set `redirect_url` and `back_url` in your config to your live domain, for example:
+
+```text
+https://yourdomain.com/donate/return
+```
+
+Notes:
+
+- `dpo_config.php` contains secrets and should not be committed.
+- The donation form supports these currencies (must be enabled on your DPO account): `KES`, `USD`, `EUR`, `GBP`.
+
+## Available scripts
 
 - `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
+- `npm run build` - Typecheck and build production assets
+- `npm run preview` - Preview production build locally
 - `npm run lint` - Run ESLint
 
-## 📁 Project Structure
+## Project structure
 
-```
+```text
 src/
-├── assets/          # Images and media files
-├── components/      # Reusable UI components
-│   ├── AboutComponents/
-│   ├── BlogComponents/
-│   ├── CausesComponents/
-│   ├── ContactComponents/
-│   ├── DonationComponents/
-│   ├── HomeComponents/
-│   ├── Layout/      # Navigation, footer, layout wrapper
-│   └── shared/      # Shared components like Button
-├── pages/           # Page components
-└── main.tsx         # Application entry point
+  assets/
+  components/
+  pages/
+  main.tsx
+public/
+  api/
+    dpo/
+      create-token.php
+      verify-token.php
 ```
-
-## 📞 Contact
-
-For more information about Uburu Multimove or to get involved:
-
-- Visit our website
-- Contact us through the Contact page
-- Follow us on social media
-
-*Built with ❤️ for the homeless community*

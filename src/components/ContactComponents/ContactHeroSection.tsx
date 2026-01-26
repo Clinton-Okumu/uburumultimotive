@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import hero from "../../assets/hero.webp";
 
 const HeroSection = ({
-    title = "Contact & Donate",
+    title = "Contact",
     breadcrumbs = [
         { label: "Home", href: "/" },
-        { label: "Contact & Donate", href: "/contact" },
+        { label: "Contact", href: "/contact" },
     ],
     image = hero,
 }) => {
@@ -58,7 +58,7 @@ const HeroSection = ({
                     {title}
                 </h1>
                 <p className="text-lg text-white/90 max-w-2xl leading-relaxed">
-                    Reach out with questions or donate food and clothing to help those in need. Every contribution makes a difference.
+                    Reach out with questions, support requests, or partnership ideas. We’ll respond as quickly as we can.
                 </p>
             </div>
         </section>

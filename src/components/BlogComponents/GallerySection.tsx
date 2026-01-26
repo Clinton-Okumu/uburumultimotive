@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import img1 from "../../assets/pic19.webp";
 import img5 from "../../assets/pic2.webp";
 import img2 from "../../assets/pic20.webp";
@@ -111,6 +112,26 @@ const impactMetrics = [
   { value: 4, label: "Shelters Built", icon: Wrench },
 ];
 
+const impactLabels: Record<string, string> = {
+  familiesHelped: "Families",
+  mealsServed: "Meals",
+  volunteers: "Volunteers",
+  childrenHelped: "Children",
+  clothesProvided: "Clothes",
+  donors: "Donors",
+  familiesSupported: "Families",
+  unitsBuilt: "Units",
+  workers: "Workers",
+  participants: "Participants",
+  sessionsHeld: "Sessions",
+  counselors: "Counselors",
+  attendees: "Attendees",
+  familiesGifted: "Families",
+  volunteerHours: "Hours",
+  residentsBenefited: "Residents",
+  tasksCompleted: "Tasks",
+};
+
 const GallerySection = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedImage, setSelectedImage] = useState<
@@ -134,17 +155,22 @@ const GallerySection = () => {
   });
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-b from-white to-gray-50">
-      <div className="container mx-auto max-w-7xl">
+    <section className="relative py-24 px-4 bg-gradient-to-b from-white via-white to-gray-50 overflow-hidden">
+      <div className="absolute -top-40 -right-32 h-96 w-96 rounded-full bg-yellow-400/10 blur-3xl" />
+      <div className="absolute -bottom-48 -left-32 h-[420px] w-[420px] rounded-full bg-neutral-900/5 blur-3xl" />
+      <div className="container mx-auto max-w-7xl relative">
         {/* Impact Metrics Section */}
         <div className="mb-16">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Our Impact
+            <span className="inline-flex items-center gap-2 bg-neutral-900 text-yellow-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-5">
+              Community Impact
+            </span>
+            <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4 tracking-tight">
+              Our Impact in Numbers
             </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Every number represents a life changed through your generous
-              support
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              Each number reflects a family supported, a meal shared, or a safe
+              night restored.
             </p>
           </div>
 
@@ -155,10 +181,10 @@ const GallerySection = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
+                className="bg-white border border-neutral-100 rounded-2xl p-6 text-center shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all duration-300"
               >
                 <div className="flex justify-center mb-3">
-                  <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-400/30">
                     <metric.icon className="w-6 h-6 text-gray-900" />
                   </div>
                 </div>
@@ -175,12 +201,14 @@ const GallerySection = () => {
 
         {/* Section Header */}
         <div className="text-center mb-10">
-          <h2 className="text-4xl font-bold text-gray-900 mb-3">
+          <span className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-800 px-5 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-4">
+            Impact Gallery
+          </span>
+          <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-3 tracking-tight">
             Stories of Change
           </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Browse through our updates to see the real impact of your
-            support
+          <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+            Real moments of care, dignity, and hope from our community.
           </p>
         </div>
 
@@ -208,7 +236,7 @@ const GallerySection = () => {
           {filteredImages.map((item) => (
             <div
               key={item.id}
-              className="group bg-white border border-gray-200 rounded-2xl overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+              className="group bg-white border border-neutral-100 rounded-[2rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
               onClick={() => setSelectedImage(item)}
             >
               <div className="relative h-72 overflow-hidden bg-gray-100">
@@ -238,11 +266,23 @@ const GallerySection = () => {
               </div>
 
               <div className="p-5 bg-white">
-                <div className="flex items-center justify-end">
-                  <button className="text-yellow-500 hover:text-yellow-600 font-semibold text-sm flex items-center gap-1 transition-colors">
-                    View Full Story
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {Object.entries(item.impact)
+                    .slice(0, 2)
+                    .map(([key, value]) => (
+                      <span
+                        key={key}
+                        className="text-[11px] font-black uppercase tracking-wide bg-neutral-100 text-neutral-700 px-3 py-1.5 rounded-full"
+                      >
+                        {value as number} {impactLabels[key] ?? key.replace(/([A-Z])/g, " $1").trim()}
+                      </span>
+                    ))}
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400">
+                    Read Story
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-yellow-500" />
                 </div>
               </div>
             </div>
@@ -342,12 +382,18 @@ const GallerySection = () => {
 
                   {/* CTA */}
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <button className="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold uppercase tracking-wide py-4 px-8 rounded-xl transition-colors">
+                    <Link
+                      to="/donate"
+                      className="flex-1 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold uppercase tracking-wide py-4 px-8 rounded-xl transition-colors text-center"
+                    >
                       Make a Donation
-                    </button>
-                    <button className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold uppercase tracking-wide py-4 px-8 rounded-xl transition-colors">
+                    </Link>
+                    <Link
+                      to="/volunteer"
+                      className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold uppercase tracking-wide py-4 px-8 rounded-xl transition-colors text-center"
+                    >
                       Volunteer With Us
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -360,4 +406,3 @@ const GallerySection = () => {
 };
 
 export default GallerySection;
-

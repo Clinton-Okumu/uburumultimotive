@@ -1,8 +1,6 @@
 import {
   Brain,
   ChevronDown,
-  CreditCard,
-  Heart,
   ShoppingBag,
 } from "lucide-react";
 import React, {
@@ -186,38 +184,23 @@ const DropdownMenu = React.memo(function DropdownMenu({
   );
 });
 
-export const donateDropdownItems = [
-  {
-    icon: CreditCard,
-    label: "Money",
-    description: "Card & M-Pesa donations",
-    href: "/donate/money",
-  },
-  {
-    icon: Heart,
-    label: "Food & Clothing",
-    description: "Clothing & food donations",
-    href: "/contact",
-  },
-];
-
 export const getDropdownItems = [
   {
     icon: Brain,
     label: "Uburu Therapy",
-    description: "Professional mental health support",
+    description: "Book for professional therapy",
     href: "/get/therapy",
   },
   {
     icon: ShoppingBag,
     label: "Uburu Home",
-    description: "Shop for a cause",
+    description: "Buy something",
     href: "/contact",
   },
   {
     icon: ShoppingBag,
     label: "Uburu Village",
-    description: "Book for recreation",
+    description: "Outdoor adventures",
     href: "/contact",
   },
 ];

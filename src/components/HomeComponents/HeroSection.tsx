@@ -1,11 +1,11 @@
 import { ChevronDown, HandHeart } from "lucide-react";
 import { useState } from "react";
 import hero from "../../assets/hero.webp";
-import { donateDropdownItems, getDropdownItems } from "../Layout/DropdownMenu";
+import { Link } from "react-router-dom";
+import { getDropdownItems } from "../Layout/DropdownMenu";
 import Button from "../shared/Button";
 
 const HeroSection = () => {
-  const [isDonateOpen, setIsDonateOpen] = useState(false);
   const [isGetOpen, setIsGetOpen] = useState(false);
 
   return (
@@ -42,38 +42,12 @@ const HeroSection = () => {
         {/* CTA Buttons with Dropdowns */}
         <div className="mt-5 flex flex-col sm:flex-row gap-4">
           <div className="relative">
-            <Button
-              className="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-8 border-none shadow-lg shadow-yellow-500/20 flex items-center gap-2"
-              onClick={() => setIsDonateOpen(!isDonateOpen)}
-            >
-              <HandHeart className="w-5 h-5" />
-              Donate
-              <ChevronDown className={`w-4 h-4 transition-transform ${isDonateOpen ? 'rotate-180' : ''}`} />
-            </Button>
-
-            {isDonateOpen && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-2xl z-50">
-                <div className="p-2">
-                  {donateDropdownItems.map((item, index) => (
-                    <a
-                      key={index}
-                      href={item.href}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                      <div className="shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <item.icon className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">{item.label}</p>
-                        {item.description && (
-                          <p className="text-xs text-gray-500 line-clamp-1">{item.description}</p>
-                        )}
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
+            <Link to="/donate" className="inline-flex">
+              <Button className="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-8 border-none shadow-lg shadow-yellow-500/20 flex items-center gap-2">
+                <HandHeart className="w-5 h-5" />
+                Donate
+              </Button>
+            </Link>
           </div>
 
           <div className="relative">
@@ -86,12 +60,13 @@ const HeroSection = () => {
             </Button>
 
             {isGetOpen && (
-              <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-2xl z-50">
+              <div className="absolute bottom-full mb-2 left-0 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl z-50 sm:bottom-auto sm:mb-0 sm:top-full sm:mt-2">
                 <div className="p-2">
                   {getDropdownItems.map((item, index) => (
                     <a
                       key={index}
                       href={item.href}
+                      onClick={() => setIsGetOpen(false)}
                       className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-colors"
                     >
                       <div className="shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">

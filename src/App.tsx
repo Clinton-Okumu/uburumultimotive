@@ -5,6 +5,9 @@ import Gallery from './pages/Gallery';
 import Causes from './pages/Causes';
 import Contact from './pages/Contact';
 import Donate from './pages/Donate';
+import DonateLanding from './pages/DonateLanding';
+import DonateItems from './pages/DonateItems';
+import Volunteer from './pages/Volunteer';
 import DonateReturn from './pages/DonateReturn';
 import Home from './pages/Home';
 import Therapy from './pages/Therapy';
@@ -20,8 +23,11 @@ function App() {
                     <Route path="/Causes" element={<Causes />} />
                     <Route path="/Gallery" element={<Gallery />} />
                     <Route path="/Contact" element={<Contact />} />
+                    <Route path="/donate" element={<DonateLanding />} />
                     <Route path="/donate/money" element={<Donate />} />
+                    <Route path="/donate/items" element={<DonateItems />} />
                     <Route path="/donate/return" element={<DonateReturn />} />
+                    <Route path="/volunteer" element={<Volunteer />} />
                     <Route path="/get/therapy" element={<Therapy />} />
                 </Routes>
             </Layout>

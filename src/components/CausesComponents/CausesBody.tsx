@@ -1,10 +1,38 @@
 import { ArrowRight, Heart, Home, Sparkles, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import img1 from "../../assets/pic5.webp";
 import img2 from "../../assets/pic6.webp";
 import img3 from "../../assets/pic7.webp";
 import Button from "../shared/Button";
 
 const CausesBody = () => {
+    const impactStats = [
+        {
+            id: 1,
+            label: "Families Supported",
+            value: "1,200+",
+            icon: Home,
+        },
+        {
+            id: 2,
+            label: "Meals Served",
+            value: "4,800+",
+            icon: Heart,
+        },
+        {
+            id: 3,
+            label: "Volunteers Engaged",
+            value: "240+",
+            icon: Users,
+        },
+        {
+            id: 4,
+            label: "Community Programs",
+            value: "12",
+            icon: Sparkles,
+        },
+    ];
+
     const causes = [
         {
             id: 1,
@@ -12,6 +40,9 @@ const CausesBody = () => {
             description: "Providing nutritious meals to those in need, ensuring no one goes hungry. Our feeding program reaches communities across the region, delivering hope one meal at a time.",
             icon: Heart,
             image: img1,
+            highlights: ["Hot meals", "Family support", "Nutrition kits"],
+            ctaLabel: "Support Meals",
+            ctaHref: "/donate",
         },
         {
             id: 2,
@@ -19,6 +50,9 @@ const CausesBody = () => {
             description: "Offering essential clothing and safe shelter to vulnerable individuals and families. We believe everyone deserves dignity, warmth, and a place to call home.",
             icon: Home,
             image: img2,
+            highlights: ["Safe shelter", "Warm clothing", "Emergency care"],
+            ctaLabel: "Donate Items",
+            ctaHref: "/donate/items",
         },
         {
             id: 3,
@@ -26,6 +60,9 @@ const CausesBody = () => {
             description: "Supporting holistic recovery and reintegration through comprehensive welfare programs. We empower individuals to rebuild their lives with dignity and purpose.",
             icon: Users,
             image: img3,
+            highlights: ["Counseling", "Skills training", "Community care"],
+            ctaLabel: "Join the Team",
+            ctaHref: "/volunteer",
         },
     ];
 
@@ -34,7 +71,7 @@ const CausesBody = () => {
             <div className="container mx-auto px-6 max-w-7xl">
 
                 {/* Section Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-14 gap-8">
                     <div className="max-w-2xl">
                         <span className="inline-flex items-center gap-2 bg-yellow-400 text-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-[0.2em] mb-6">
                             <Sparkles className="w-3 h-3" />
@@ -44,9 +81,43 @@ const CausesBody = () => {
                             Causes That <span className="text-yellow-500">Matter</span>
                         </h2>
                     </div>
-                    <p className="text-lg text-gray-500 max-w-md font-medium leading-tight">
-                        We are committed to making a lasting difference in the lives of those who need it most through our dedicated programs.
-                    </p>
+                    <div className="max-w-md space-y-4">
+                        <p className="text-lg text-gray-500 font-medium leading-tight">
+                            We focus on dignity-first care: food, shelter, and
+                            rehabilitation that restores stability and hope.
+                        </p>
+                        <div className="flex flex-wrap gap-3">
+                            <span className="text-xs font-black uppercase tracking-widest text-neutral-500 bg-neutral-100 px-3 py-1.5 rounded-full">
+                                Community First
+                            </span>
+                            <span className="text-xs font-black uppercase tracking-widest text-neutral-500 bg-neutral-100 px-3 py-1.5 rounded-full">
+                                Long-Term Impact
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Impact Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+                    {impactStats.map((stat) => {
+                        const Icon = stat.icon;
+                        return (
+                            <div
+                                key={stat.id}
+                                className="bg-neutral-50 border border-neutral-100 rounded-2xl p-6 text-center shadow-sm hover:shadow-lg transition-all"
+                            >
+                                <div className="mx-auto mb-4 w-12 h-12 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg shadow-yellow-400/30">
+                                    <Icon className="w-6 h-6 text-black" />
+                                </div>
+                                <p className="text-3xl font-black text-gray-900">
+                                    {stat.value}
+                                </p>
+                                <p className="text-xs font-bold uppercase tracking-widest text-neutral-500 mt-2">
+                                    {stat.label}
+                                </p>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 {/* Causes Grid */}
@@ -84,11 +155,25 @@ const CausesBody = () => {
                                         {cause.description}
                                     </p>
 
+                                    <div className="flex flex-wrap gap-2 mb-8">
+                                        {cause.highlights.map((highlight) => (
+                                            <span
+                                                key={highlight}
+                                                className="text-[10px] font-black uppercase tracking-widest text-neutral-500 bg-white border border-neutral-200 px-3 py-1.5 rounded-full"
+                                            >
+                                                {highlight}
+                                            </span>
+                                        ))}
+                                    </div>
+
                                     <div className="mt-auto">
-                                        <button className="w-full flex items-center justify-between py-4 px-6 bg-white border border-neutral-200 rounded-xl font-black uppercase text-xs tracking-widest group/btn hover:bg-black hover:text-white transition-all duration-300">
-                                            Learn More
+                                        <Link
+                                            to={cause.ctaHref}
+                                            className="w-full flex items-center justify-between py-4 px-6 bg-white border border-neutral-200 rounded-xl font-black uppercase text-xs tracking-widest group/btn hover:bg-black hover:text-white transition-all duration-300"
+                                        >
+                                            {cause.ctaLabel}
                                             <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform text-yellow-500" />
-                                        </button>
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -113,12 +198,16 @@ const CausesBody = () => {
                             </div>
 
                             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                                <Button className="bg-yellow-400 hover:bg-yellow-300 text-black px-10 py-5 text-sm font-black uppercase tracking-widest rounded-2xl">
-                                    Donate Now
-                                </Button>
-                                <button className="bg-neutral-800 text-white px-10 py-5 text-sm font-black uppercase tracking-widest rounded-2xl hover:bg-neutral-700 transition-all border border-neutral-700">
-                                    Become a Volunteer
-                                </button>
+                                <Link to="/donate" className="w-full sm:w-auto">
+                                    <Button className="bg-yellow-400 hover:bg-yellow-300 text-black px-10 py-5 text-sm font-black uppercase tracking-widest rounded-2xl w-full">
+                                        Donate Now
+                                    </Button>
+                                </Link>
+                                <Link to="/volunteer" className="w-full sm:w-auto">
+                                    <button className="bg-neutral-800 text-white px-10 py-5 text-sm font-black uppercase tracking-widest rounded-2xl hover:bg-neutral-700 transition-all border border-neutral-700 w-full">
+                                        Become a Volunteer
+                                    </button>
+                                </Link>
                             </div>
                         </div>
                     </div>

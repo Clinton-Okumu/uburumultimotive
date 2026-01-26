@@ -2,10 +2,6 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.webp";
-import Button from "../shared/Button";
-
-const donateUrl =
-  "https://shop.directpay.online/paymybills/UBURUMULTIMOVEHOMELESSSHELTER?utm_source=ig&utm_medium=social&utm_content=link_in_bio";
 
 type NavLink = {
   id: number;
@@ -19,6 +15,7 @@ const NavbarLinks: NavLink[] = [
   { id: 3, title: "Causes", link: "/causes" },
   { id: 4, title: "Gallery", link: "/gallery" },
   { id: 5, title: "Contact", link: "/contact" },
+  { id: 6, title: "Volunteer", link: "/volunteer" },
 ];
 
 const Navbar = () => {
@@ -114,18 +111,6 @@ const Navbar = () => {
               {link.title}
             </Link>
           ))}
-          <div className="pt-6 border-t border-neutral-800">
-            <a
-              href={donateUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full"
-            >
-              <Button fullWidth className="py-4 text-lg">
-                Make a Donation
-              </Button>
-            </a>
-          </div>
         </div>
       </div>
     </nav>

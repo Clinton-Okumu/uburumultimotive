@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 .env
 dpo_config.php
+mail_config.php

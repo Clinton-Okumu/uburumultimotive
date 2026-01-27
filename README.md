@@ -56,6 +56,14 @@ npm run build
 - Upload `public/api/dpo/create-token.php` to `public_html/api/dpo/create-token.php`
 - Upload `public/api/dpo/verify-token.php` to `public_html/api/dpo/verify-token.php`
 
+Upload form endpoints:
+
+- Upload the entire `public/api/forms/` directory (includes shared helpers)
+- Upload `public/api/forms/contact.php` to `public_html/api/forms/contact.php`
+- Upload `public/api/forms/volunteer.php` to `public_html/api/forms/volunteer.php`
+- Upload `public/api/forms/donate-items.php` to `public_html/api/forms/donate-items.php`
+- Upload `public/api/forms/therapy.php` to `public_html/api/forms/therapy.php`
+
 4. Ensure rewrites do not break the API:
 
 - Upload `.htaccess` to `public_html/`
@@ -80,7 +88,25 @@ https://yourdomain.com/donate/return
 Notes:
 
 - `dpo_config.php` contains secrets and should not be committed.
-- The donation form supports these currencies (must be enabled on your DPO account): `KES`, `USD`, `EUR`, `GBP`.
+- The donation form supports these currencies (must be enabled on your DPO account): `KES`, `USD`.
+
+## Form email delivery
+
+Contact, volunteer, donate-items, and therapy forms submit to PHP endpoints under `public/api/forms/`.
+
+Recommended setup is SMTP from the server.
+
+1. Copy `mail_config.example.php` to a secure path, for example:
+
+- `/home/<user>/mail_config.php`
+
+2. Set the hosting environment variable:
+
+```text
+MAIL_CONFIG_PATH=/home/<user>/mail_config.php
+```
+
+3. Update recipients in the config (`to.default`, and optionally per form: `to.contact`, `to.volunteer`, `to.donate_items`, `to.therapy`).
 
 ## Available scripts
 

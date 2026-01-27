@@ -4,12 +4,57 @@ import {
   HeartHandshake,
   Users,
 } from "lucide-react";
+import { useState } from "react";
 import Button from "../shared/Button";
 
 const VolunteerFormSection = () => {
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
+  const [statusMessage, setStatusMessage] = useState("");
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Volunteer submission");
+    if (status === "sending") return;
+
+    setStatus("sending");
+    setStatusMessage("");
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const payload = {
+      firstName: (formData.get("firstName") || "").toString().trim(),
+      lastName: (formData.get("lastName") || "").toString().trim(),
+      email: (formData.get("email") || "").toString().trim(),
+      phone: (formData.get("phone") || "").toString().trim(),
+      location: (formData.get("location") || "").toString().trim(),
+      availability: (formData.get("availability") || "").toString().trim(),
+      frequency: (formData.get("frequency") || "").toString().trim(),
+      interests: formData.getAll("interests").map((v) => v.toString()),
+      message: (formData.get("message") || "").toString().trim(),
+      company: (formData.get("company") || "").toString(),
+    };
+
+    try {
+      const response = await fetch("/api/forms/volunteer.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || "Unable to submit the form.");
+      }
+
+      setStatus("sent");
+      setStatusMessage("Thanks for volunteering. We'll contact you soon.");
+      form.reset();
+    } catch (error) {
+      setStatus("error");
+      setStatusMessage(
+        error instanceof Error ? error.message : "Unable to submit the form.",
+      );
+    }
   };
 
   return (
@@ -34,17 +79,26 @@ const VolunteerFormSection = () => {
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-6">
+              <input
+                type="text"
+                name="company"
+                tabIndex={-1}
+                autoComplete="off"
+                className="hidden"
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input
                   type="text"
                   name="firstName"
                   placeholder="First Name*"
+                  required
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                 />
                 <input
                   type="text"
                   name="lastName"
                   placeholder="Last Name*"
+                  required
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                 />
               </div>
@@ -53,12 +107,14 @@ const VolunteerFormSection = () => {
                   type="email"
                   name="email"
                   placeholder="Email Address*"
+                  required
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                 />
                 <input
                   type="tel"
                   name="phone"
                   placeholder="Phone Number*"
+                  required
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                 />
               </div>
@@ -66,6 +122,7 @@ const VolunteerFormSection = () => {
                 type="text"
                 name="location"
                 placeholder="Location (City / Area)*"
+                required
                 className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
               />
 
@@ -74,6 +131,7 @@ const VolunteerFormSection = () => {
                   name="availability"
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                   defaultValue=""
+                  required
                 >
                   <option value="" disabled>
                     Availability*
@@ -87,6 +145,7 @@ const VolunteerFormSection = () => {
                   name="frequency"
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                   defaultValue=""
+                  required
                 >
                   <option value="" disabled>
                     Commitment*
@@ -129,8 +188,22 @@ const VolunteerFormSection = () => {
                 className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all resize-none"
               />
 
-              <Button className="w-full py-6 bg-black text-black-400 hover:bg-neutral-800 rounded-[1.5rem] text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                Submit Volunteer Form
+              {status !== "idle" && (
+                <p
+                  className={`text-sm font-bold ${
+                    status === "sent" ? "text-green-700" : "text-red-700"
+                  }`}
+                >
+                  {statusMessage}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={status === "sending"}
+                className="w-full py-6 bg-black text-black-400 hover:bg-neutral-800 rounded-[1.5rem] text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3"
+              >
+                {status === "sending" ? "Submitting..." : "Submit Volunteer Form"}
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </form>

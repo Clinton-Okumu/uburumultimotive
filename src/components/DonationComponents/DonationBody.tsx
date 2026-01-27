@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 
 type PaymentStatus = "idle" | "processing";
 
-type CurrencyCode = "KES" | "USD" | "EUR" | "GBP";
+type CurrencyCode = "KES" | "USD";
 
 const DonationBody = () => {
   const [amount, setAmount] = useState("");
@@ -17,8 +17,6 @@ const DonationBody = () => {
   const currencyOptions: { code: CurrencyCode; label: string }[] = [
     { code: "KES", label: "KES (Kenyan Shilling)" },
     { code: "USD", label: "USD (US Dollar)" },
-    { code: "EUR", label: "EUR (Euro)" },
-    { code: "GBP", label: "GBP (Pound Sterling)" },
   ];
 
   const getFriendlyErrorMessage = (message: string) => {

@@ -8,7 +8,7 @@ return [
     'back_url' => 'https://uburumultimovehs.org/donate/return',
     'service_type' => '100026',
     'default_currency' => 'KES',
-    'allowed_currencies' => ['KES', 'USD', 'EUR', 'GBP'],
+    'allowed_currencies' => ['KES', 'USD'],
     'min_amount' => 10,
     'max_amount' => 1000000,
     'service_description' => 'Donation',

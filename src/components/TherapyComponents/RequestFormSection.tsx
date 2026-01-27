@@ -15,6 +15,8 @@ const RequestFormSection = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -27,11 +29,43 @@ const RequestFormSection = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Therapy Request:", formData);
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    if (submitting) return;
+
+    setSubmitting(true);
+    setSubmitError("");
+
+    try {
+      const response = await fetch("/api/forms/therapy.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, company: "" }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || "Unable to submit the request.");
+      }
+
+      setSubmitted(true);
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        age: "",
+        therapyType: "",
+        preferredMode: "",
+        preferredTime: "",
+        message: "",
+      });
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Unable to submit the request.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -122,7 +156,14 @@ const RequestFormSection = () => {
           </div>
 
           <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-8 shadow-lg">
+             <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-8 shadow-lg">
+               <input
+                 type="text"
+                 name="company"
+                 tabIndex={-1}
+                 autoComplete="off"
+                 className="hidden"
+               />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
@@ -276,12 +317,19 @@ const RequestFormSection = () => {
                 />
               </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-yellow-500 text-black hover:bg-yellow-400 py-4 text-lg"
-              >
-                Submit Request
-              </Button>
+               {submitError && (
+                 <p className="text-sm font-bold text-red-700 mb-4">
+                   {submitError}
+                 </p>
+               )}
+
+               <Button
+                 type="submit"
+                 disabled={submitting}
+                 className="w-full bg-yellow-500 text-black hover:bg-yellow-400 py-4 text-lg"
+               >
+                 {submitting ? "Submitting..." : "Submit Request"}
+               </Button>
             </form>
           </div>
         </div>

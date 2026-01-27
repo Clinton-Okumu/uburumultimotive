@@ -5,6 +5,7 @@ import {
   Phone,
   Send,
 } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import Button from "../shared/Button";
 
@@ -67,9 +68,49 @@ const ContactInfoCard = ({
 };
 
 const ContactFormSection = () => {
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
+  const [statusMessage, setStatusMessage] = useState("");
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Contact submission");
+
+    if (status === "sending") return;
+    setStatus("sending");
+    setStatusMessage("");
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const payload = {
+      firstName: (formData.get("firstName") || "").toString().trim(),
+      lastName: (formData.get("lastName") || "").toString().trim(),
+      email: (formData.get("email") || "").toString().trim(),
+      message: (formData.get("message") || "").toString().trim(),
+      company: (formData.get("company") || "").toString(),
+    };
+
+    try {
+      const response = await fetch("/api/forms/contact.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.error || "Unable to submit the form.");
+      }
+
+      setStatus("sent");
+      setStatusMessage("Message sent. We'll reply within 24 hours.");
+      form.reset();
+    } catch (error) {
+      setStatus("error");
+      setStatusMessage(
+        error instanceof Error ? error.message : "Unable to submit the form.",
+      );
+    }
   };
 
   return (
@@ -94,17 +135,26 @@ const ContactFormSection = () => {
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-6">
+              <input
+                type="text"
+                name="company"
+                tabIndex={-1}
+                autoComplete="off"
+                className="hidden"
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input
                   type="text"
                   name="firstName"
                   placeholder="First Name*"
+                  required
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                 />
                 <input
                   type="text"
                   name="lastName"
                   placeholder="Last Name*"
+                  required
                   className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                 />
               </div>
@@ -112,16 +162,32 @@ const ContactFormSection = () => {
                 type="email"
                 name="email"
                 placeholder="Email Address*"
+                required
                 className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
               />
               <textarea
                 name="message"
                 placeholder="How can we help you?*"
                 rows={4}
+                required
                 className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all resize-none"
               />
-              <Button className="w-full py-6 bg-black text-black-400 hover:bg-neutral-800 rounded-[1.5rem] text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                Send Message
+              {status !== "idle" && (
+                <p
+                  className={`text-sm font-bold ${
+                    status === "sent" ? "text-green-700" : "text-red-700"
+                  }`}
+                >
+                  {statusMessage}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full py-6 bg-black text-black-400 hover:bg-neutral-800 rounded-[1.5rem] text-sm font-black uppercase tracking-widest flex items-center justify-center gap-3"
+                disabled={status === "sending"}
+              >
+                {status === "sending" ? "Sending..." : "Send Message"}
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </form>

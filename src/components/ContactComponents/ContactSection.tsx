@@ -1,12 +1,5 @@
-import {
-  ArrowRight,
-  Mail,
-  MapPin,
-  Phone,
-  Send,
-} from "lucide-react";
+import { ArrowRight, Mail, MapPin, Phone, Send } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import Button from "../shared/Button";
 
 interface ContactInfoCardProps {
@@ -231,27 +224,6 @@ const ContactFormSection = () => {
 };
 
 const ContactInfoSection = () => {
-  const quickLinks = [
-    {
-      id: 1,
-      title: "Donate Items",
-      description: "Food and clothing support",
-      href: "/donate/items",
-    },
-    {
-      id: 2,
-      title: "Volunteer",
-      description: "Give time and skills",
-      href: "/volunteer",
-    },
-    {
-      id: 3,
-      title: "Donate",
-      description: "Support our programs",
-      href: "/donate",
-    },
-  ];
-
   const contactInfo = [
     {
       icon: Phone,
@@ -277,43 +249,10 @@ const ContactInfoSection = () => {
   return (
     <section className="pb-24 px-4 bg-white">
       <div className="container mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-8 lg:col-span-2">
-            {contactInfo.map((info, index) => (
-              <ContactInfoCard key={index} {...info} />
-            ))}
-          </div>
-          <div className="bg-neutral-950 text-white rounded-[2.5rem] p-10 shadow-2xl border border-neutral-900">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-yellow-400 mb-4">
-              Quick Actions
-            </p>
-            <h3 className="text-3xl font-black mb-4 tracking-tight">
-              Find the right way to help
-            </h3>
-            <p className="text-neutral-300 text-sm font-medium mb-8">
-              Choose the path that matches your heart. We’ll guide you to the
-              right place.
-            </p>
-            <div className="space-y-4">
-              {quickLinks.map((link) => (
-                <Link
-                  key={link.id}
-                  to={link.href}
-                  className="flex items-center justify-between gap-4 bg-neutral-900 border border-neutral-800 rounded-2xl px-5 py-4 hover:border-yellow-400/70 hover:bg-neutral-900/70 transition-all"
-                >
-                  <div>
-                    <p className="text-sm font-black uppercase tracking-widest text-white">
-                      {link.title}
-                    </p>
-                    <p className="text-xs text-neutral-400 mt-1">
-                      {link.description}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-yellow-400" />
-                </Link>
-              ))}
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {contactInfo.map((info, index) => (
+            <ContactInfoCard key={index} {...info} />
+          ))}
         </div>
       </div>
     </section>

@@ -11,11 +11,19 @@ enforce_rate_limit($mailConfig, 'therapy');
 $fullName = require_string($payload, 'fullName', 160);
 $email = require_email($payload, 'email');
 $phone = require_string($payload, 'phone', 50);
+$gender = require_string($payload, 'gender', 20);
+$country = require_string($payload, 'country', 80);
 $age = require_string($payload, 'age', 20);
-$therapyType = require_string($payload, 'therapyType', 50);
-$preferredMode = require_string($payload, 'preferredMode', 50);
-$preferredTime = require_string($payload, 'preferredTime', 50);
-$message = optional_string($payload, 'message', 5000);
+$assistanceType = require_string($payload, 'assistanceType', 100);
+$assistanceOther = optional_string($payload, 'assistanceOther', 200);
+$practitionerGender = require_string($payload, 'practitionerGender', 30);
+$financialStatus = require_string($payload, 'financialStatus', 20);
+$alcoholFrequency = require_string($payload, 'alcoholFrequency', 30);
+$religion = require_string($payload, 'religion', 30);
+$priorTherapy = require_string($payload, 'priorTherapy', 10);
+$assistanceReason = require_string($payload, 'assistanceReason', 200);
+$assistanceReasonOther = optional_string($payload, 'assistanceReasonOther', 200);
+$medication = require_string($payload, 'medication', 10);
 
 $from = config_from($mailConfig);
 $toEmail = config_recipient($mailConfig, 'therapy');
@@ -26,15 +34,24 @@ $bodyLines = [
     'Name: ' . $fullName,
     'Email: ' . $email,
     'Phone: ' . $phone,
+    'Gender: ' . $gender,
+    'Country: ' . $country,
     'Age: ' . $age,
-    'Therapy type: ' . $therapyType,
-    'Preferred mode: ' . $preferredMode,
-    'Preferred time: ' . $preferredTime,
+    'Assistance type: ' . $assistanceType,
+    'Practitioner gender preference: ' . $practitionerGender,
+    'Financial status: ' . $financialStatus,
+    'Alcohol frequency: ' . $alcoholFrequency,
+    'Religion: ' . $religion,
+    'Prior therapy: ' . $priorTherapy,
+    'Reason: ' . $assistanceReason,
+    'Currently taking medication: ' . $medication,
     'IP: ' . client_ip(),
 ];
-if ($message !== '') {
-    $bodyLines[] = '';
-    $bodyLines[] = $message;
+if ($assistanceOther !== '') {
+    $bodyLines[] = 'Assistance other: ' . $assistanceOther;
+}
+if ($assistanceReasonOther !== '') {
+    $bodyLines[] = 'Reason other: ' . $assistanceReasonOther;
 }
 
 send_form_email($mailConfig, [

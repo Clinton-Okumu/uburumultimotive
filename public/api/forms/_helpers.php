@@ -27,9 +27,27 @@ function require_post_json(): array
 function load_mail_config(): array
 {
     $defaultConfigPath = dirname(__DIR__, 3) . '/mail_config.php';
-    $configPath = getenv('MAIL_CONFIG_PATH') ?: $defaultConfigPath;
+    $explicitPath = (string)(getenv('MAIL_CONFIG_PATH') ?: '');
+    $home = (string)(getenv('HOME') ?: ($_SERVER['HOME'] ?? ''));
+    $homeConfigPath = $home !== ''
+        ? rtrim($home, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'mail_config.php'
+        : '';
 
-    if (!file_exists($configPath)) {
+    $candidates = array_values(array_filter([
+        $explicitPath,
+        $homeConfigPath,
+        $defaultConfigPath,
+    ]));
+
+    $configPath = '';
+    foreach ($candidates as $candidate) {
+        if (file_exists($candidate)) {
+            $configPath = $candidate;
+            break;
+        }
+    }
+
+    if ($configPath === '') {
         json_response(500, ['error' => 'Server configuration missing']);
     }
 

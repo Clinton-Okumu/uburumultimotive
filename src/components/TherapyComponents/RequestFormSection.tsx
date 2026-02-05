@@ -89,18 +89,40 @@ const RequestFormSection = () => {
     setSubmitError("");
 
     try {
-      const response = await fetch("/api/forms/therapy.php", {
+      const submitData = new FormData();
+      submitData.set("_subject", "Website: Therapy request");
+      submitData.set("email", formData.email);
+      submitData.set("_replyto", formData.email);
+      submitData.set("fullName", formData.fullName);
+      submitData.set("phone", formData.phone);
+      submitData.set("gender", formData.gender);
+      submitData.set("country", formData.country);
+      submitData.set("age", formData.age);
+      submitData.set("assistanceType", formData.assistanceType);
+      submitData.set("assistanceOther", formData.assistanceOther);
+      submitData.set("practitionerGender", formData.practitionerGender);
+      submitData.set("financialStatus", formData.financialStatus);
+      submitData.set("alcoholFrequency", formData.alcoholFrequency);
+      submitData.set("religion", formData.religion);
+      submitData.set("priorTherapy", formData.priorTherapy);
+      submitData.set("assistanceReason", formData.assistanceReason.join(", "));
+      submitData.set("assistanceReasonOther", formData.assistanceReasonOther);
+      submitData.set("medication", formData.medication);
+      submitData.set("termsAccepted", formData.termsAccepted ? "yes" : "no");
+      submitData.set("company", "");
+
+      const response = await fetch("https://formspree.io/f/xpqjaolz", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          assistanceReason: formData.assistanceReason.join(", "),
-          company: "",
-        }),
+        headers: { Accept: "application/json" },
+        body: submitData,
       });
       const data = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(data?.error || "Unable to submit the request.");
+        const errorMessage =
+          data?.error ||
+          data?.errors?.map?.((e: { message?: string }) => e?.message).filter(Boolean).join(", ") ||
+          "Unable to submit the request.";
+        throw new Error(errorMessage);
       }
 
       setSubmitted(true);
@@ -196,7 +218,12 @@ const RequestFormSection = () => {
           </div>
 
           <div className="lg:col-span-3">
-            <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100">
+            <form
+              onSubmit={handleSubmit}
+              action="https://formspree.io/f/xpqjaolz"
+              method="POST"
+              className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100"
+            >
               <input
                 type="text"
                 name="company"

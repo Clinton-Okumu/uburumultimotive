@@ -75,24 +75,36 @@ const ContactFormSection = () => {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const payload = {
-      firstName: (formData.get("firstName") || "").toString().trim(),
-      lastName: (formData.get("lastName") || "").toString().trim(),
-      email: (formData.get("email") || "").toString().trim(),
-      message: (formData.get("message") || "").toString().trim(),
-      company: (formData.get("company") || "").toString(),
-    };
+    const firstName = (formData.get("firstName") || "").toString().trim();
+    const lastName = (formData.get("lastName") || "").toString().trim();
+    const email = (formData.get("email") || "").toString().trim();
+    const message = (formData.get("message") || "").toString().trim();
+    const company = (formData.get("company") || "").toString();
+
+    const submitData = new FormData();
+    submitData.set("firstName", firstName);
+    submitData.set("lastName", lastName);
+    submitData.set("name", `${firstName} ${lastName}`.trim());
+    submitData.set("email", email);
+    submitData.set("_replyto", email);
+    submitData.set("message", message);
+    submitData.set("company", company);
+    submitData.set("_subject", "Website: Contact form");
 
     try {
-      const response = await fetch("/api/forms/contact.php", {
+      const response = await fetch("https://formspree.io/f/xpqjaolz", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: { Accept: "application/json" },
+        body: submitData,
       });
 
       const data = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(data?.error || "Unable to submit the form.");
+        const errorMessage =
+          data?.error ||
+          data?.errors?.map?.((e: { message?: string }) => e?.message).filter(Boolean).join(", ") ||
+          "Unable to submit the form.";
+        throw new Error(errorMessage);
       }
 
       setStatus("sent");
@@ -127,7 +139,12 @@ const ContactFormSection = () => {
               </p>
             </div>
 
-            <form onSubmit={handleFormSubmit} className="space-y-6">
+            <form
+              onSubmit={handleFormSubmit}
+              action="https://formspree.io/f/xpqjaolz"
+              method="POST"
+              className="space-y-6"
+            >
               <input
                 type="text"
                 name="company"

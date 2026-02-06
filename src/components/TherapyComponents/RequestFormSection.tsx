@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Button from "../shared/Button";
-import { Check, Mail, Phone, User } from "lucide-react";
+import { Mail, Phone, User } from "lucide-react";
 
 const RequestFormSection = () => {
   type FormData = {
@@ -43,9 +43,10 @@ const RequestFormSection = () => {
     termsAccepted: false,
   });
 
-  const [submitted, setSubmitted] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
+  const [statusMessage, setStatusMessage] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -78,15 +79,16 @@ const RequestFormSection = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (status === "sending") return;
 
     if (formData.assistanceReason.length === 0) {
-      setSubmitError("Please select at least one reason for assistance.");
+      setStatus("error");
+      setStatusMessage("Please select at least one reason for assistance.");
       return;
     }
 
-    setSubmitting(true);
-    setSubmitError("");
+    setStatus("sending");
+    setStatusMessage("");
 
     try {
       const submitData = new FormData();
@@ -125,7 +127,8 @@ const RequestFormSection = () => {
         throw new Error(errorMessage);
       }
 
-      setSubmitted(true);
+      setStatus("sent");
+      setStatusMessage("The support team will reach out to help you with booking");
       setFormData({
         fullName: "",
         email: "",
@@ -145,46 +148,15 @@ const RequestFormSection = () => {
         medication: "",
         termsAccepted: false,
       });
-      setTimeout(() => setSubmitted(false), 3000);
     } catch (error) {
-      setSubmitError(
+      setStatus("error");
+      setStatusMessage(
         error instanceof Error ? error.message : "Unable to submit the request.",
       );
     } finally {
-      setSubmitting(false);
+      setStatus((current) => (current === "sending" ? "idle" : current));
     }
   };
-
-  if (submitted) {
-    return (
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-green-50 to-emerald-50">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="bg-white rounded-3xl p-12 shadow-2xl">
-            <div className="bg-green-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Check className="w-12 h-12 text-green-600" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-              Request Submitted!
-            </h2>
-            <p className="text-lg text-gray-600 leading-relaxed mb-6">
-              Thank you for reaching out. Our team will contact you within 24-48 hours
-              to schedule your therapy session.
-            </p>
-            <div className="flex items-center justify-center gap-6 text-gray-600">
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5" />
-                <span>+254 123 456 789</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5" />
-                <span>therapy@uburumultimove.org</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
@@ -220,8 +192,6 @@ const RequestFormSection = () => {
           <div className="lg:col-span-3">
             <form
               onSubmit={handleSubmit}
-              action="https://formspree.io/f/xpqjaolz"
-              method="POST"
               className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100"
             >
               <input
@@ -634,16 +604,22 @@ const RequestFormSection = () => {
                 </label>
               </div>
 
-              {submitError && (
-                <p className="text-sm font-bold text-red-700 mb-4">{submitError}</p>
+              {status !== "idle" && (
+                <p
+                  className={`text-sm font-bold mb-4 ${
+                    status === "sent" ? "text-green-700" : "text-red-700"
+                  }`}
+                >
+                  {statusMessage}
+                </p>
               )}
 
               <Button
                 type="submit"
-                disabled={submitting}
+                disabled={status === "sending"}
                 className="w-full bg-yellow-500 text-black hover:bg-yellow-400 py-4 text-lg"
               >
-                {submitting ? "Submitting..." : "Submit"}
+                {status === "sending" ? "Submitting..." : "Submit"}
               </Button>
             </form>
           </div>

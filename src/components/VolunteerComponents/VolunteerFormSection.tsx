@@ -67,7 +67,9 @@ const VolunteerFormSection = () => {
       }
 
       setStatus("sent");
-      setStatusMessage("Thanks for volunteering. We'll contact you soon.");
+      setStatusMessage(
+        "Submitted successfully. Thanks for volunteering. We'll contact you soon.",
+      );
       form.reset();
     } catch (error) {
       setStatus("error");
@@ -214,13 +216,15 @@ const VolunteerFormSection = () => {
               />
 
               {status !== "idle" && (
-                <p
-                  className={`text-sm font-bold ${
-                    status === "sent" ? "text-green-700" : "text-red-700"
+                <div
+                  className={`rounded-2xl px-5 py-4 text-sm font-bold border ${
+                    status === "sent"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-red-50 text-red-700 border-red-200"
                   }`}
                 >
                   {statusMessage}
-                </p>
+                </div>
               )}
 
               <Button

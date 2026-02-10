@@ -11,6 +11,8 @@ import Volunteer from './pages/Volunteer';
 import DonateReturn from './pages/DonateReturn';
 import Home from './pages/Home';
 import Therapy from './pages/Therapy';
+import UburuHome from './pages/UburuHome';
+import UburuVillage from './pages/UburuVillage';
 
 
 function App() {
@@ -29,6 +31,8 @@ function App() {
                     <Route path="/donate/return" element={<DonateReturn />} />
                     <Route path="/volunteer" element={<Volunteer />} />
                     <Route path="/get/therapy" element={<Therapy />} />
+                    <Route path="/get/home" element={<UburuHome />} />
+                    <Route path="/get/village" element={<UburuVillage />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

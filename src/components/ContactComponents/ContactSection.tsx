@@ -108,7 +108,9 @@ const ContactFormSection = () => {
       }
 
       setStatus("sent");
-      setStatusMessage("Message sent. We'll reply within 24 hours.");
+      setStatusMessage(
+        "Submitted successfully. Message sent. We'll reply within 24 hours.",
+      );
       form.reset();
     } catch (error) {
       setStatus("error");
@@ -183,13 +185,15 @@ const ContactFormSection = () => {
                 className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all resize-none"
               />
               {status !== "idle" && (
-                <p
-                  className={`text-sm font-bold ${
-                    status === "sent" ? "text-green-700" : "text-red-700"
+                <div
+                  className={`rounded-2xl px-5 py-4 text-sm font-bold border ${
+                    status === "sent"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-red-50 text-red-700 border-red-200"
                   }`}
                 >
                   {statusMessage}
-                </p>
+                </div>
               )}
 
               <Button

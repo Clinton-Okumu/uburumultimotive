@@ -128,7 +128,9 @@ const RequestFormSection = () => {
       }
 
       setStatus("sent");
-      setStatusMessage("The support team will reach out to help you with booking");
+      setStatusMessage(
+        "Submitted successfully. The support team will reach out to help you with booking",
+      );
       setFormData({
         fullName: "",
         email: "",
@@ -605,13 +607,15 @@ const RequestFormSection = () => {
               </div>
 
               {status !== "idle" && (
-                <p
-                  className={`text-sm font-bold mb-4 ${
-                    status === "sent" ? "text-green-700" : "text-red-700"
+                <div
+                  className={`mb-4 rounded-2xl px-5 py-4 text-sm font-bold border ${
+                    status === "sent"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-red-50 text-red-700 border-red-200"
                   }`}
                 >
                   {statusMessage}
-                </p>
+                </div>
               )}
 
               <Button

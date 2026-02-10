@@ -65,7 +65,9 @@ const DonationItemsSection = () => {
       }
 
       setStatus("sent");
-      setStatusMessage("Thanks. We'll contact you to coordinate the donation.");
+      setStatusMessage(
+        "Submitted successfully. Thanks. We'll contact you to coordinate the donation.",
+      );
       form.reset();
     } catch (error) {
       setStatus("error");
@@ -220,13 +222,15 @@ const DonationItemsSection = () => {
               )}
 
               {status !== "idle" && (
-                <p
-                  className={`text-sm font-bold ${
-                    status === "sent" ? "text-green-700" : "text-red-700"
+                <div
+                  className={`rounded-2xl px-5 py-4 text-sm font-bold border ${
+                    status === "sent"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-red-50 text-red-700 border-red-200"
                   }`}
                 >
                   {statusMessage}
-                </p>
+                </div>
               )}
 
               <Button

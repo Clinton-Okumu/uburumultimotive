@@ -194,14 +194,14 @@ export const getDropdownItems = [
   {
     icon: ShoppingBag,
     label: "Uburu Home",
-    description: "Buy something",
-    href: "/contact",
+    description: "Shop to support families",
+    href: "/get/home",
   },
   {
     icon: ShoppingBag,
     label: "Uburu Village",
     description: "Outdoor adventures",
-    href: "/contact",
+    href: "/get/village",
   },
 ];
 

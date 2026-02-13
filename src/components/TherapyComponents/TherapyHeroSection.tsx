@@ -2,36 +2,29 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import hero from "../../assets/hero.webp";
 
-const HeroSection = ({
-  title = "Therapy Services",
-  breadcrumbs = [
+const TherapyHeroSection = () => {
+  const breadcrumbs = [
     { label: "Home", href: "/" },
-    { label: "Therapy", href: "/therapy" },
-  ],
-  image = hero,
-}) => {
+    { label: "Uburu Therapy", href: "/get/therapy" },
+  ];
+
   return (
     <section
       role="banner"
-      aria-label={title}
-      className="relative h-[260px] flex items-center bg-cover bg-no-repeat bg-[center_30%] pt-10"
-      style={{ backgroundImage: `url(${image})` }}
+      aria-label="Uburu Therapy"
+      className="relative h-[340px] flex items-center bg-cover bg-no-repeat bg-[center_30%] pt-10"
+      style={{ backgroundImage: `url(${hero})` }}
     >
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-black/60" />
 
-      {/* Content */}
       <div className="relative z-10 text-white container mx-auto px-6 max-w-4xl">
-        <h1 className="text-5xl font-bold mb-3 drop-shadow">{title}</h1>
-
-        {/* Breadcrumbs */}
-        <nav aria-label="Breadcrumb">
+        <nav aria-label="Breadcrumb" className="mb-4">
           <ol className="flex items-center text-sm">
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1;
 
               return (
-                <li key={index} className="flex items-center">
+                <li key={crumb.href} className="flex items-center">
                   {!isLast ? (
                     <>
                       <Link
@@ -52,9 +45,15 @@ const HeroSection = ({
             })}
           </ol>
         </nav>
+
+        <h1 className="text-5xl font-bold mb-4 drop-shadow">Uburu Therapy</h1>
+        <p className="text-lg text-white/90 max-w-2xl leading-relaxed">
+          Confidential, affordable support with licensed therapists for individuals,
+          couples, and teens.
+        </p>
       </div>
     </section>
   );
 };
 
-export default HeroSection;
+export default TherapyHeroSection;

@@ -10,32 +10,46 @@ type PaymentStatus = "idle" | "processing" | "success" | "error";
 
 const products = [
   {
-    id: "warmth-starter",
-    name: "Warmth Starter Kit",
-    price: 2400,
-    tag: "Best seller",
+    id: "woven-baskets-bags",
+    name: "Woven baskets and bags",
+    price: 2100,
+    tag: "Artisan",
     image: pic1,
   },
   {
-    id: "pantry-box",
-    name: "Neighborhood Pantry Box",
-    price: 1850,
-    tag: "Limited",
+    id: "beaded-crafts-placemats",
+    name: "Beaded crafts and placemats",
+    price: 1650,
+    tag: "Handmade",
     image: pic4,
   },
   {
-    id: "comfort-throw",
-    name: "Handmade Comfort Throw",
-    price: 3200,
-    tag: "New",
+    id: "soapstone-carvings",
+    name: "Soapstone carvings",
+    price: 2800,
+    tag: "Collector",
     image: pic6,
   },
   {
-    id: "family-essentials",
-    name: "Family Essentials Pack",
-    price: 2950,
-    tag: "Top rated",
+    id: "fair-trade-coffee",
+    name: "Fair trade coffee",
+    price: 1400,
+    tag: "Fresh",
     image: pic7,
+  },
+  {
+    id: "gift-wrapping-bags",
+    name: "Gift wrapping bags",
+    price: 950,
+    tag: "Seasonal",
+    image: pic1,
+  },
+  {
+    id: "tshirts-accessories",
+    name: "T-shirts and accessories",
+    price: 1750,
+    tag: "Popular",
+    image: pic4,
   },
 ];
 
@@ -162,7 +176,7 @@ const FeaturedProducts = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-neutral-500">
-              4 items
+              6 items
             </span>
             <Button className="bg-neutral-900 text-white hover:bg-neutral-800 px-6 py-3 text-xs font-black uppercase tracking-[0.3em]">
               View all
@@ -218,6 +232,9 @@ const FeaturedProducts = () => {
                   >
                     -
                   </button>
+                  <span className="text-xs font-black uppercase tracking-widest text-neutral-500">
+                    Qty:
+                  </span>
                   <input
                     type="number"
                     min={1}
@@ -266,7 +283,7 @@ const FeaturedProducts = () => {
             </div>
             {selectedProduct && (
               <div className="rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-700">
-                {selectedProduct.name} · Qty {quantities[selectedProduct.id] ?? 1}
+                {selectedProduct.name} · Qty: {quantities[selectedProduct.id] ?? 1}
                 <span className="ml-2 text-neutral-900">
                   KES {(selectedProduct.price * (quantities[selectedProduct.id] ?? 1)).toLocaleString("en-KE")}
                 </span>

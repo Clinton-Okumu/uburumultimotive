@@ -10,32 +10,46 @@ type PaymentStatus = "idle" | "processing" | "success" | "error";
 
 const events = [
   {
-    id: "sunrise-trail",
-    name: "Sunrise Trail Pass",
-    price: 1800,
-    tag: "Saturday",
+    id: "charity-home",
+    name: "Charity home",
+    price: 1500,
+    tag: "Community",
     image: pic3,
   },
   {
-    id: "campfire-night",
-    name: "Campfire Night",
-    price: 2200,
-    tag: "Limited",
+    id: "gala-dinner",
+    name: "Gala dinner",
+    price: 4500,
+    tag: "Formal",
     image: pic5,
   },
   {
-    id: "forest-cycle",
-    name: "Forest Cycle Ride",
-    price: 2600,
-    tag: "New",
+    id: "quiz-evening",
+    name: "Quiz evening",
+    price: 1200,
+    tag: "Fun",
     image: pic8,
   },
   {
-    id: "summit-escape",
-    name: "Summit Escape",
-    price: 3400,
-    tag: "Top rated",
+    id: "sport-tournaments",
+    name: "Sport tournaments",
+    price: 2000,
+    tag: "All ages",
     image: pic9,
+  },
+  {
+    id: "cultural-concert",
+    name: "Cultural concert/performance",
+    price: 2500,
+    tag: "Live",
+    image: pic3,
+  },
+  {
+    id: "fundraising-events",
+    name: "Fundraising events",
+    price: 1800,
+    tag: "Benefit",
+    image: pic5,
   },
 ];
 
@@ -161,7 +175,7 @@ const FeaturedEvents = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-neutral-200 bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-neutral-500">
-              4 events
+              6 events
             </span>
             <Button className="bg-neutral-900 text-white hover:bg-neutral-800 px-6 py-3 text-xs font-black uppercase tracking-[0.3em]">
               View all
@@ -217,6 +231,9 @@ const FeaturedEvents = () => {
                   >
                     -
                   </button>
+                  <span className="text-xs font-black uppercase tracking-widest text-neutral-500">
+                    Qty:
+                  </span>
                   <input
                     type="number"
                     min={1}
@@ -240,7 +257,7 @@ const FeaturedEvents = () => {
                   onClick={() => handleBuyClick(event.id)}
                   className="mt-5 w-full bg-neutral-900 text-white hover:bg-neutral-800 py-3 text-xs font-black uppercase tracking-[0.3em]"
                 >
-                  Buy now
+                  Book ticket
                 </Button>
               </div>
             </div>
@@ -262,7 +279,7 @@ const FeaturedEvents = () => {
             </div>
             {selectedEvent && (
               <div className="rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-700">
-                {selectedEvent.name} · Qty {quantities[selectedEvent.id] ?? 1}
+                {selectedEvent.name} · Qty: {quantities[selectedEvent.id] ?? 1}
                 <span className="ml-2 text-neutral-900">
                   KES {(selectedEvent.price * (quantities[selectedEvent.id] ?? 1)).toLocaleString("en-KE")}
                 </span>

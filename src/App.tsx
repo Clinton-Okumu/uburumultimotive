@@ -9,6 +9,7 @@ import DonateLanding from './pages/DonateLanding';
 import DonateItems from './pages/DonateItems';
 import Volunteer from './pages/Volunteer';
 import DonateReturn from './pages/DonateReturn';
+import PurchaseReturn from './pages/PurchaseReturn';
 import Home from './pages/Home';
 import Therapy from './pages/Therapy';
 import UburuHome from './pages/UburuHome';
@@ -29,6 +30,7 @@ function App() {
                     <Route path="/donate/money" element={<Donate />} />
                     <Route path="/donate/items" element={<DonateItems />} />
                     <Route path="/donate/return" element={<DonateReturn />} />
+                    <Route path="/purchase/return" element={<PurchaseReturn />} />
                     <Route path="/volunteer" element={<Volunteer />} />
                     <Route path="/get/therapy" element={<Therapy />} />
                     <Route path="/get/home" element={<UburuHome />} />

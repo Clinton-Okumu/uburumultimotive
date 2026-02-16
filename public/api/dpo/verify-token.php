@@ -18,6 +18,8 @@ if (!file_exists($configPath)) {
 
 $config = require $configPath;
 
+$formspreeUrl = trim((string)($config['formspree_purchase_url'] ?? ''));
+
 $payload = json_decode(file_get_contents('php://input'), true);
 if (!is_array($payload)) {
     http_response_code(400);
@@ -103,12 +105,36 @@ if (!$resolvedCompanyRef) {
     $resolvedCompanyRef = $companyRef ?: find_ref_by_token($storeData, $transactionToken);
 }
 
+$recordContext = '';
+$recordMeta = [];
+$recordAmount = '';
+$recordCurrency = '';
+$recordCustomer = [];
+
 if ($storeHandle) {
     $refKey = $resolvedCompanyRef ?: find_ref_by_token($storeData, $transactionToken);
     if ($refKey && isset($storeData['donations'][$refKey])) {
-        $storeData['donations'][$refKey]['status'] = $status;
-        $storeData['donations'][$refKey]['updatedAt'] = date('c');
-        $storeData['donations'][$refKey]['lastResult'] = $result;
+        $record = $storeData['donations'][$refKey];
+        $previousStatus = (string)($record['status'] ?? '');
+        $record['status'] = $status;
+        $record['updatedAt'] = date('c');
+        $record['lastResult'] = $result;
+
+        [$record] = send_purchase_formspree_if_needed(
+            $record,
+            $formspreeUrl,
+            $status,
+            $previousStatus,
+            $resolvedCompanyRef ?: $refKey
+        );
+
+        $storeData['donations'][$refKey] = $record;
+        $recordContext = (string)($record['context'] ?? '');
+        $recordMeta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+        $recordAmount = (string)($record['amount'] ?? '');
+        $recordCurrency = (string)($record['currency'] ?? '');
+        $recordCustomer = is_array($record['customer'] ?? null) ? $record['customer'] : [];
+
         save_store($storeHandle, $storagePath, $storeData);
     } else {
         close_store($storeHandle);
@@ -117,11 +143,26 @@ if ($storeHandle) {
     close_store($storeHandle);
 }
 
+$contextValue = $recordContext !== ''
+    ? $recordContext
+    : (string)($recordMeta['context'] ?? '');
+$itemName = trim((string)($recordMeta['itemName'] ?? ''));
+$quantity = (int)($recordMeta['quantity'] ?? 0);
+$amountValue = $recordAmount !== '' ? $recordAmount : (string)($recordMeta['totalAmount'] ?? '');
+$currencyValue = $recordCurrency !== ''
+    ? $recordCurrency
+    : (string)($recordMeta['currency'] ?? '');
+
 echo json_encode([
     'status' => $status,
     'result' => $result,
     'message' => (string)$xmlResp->ResultExplanation,
     'companyRef' => $resolvedCompanyRef ?: null,
+    'context' => $contextValue !== '' ? $contextValue : null,
+    'itemName' => $itemName !== '' ? $itemName : null,
+    'quantity' => $quantity > 0 ? $quantity : null,
+    'amount' => $amountValue !== '' ? $amountValue : null,
+    'currency' => $currencyValue !== '' ? $currencyValue : null,
 ]);
 
 function curl_xml(string $url, string $xml, int $retries = 0): array
@@ -235,4 +276,121 @@ function find_ref_by_token(array $storeData, string $token): string
     }
 
     return '';
+}
+
+function is_valid_email(string $email): bool
+{
+    return $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL);
+}
+
+function format_amount_value($value): string
+{
+    if ($value === null) {
+        return '';
+    }
+    $value = is_string($value) ? trim($value) : $value;
+    if ($value === '') {
+        return '';
+    }
+    if (is_numeric($value)) {
+        return number_format((float)$value, 2, '.', ',');
+    }
+    return (string)$value;
+}
+
+function post_formspree(string $url, array $payload): bool
+{
+    if (!$url) {
+        return false;
+    }
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: application/json',
+            'Accept: application/json',
+        ],
+        CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT => 20,
+    ]);
+    $body = curl_exec($ch);
+    $status = $body !== false ? (int)curl_getinfo($ch, CURLINFO_HTTP_CODE) : 0;
+    $error = curl_error($ch);
+    curl_close($ch);
+
+    if ($error || $status < 200 || $status >= 300) {
+        return false;
+    }
+
+    return true;
+}
+
+function send_purchase_formspree_if_needed(
+    array $record,
+    string $formspreeUrl,
+    string $status,
+    string $previousStatus,
+    string $companyRef
+): array {
+    if ($status !== 'PAID') {
+        return [$record];
+    }
+
+    $context = strtolower((string)($record['context'] ?? ''));
+    if (!in_array($context, ['uburu_village', 'uburu_home'], true)) {
+        return [$record];
+    }
+
+    if ($formspreeUrl === '') {
+        return [$record];
+    }
+
+    $emailSent = is_array($record['emailSent'] ?? null) ? $record['emailSent'] : [];
+    if ($previousStatus === 'PAID' && !empty($emailSent['formspree'])) {
+        return [$record];
+    }
+
+    $customer = is_array($record['customer'] ?? null) ? $record['customer'] : [];
+    $buyerName = trim((string)($customer['name'] ?? ''));
+    $buyerEmail = trim((string)($customer['email'] ?? ''));
+
+    $meta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+    $itemName = trim((string)($meta['itemName'] ?? ''));
+    $quantity = (int)($meta['quantity'] ?? 1);
+    $unitPrice = $meta['unitPrice'] ?? '';
+    $amountValue = $record['amount'] ?? ($meta['totalAmount'] ?? '');
+    $currency = (string)($record['currency'] ?? ($meta['currency'] ?? 'KES'));
+
+    $contextLabel = $context === 'uburu_home' ? 'Uburu Home' : 'Uburu Village';
+    $amountText = trim($currency . ' ' . format_amount_value($amountValue));
+    $unitPriceText = format_amount_value($unitPrice);
+    if ($unitPriceText !== '') {
+        $unitPriceText = $currency . ' ' . $unitPriceText;
+    }
+
+    $payload = [
+        '_subject' => 'Payment confirmed: ' . $contextLabel,
+        'email' => is_valid_email($buyerEmail) ? $buyerEmail : 'no-reply@uburumultimovehs.org',
+        '_replyto' => is_valid_email($buyerEmail) ? $buyerEmail : '',
+        'fullName' => $buyerName,
+        'context' => $contextLabel,
+        'itemName' => $itemName,
+        'quantity' => $quantity > 0 ? (string)$quantity : '',
+        'unitPrice' => $unitPriceText,
+        'total' => $amountText,
+        'companyRef' => $companyRef,
+        'buyerEmail' => $buyerEmail,
+        'sendBuyerReceipt' => 'yes',
+    ];
+
+    $ok = post_formspree($formspreeUrl, $payload);
+    if ($ok) {
+        $emailSent['formspree'] = date('c');
+        $record['emailSent'] = $emailSent;
+    }
+
+    return [$record];
 }

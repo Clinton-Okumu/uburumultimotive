@@ -31,6 +31,8 @@ $customer = is_array($payload['customer'] ?? null) ? $payload['customer'] : [];
 $customerName = trim((string)($customer['name'] ?? ''));
 $customerEmail = trim((string)($customer['email'] ?? ''));
 $customerPhone = trim((string)($customer['phone'] ?? ''));
+$context = strtolower(trim((string)($payload['context'] ?? '')));
+$meta = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
 
 if (!is_numeric($amount)) {
     http_response_code(400);
@@ -74,6 +76,17 @@ $serviceDate = date('Y/m/d H:i');
 
 $redirectUrl = trim((string)($config['redirect_url'] ?? ''));
 $backUrl = trim((string)($config['back_url'] ?? ''));
+$purchaseContexts = ['uburu_village', 'uburu_home'];
+if (in_array($context, $purchaseContexts, true)) {
+    $purchaseRedirect = trim((string)($config['purchase_redirect_url'] ?? ''));
+    $purchaseBack = trim((string)($config['purchase_back_url'] ?? ''));
+    if ($purchaseRedirect !== '') {
+        $redirectUrl = $purchaseRedirect;
+    }
+    if ($purchaseBack !== '') {
+        $backUrl = $purchaseBack;
+    }
+}
 if (!$redirectUrl || !$backUrl) {
     http_response_code(500);
     echo json_encode(['error' => 'Missing redirect or back URL configuration']);
@@ -97,6 +110,12 @@ if (!$serviceType) {
 }
 
 $serviceDescription = trim((string)($config['service_description'] ?? 'Donation')) ?: 'Donation';
+$purchaseDescriptions = is_array($config['purchase_descriptions'] ?? null)
+    ? $config['purchase_descriptions']
+    : [];
+if ($context !== '' && isset($purchaseDescriptions[$context])) {
+    $serviceDescription = trim((string)$purchaseDescriptions[$context]) ?: $serviceDescription;
+}
 
 $xml = <<<XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -174,6 +193,8 @@ if ($storeHandle) {
             'email' => $customerEmail,
             'phone' => $customerPhone,
         ],
+        'context' => $context,
+        'meta' => $meta,
         'createdAt' => date('c'),
         'updatedAt' => date('c'),
     ];

@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { CheckCircle, Loader } from "lucide-react";
 import Button from "../shared/Button";
-import pic1 from "../../assets/pic1.webp";
-import pic4 from "../../assets/pic4.webp";
-import pic6 from "../../assets/pic6.webp";
-import pic7 from "../../assets/pic7.webp";
+import ebook from "../../assets/ebook.webp";
+import shirt from "../../assets/shirt.webp";
+import cap from "../../assets/cap.webp";
+import hoodie from "../../assets/hoodie.webp";
+import waterBottle from "../../assets/waterbottle.webp";
 
 type PaymentStatus = "idle" | "processing" | "success" | "error";
 
@@ -14,35 +15,35 @@ const products = [
     name: "Ebooks",
     price: 1200,
     tag: "Digital",
-    image: pic1,
+    image: ebook,
   },
   {
     id: "tshirts",
     name: "T-shirts",
     price: 1800,
     tag: "Apparel",
-    image: pic4,
+    image: shirt,
   },
   {
     id: "caps",
     name: "Caps",
     price: 900,
     tag: "Everyday",
-    image: pic6,
+    image: cap,
   },
   {
     id: "hoodies",
     name: "Hoodies",
     price: 2800,
     tag: "Cozy",
-    image: pic7,
+    image: hoodie,
   },
   {
     id: "reusable-bottles",
     name: "Reusable bottles",
     price: 1500,
     tag: "Eco",
-    image: pic1,
+    image: waterBottle,
   },
 ];
 

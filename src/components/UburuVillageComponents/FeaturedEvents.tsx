@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { CheckCircle, Loader } from "lucide-react";
 import Button from "../shared/Button";
-import pic3 from "../../assets/pic3.webp";
-import pic5 from "../../assets/pic5.webp";
-import pic8 from "../../assets/pic8.webp";
-import pic9 from "../../assets/pic9.webp";
+import culturalEvent from "../../assets/Screenshot-2026-02-20_10-06-49.webp";
+import communityPainting from "../../assets/community-painting-wood-medium-shot.webp";
+import footballCircle from "../../assets/top-view-childs-feet-around-football-ball.webp";
+import  charityHome from "../../assets/pic20.webp";
 
 type PaymentStatus = "idle" | "processing" | "success" | "error";
 
@@ -13,43 +13,29 @@ const events = [
     id: "charity-home",
     name: "Charity home",
     price: 1500,
-    tag: "Community",
-    image: pic3,
+    tag: "Care",
+    image: charityHome,
   },
   {
     id: "gala-dinner",
-    name: "Gala dinner",
+    name: "Cultural concert/performance",
     price: 4500,
-    tag: "Formal",
-    image: pic5,
+    tag: "Live",
+    image: culturalEvent,
   },
   {
     id: "quiz-evening",
     name: "Quiz evening",
     price: 1200,
-    tag: "Fun",
-    image: pic8,
+    tag: "Interactive",
+    image: communityPainting,
   },
   {
     id: "sport-tournaments",
     name: "Sport tournaments",
     price: 2000,
     tag: "All ages",
-    image: pic9,
-  },
-  {
-    id: "cultural-concert",
-    name: "Cultural concert/performance",
-    price: 2500,
-    tag: "Live",
-    image: pic3,
-  },
-  {
-    id: "fundraising-events",
-    name: "Fundraising events",
-    price: 1800,
-    tag: "Benefit",
-    image: pic5,
+    image: footballCircle,
   },
 ];
 
@@ -174,9 +160,9 @@ const FeaturedEvents = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="rounded-full border border-[#dbe7f3] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-[#5c6f86]">
-              6 events
-            </span>
+              <span className="rounded-full border border-[#dbe7f3] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-[#5c6f86]">
+                5 events
+              </span>
             <Button className="bg-[#f2c15d] text-[#1c3b57] hover:bg-[#ffd886] px-6 py-3 text-xs font-black uppercase tracking-[0.3em]">
               View all
             </Button>

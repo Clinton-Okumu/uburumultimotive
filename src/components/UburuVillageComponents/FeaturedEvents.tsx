@@ -8,6 +8,14 @@ import  charityHome from "../../assets/pic20.webp";
 
 type PaymentStatus = "idle" | "processing" | "success" | "error";
 
+type CartItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+};
+
 const events = [
   {
     id: "charity-home",
@@ -47,12 +55,34 @@ const FeaturedEvents = () => {
     >,
   );
   const [selectedEventId, setSelectedEventId] = useState(events[0].id);
+  const [cart, setCart] = useState<Record<string, number>>({});
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [status, setStatus] = useState<PaymentStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("");
 
-  const selectedEvent = events.find((event) => event.id === selectedEventId);
+  const cartItems: CartItem[] = events
+    .map((event) => {
+      const quantity = cart[event.id] ?? 0;
+      if (quantity <= 0) {
+        return null;
+      }
+
+      return {
+        id: event.id,
+        name: event.name,
+        quantity,
+        unitPrice: event.price,
+        lineTotal: event.price * quantity,
+      };
+    })
+    .filter((item): item is CartItem => item !== null);
+
+  const cartTotal = cartItems.reduce((total, item) => total + item.lineTotal, 0);
+  const cartItemCount = cartItems.reduce(
+    (count, item) => count + item.quantity,
+    0,
+  );
 
   const updateQuantity = (eventId: string, nextValue: number) => {
     const safeValue = Math.max(1, Math.min(99, nextValue));
@@ -61,6 +91,40 @@ const FeaturedEvents = () => {
 
   const handleBuyClick = (eventId: string) => {
     setSelectedEventId(eventId);
+    const quantityToAdd = quantities[eventId] ?? 1;
+    setCart((prev) => {
+      const nextQuantity = Math.max(
+        1,
+        Math.min(99, (prev[eventId] ?? 0) + quantityToAdd),
+      );
+      return { ...prev, [eventId]: nextQuantity };
+    });
+    setStatus("idle");
+    setStatusMessage("");
+    const checkoutElement = document.getElementById("uburu-village-checkout");
+    if (checkoutElement) {
+      checkoutElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  const updateCartItemQuantity = (eventId: string, nextValue: number) => {
+    const safeValue = Math.max(0, Math.min(99, nextValue));
+    setCart((prev) => {
+      if (safeValue <= 0) {
+        const next = { ...prev };
+        delete next[eventId];
+        return next;
+      }
+      return { ...prev, [eventId]: safeValue };
+    });
+    setStatus("idle");
+    setStatusMessage("");
+  };
+
+  const clearCart = () => {
+    setCart({});
+    setStatus("idle");
+    setStatusMessage("");
   };
 
   const getFriendlyErrorMessage = (message: string) => {
@@ -78,7 +142,11 @@ const FeaturedEvents = () => {
   };
 
   const handleCheckout = async () => {
-    if (!selectedEvent) return;
+    if (cartItems.length === 0 || cartTotal <= 0) {
+      setStatus("error");
+      setStatusMessage("Please add at least one ticket to your cart.");
+      return;
+    }
     if (!buyerName.trim()) {
       setStatus("error");
       setStatusMessage("Please enter your full name.");
@@ -90,9 +158,6 @@ const FeaturedEvents = () => {
       return;
     }
 
-    const quantity = quantities[selectedEvent.id] ?? 1;
-    const totalAmount = selectedEvent.price * quantity;
-
     setStatus("processing");
     setStatusMessage("");
 
@@ -101,12 +166,25 @@ const FeaturedEvents = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: totalAmount,
+          amount: cartTotal,
           currency: "KES",
           customer: {
             name: buyerName.trim(),
             email: buyerEmail.trim(),
             phone: undefined,
+          },
+          context: "uburu_village",
+          meta: {
+            type: "event_purchase",
+            itemCount: cartItemCount,
+            items: cartItems.map((item) => ({
+              itemId: item.id,
+              itemName: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalAmount: item.lineTotal,
+            })),
+            totalAmount: cartTotal,
           },
         }),
       });
@@ -159,9 +237,9 @@ const FeaturedEvents = () => {
               Grab tickets for the next adventure and keep community programs moving.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
               <span className="rounded-full border border-[#dbe7f3] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-[#5c6f86]">
-                5 events
+                {events.length} events
               </span>
             <Button className="bg-[#f2c15d] text-[#1c3b57] hover:bg-[#ffd886] px-6 py-3 text-xs font-black uppercase tracking-[0.3em]">
               View all
@@ -243,32 +321,96 @@ const FeaturedEvents = () => {
                   onClick={() => handleBuyClick(event.id)}
                   className="mt-5 w-full bg-[#2f6f99] text-white hover:bg-[#3b83b4] py-3 text-xs font-black uppercase tracking-[0.3em]"
                 >
-                  Book ticket
+                  Buy now
                 </Button>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 rounded-[2.5rem] border border-[#dbe7f3] bg-white p-8 shadow-lg">
+        <div
+          id="uburu-village-checkout"
+          className="mt-12 rounded-[2.5rem] border border-[#dbe7f3] bg-white p-8 shadow-lg"
+        >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.3em] text-[#5c6f86]">
                 Checkout
               </p>
               <h3 className="mt-2 text-2xl font-black text-[#1c3b57]">
-                Confirm your tickets
+                Complete your purchase
               </h3>
               <p className="mt-2 text-sm font-semibold text-[#5c6f86]">
                 Payments are processed securely via DPO.
               </p>
             </div>
-            {selectedEvent && (
-              <div className="rounded-2xl border border-[#dbe7f3] bg-white px-5 py-4 text-sm font-bold text-[#3b4b74]">
-                {selectedEvent.name} · Qty: {quantities[selectedEvent.id] ?? 1}
-                <span className="ml-2 text-[#1c3b57]">
-                  KES {(selectedEvent.price * (quantities[selectedEvent.id] ?? 1)).toLocaleString("en-KE")}
-                </span>
+            <div className="rounded-2xl border border-[#dbe7f3] bg-white px-5 py-4 text-sm font-bold text-[#3b4b74]">
+              Cart total: <span className="text-[#1c3b57]">KES {cartTotal.toLocaleString("en-KE")}</span>
+              <span className="ml-3 text-[#5c6f86]">Items: {cartItemCount}</span>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] p-4">
+            {cartItems.length === 0 ? (
+              <p className="text-sm font-semibold text-[#5c6f86]">
+                Your cart is empty. Tap Buy now on any event card to add tickets and jump here.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {cartItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-3 rounded-xl border border-[#dbe7f3] bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-black text-[#1c3b57]">{item.name}</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">
+                        KES {item.unitPrice.toLocaleString("en-KE")} each
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                        className="h-8 w-8 rounded-lg bg-white text-sm font-black text-[#1c3b57] shadow-sm"
+                        aria-label={`Decrease ${item.name} quantity in cart`}
+                      >
+                        -
+                      </button>
+                      <span className="min-w-8 text-center text-sm font-black text-[#1c3b57]">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                        className="h-8 w-8 rounded-lg bg-white text-sm font-black text-[#1c3b57] shadow-sm"
+                        aria-label={`Increase ${item.name} quantity in cart`}
+                      >
+                        +
+                      </button>
+                      <span className="ml-3 text-sm font-black text-[#1c3b57]">
+                        KES {item.lineTotal.toLocaleString("en-KE")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateCartItemQuantity(item.id, 0)}
+                        className="ml-3 rounded-lg border border-[#dbe7f3] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#5c6f86]"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {cartItems.length > 0 && (
+              <div className="mt-4 flex justify-end">
+                <Button
+                  onClick={clearCart}
+                  className="bg-[#dbe7f3] text-[#1c3b57] hover:bg-[#c9ddef] px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em]"
+                >
+                  Clear cart
+                </Button>
               </div>
             )}
           </div>
@@ -310,7 +452,7 @@ const FeaturedEvents = () => {
           <div className="mt-6">
             <Button
               onClick={handleCheckout}
-              disabled={status === "processing"}
+              disabled={status === "processing" || cartItems.length === 0}
               className="w-full bg-[#f2c15d] text-[#1c3b57] hover:bg-[#ffd886] py-4 text-sm font-black uppercase tracking-[0.3em]"
             >
               {status === "processing" ? (

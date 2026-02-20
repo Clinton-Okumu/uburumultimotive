@@ -10,6 +10,11 @@ type VerifyStatus =
   | "unknown"
   | "error";
 
+type PurchasedItem = {
+  itemName: string;
+  quantity: number;
+};
+
 const PurchaseReturn = () => {
   const [status, setStatus] = useState<VerifyStatus>("checking");
   const [message, setMessage] = useState("");
@@ -17,6 +22,8 @@ const PurchaseReturn = () => {
   const [context, setContext] = useState("");
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState<number | null>(null);
+  const [itemCount, setItemCount] = useState<number | null>(null);
+  const [items, setItems] = useState<PurchasedItem[]>([]);
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("");
 
@@ -80,6 +87,20 @@ const PurchaseReturn = () => {
         setContext(data?.context || "");
         setItemName(data?.itemName || "");
         setQuantity(typeof data?.quantity === "number" ? data.quantity : null);
+        setItemCount(typeof data?.itemCount === "number" ? data.itemCount : null);
+        setItems(
+          Array.isArray(data?.items)
+            ? data.items
+                .map((item: { itemName?: unknown; quantity?: unknown }) => ({
+                  itemName: (item?.itemName || "").toString(),
+                  quantity:
+                    typeof item?.quantity === "number" && item.quantity > 0
+                      ? item.quantity
+                      : 1,
+                }))
+                .filter((item: PurchasedItem) => item.itemName.trim() !== "")
+            : [],
+        );
         setAmount(data?.amount || "");
         setCurrency(data?.currency || "");
       } catch (error) {
@@ -115,10 +136,29 @@ const PurchaseReturn = () => {
             <p className="text-gray-700 mb-2">
               Thank you for supporting {contextLabel}.
             </p>
-            {itemName && (
+            {itemCount && itemCount > 1 && (
+              <p className="text-sm text-gray-600">Items: {itemCount}</p>
+            )}
+            {!items.length && itemName && (
               <p className="text-sm text-gray-600">Item: {itemName}</p>
             )}
-            {quantity && <p className="text-sm text-gray-600">Qty: {quantity}</p>}
+            {!items.length && quantity && (
+              <p className="text-sm text-gray-600">Qty: {quantity}</p>
+            )}
+            {items.length > 0 && (
+              <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
+                  Purchase details
+                </p>
+                <div className="mt-2 space-y-1">
+                  {items.map((item, index) => (
+                    <p key={`${item.itemName}-${index}`} className="text-sm text-gray-700">
+                      {item.itemName} x{item.quantity}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
             {amountLabel && (
               <p className="text-sm text-gray-600">Total: {amountLabel}</p>
             )}

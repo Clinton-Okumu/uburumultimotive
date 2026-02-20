@@ -9,6 +9,14 @@ import waterBottle from "../../assets/waterbottle.webp";
 
 type PaymentStatus = "idle" | "processing" | "success" | "error";
 
+type CartItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+};
+
 const products = [
   {
     id: "ebooks",
@@ -55,13 +63,33 @@ const FeaturedProducts = () => {
     >,
   );
   const [selectedProductId, setSelectedProductId] = useState(products[0].id);
+  const [cart, setCart] = useState<Record<string, number>>({});
   const [buyerName, setBuyerName] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [status, setStatus] = useState<PaymentStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("");
 
-  const selectedProduct = products.find(
-    (product) => product.id === selectedProductId,
+  const cartItems: CartItem[] = products
+    .map((product) => {
+      const quantity = cart[product.id] ?? 0;
+      if (quantity <= 0) {
+        return null;
+      }
+
+      return {
+        id: product.id,
+        name: product.name,
+        quantity,
+        unitPrice: product.price,
+        lineTotal: product.price * quantity,
+      };
+    })
+    .filter((item): item is CartItem => item !== null);
+
+  const cartTotal = cartItems.reduce((total, item) => total + item.lineTotal, 0);
+  const cartItemCount = cartItems.reduce(
+    (count, item) => count + item.quantity,
+    0,
   );
 
   const updateQuantity = (productId: string, nextValue: number) => {
@@ -69,8 +97,46 @@ const FeaturedProducts = () => {
     setQuantities((prev) => ({ ...prev, [productId]: safeValue }));
   };
 
+  const scrollToCheckout = () => {
+    const checkoutElement = document.getElementById("uburu-home-checkout");
+    if (checkoutElement) {
+      checkoutElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const handleBuyClick = (productId: string) => {
     setSelectedProductId(productId);
+    const quantityToAdd = quantities[productId] ?? 1;
+    setCart((prev) => {
+      const nextQuantity = Math.max(
+        1,
+        Math.min(99, (prev[productId] ?? 0) + quantityToAdd),
+      );
+      return { ...prev, [productId]: nextQuantity };
+    });
+    setStatus("idle");
+    setStatusMessage("");
+    scrollToCheckout();
+  };
+
+  const updateCartItemQuantity = (productId: string, nextValue: number) => {
+    const safeValue = Math.max(0, Math.min(99, nextValue));
+    setCart((prev) => {
+      if (safeValue <= 0) {
+        const next = { ...prev };
+        delete next[productId];
+        return next;
+      }
+      return { ...prev, [productId]: safeValue };
+    });
+    setStatus("idle");
+    setStatusMessage("");
+  };
+
+  const clearCart = () => {
+    setCart({});
+    setStatus("idle");
+    setStatusMessage("");
   };
 
   const getFriendlyErrorMessage = (message: string) => {
@@ -88,7 +154,11 @@ const FeaturedProducts = () => {
   };
 
   const handleCheckout = async () => {
-    if (!selectedProduct) return;
+    if (cartItems.length === 0 || cartTotal <= 0) {
+      setStatus("error");
+      setStatusMessage("Please add at least one item to your cart.");
+      return;
+    }
     if (!buyerName.trim()) {
       setStatus("error");
       setStatusMessage("Please enter your full name.");
@@ -100,9 +170,6 @@ const FeaturedProducts = () => {
       return;
     }
 
-    const quantity = quantities[selectedProduct.id] ?? 1;
-    const totalAmount = selectedProduct.price * quantity;
-
     setStatus("processing");
     setStatusMessage("");
 
@@ -111,7 +178,7 @@ const FeaturedProducts = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: totalAmount,
+          amount: cartTotal,
           currency: "KES",
           customer: {
             name: buyerName.trim(),
@@ -121,11 +188,15 @@ const FeaturedProducts = () => {
           context: "uburu_home",
           meta: {
             type: "product_purchase",
-            itemId: selectedProduct.id,
-            itemName: selectedProduct.name,
-            quantity,
-            unitPrice: selectedProduct.price,
-            totalAmount,
+            itemCount: cartItemCount,
+            items: cartItems.map((item) => ({
+              itemId: item.id,
+              itemName: item.name,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalAmount: item.lineTotal,
+            })),
+            totalAmount: cartTotal,
           },
         }),
       });
@@ -179,7 +250,7 @@ const FeaturedProducts = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-yellow-500/40 bg-black px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-yellow-300">
-              6 items
+              {products.length} items
             </span>
             <Button className="bg-yellow-400 text-black hover:bg-yellow-300 px-6 py-3 text-xs font-black uppercase tracking-[0.3em]">
               View all
@@ -257,12 +328,12 @@ const FeaturedProducts = () => {
                   +
                 </button>
               </div>
-              <Button
-                onClick={() => handleBuyClick(product.id)}
-                className="mt-5 w-full bg-red-600 text-white hover:bg-red-500 py-3 text-xs font-black uppercase tracking-[0.3em]"
-              >
-                Buy now
-              </Button>
+                <Button
+                  onClick={() => handleBuyClick(product.id)}
+                  className="mt-5 w-full bg-red-600 text-white hover:bg-red-500 py-3 text-xs font-black uppercase tracking-[0.3em]"
+                >
+                  Buy now
+                </Button>
               </div>
             </div>
           ))}
@@ -284,12 +355,77 @@ const FeaturedProducts = () => {
                 Payments are processed securely via DPO.
               </p>
             </div>
-            {selectedProduct && (
-              <div className="rounded-2xl border border-neutral-800 bg-black px-5 py-4 text-sm font-bold text-white/80">
-                {selectedProduct.name} · Qty: {quantities[selectedProduct.id] ?? 1}
-                <span className="ml-2 text-yellow-300">
-                  KES {(selectedProduct.price * (quantities[selectedProduct.id] ?? 1)).toLocaleString("en-KE")}
-                </span>
+            <div className="rounded-2xl border border-neutral-800 bg-black px-5 py-4 text-sm font-bold text-white/80">
+              Cart total: <span className="text-yellow-300">KES {cartTotal.toLocaleString("en-KE")}</span>
+              <span className="ml-3 text-white/60">Items: {cartItemCount}</span>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-neutral-800 bg-black/70 p-4">
+            {cartItems.length === 0 ? (
+              <p className="text-sm font-semibold text-white/60">
+                Your cart is empty. Tap Buy now on any product card to add it and jump here.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {cartItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex flex-col gap-3 rounded-xl border border-neutral-800 bg-neutral-900/80 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-black text-white">{item.name}</p>
+                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-yellow-200/70">
+                        KES {item.unitPrice.toLocaleString("en-KE")} each
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateCartItemQuantity(item.id, item.quantity - 1)
+                        }
+                        className="h-8 w-8 rounded-lg bg-neutral-800 text-sm font-black text-yellow-300"
+                        aria-label={`Decrease ${item.name} quantity in cart`}
+                      >
+                        -
+                      </button>
+                      <span className="min-w-8 text-center text-sm font-black text-white">
+                        {item.quantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateCartItemQuantity(item.id, item.quantity + 1)
+                        }
+                        className="h-8 w-8 rounded-lg bg-neutral-800 text-sm font-black text-yellow-300"
+                        aria-label={`Increase ${item.name} quantity in cart`}
+                      >
+                        +
+                      </button>
+                      <span className="ml-3 text-sm font-black text-yellow-300">
+                        KES {item.lineTotal.toLocaleString("en-KE")}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => updateCartItemQuantity(item.id, 0)}
+                        className="ml-3 rounded-lg border border-neutral-700 px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/70"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {cartItems.length > 0 && (
+              <div className="mt-4 flex justify-end">
+                <Button
+                  onClick={clearCart}
+                  className="bg-neutral-800 text-white hover:bg-neutral-700 px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em]"
+                >
+                  Clear cart
+                </Button>
               </div>
             )}
           </div>
@@ -331,7 +467,7 @@ const FeaturedProducts = () => {
           <div className="mt-6">
             <Button
               onClick={handleCheckout}
-              disabled={status === "processing"}
+              disabled={status === "processing" || cartItems.length === 0}
               className="w-full bg-yellow-400 text-black hover:bg-yellow-300 py-4 text-sm font-black uppercase tracking-[0.3em]"
             >
               {status === "processing" ? (

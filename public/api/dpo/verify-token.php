@@ -146,8 +146,20 @@ if ($storeHandle) {
 $contextValue = $recordContext !== ''
     ? $recordContext
     : (string)($recordMeta['context'] ?? '');
-$itemName = trim((string)($recordMeta['itemName'] ?? ''));
-$quantity = (int)($recordMeta['quantity'] ?? 0);
+$items = normalize_items($recordMeta['items'] ?? null);
+$legacyItemName = trim((string)($recordMeta['itemName'] ?? ''));
+$legacyQuantity = (int)($recordMeta['quantity'] ?? 0);
+if (!$items && $legacyItemName !== '') {
+    $items[] = [
+        'itemName' => $legacyItemName,
+        'quantity' => max(1, $legacyQuantity),
+    ];
+}
+$itemName = $items
+    ? (string)($items[0]['itemName'] ?? '')
+    : $legacyItemName;
+$quantity = $items ? sum_item_quantities($items) : $legacyQuantity;
+$itemCount = count($items);
 $amountValue = $recordAmount !== '' ? $recordAmount : (string)($recordMeta['totalAmount'] ?? '');
 $currencyValue = $recordCurrency !== ''
     ? $recordCurrency
@@ -161,6 +173,8 @@ echo json_encode([
     'context' => $contextValue !== '' ? $contextValue : null,
     'itemName' => $itemName !== '' ? $itemName : null,
     'quantity' => $quantity > 0 ? $quantity : null,
+    'itemCount' => $itemCount > 0 ? $itemCount : null,
+    'items' => $items ?: null,
     'amount' => $amountValue !== '' ? $amountValue : null,
     'currency' => $currencyValue !== '' ? $currencyValue : null,
 ]);
@@ -358,8 +372,35 @@ function send_purchase_formspree_if_needed(
     $buyerEmail = trim((string)($customer['email'] ?? ''));
 
     $meta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+    $items = normalize_items($meta['items'] ?? null);
     $itemName = trim((string)($meta['itemName'] ?? ''));
-    $quantity = (int)($meta['quantity'] ?? 1);
+    $quantity = (int)($meta['quantity'] ?? 0);
+    if (!$items && $itemName !== '') {
+        $items[] = [
+            'itemName' => $itemName,
+            'quantity' => max(1, $quantity),
+            'unitPrice' => $meta['unitPrice'] ?? '',
+            'totalAmount' => $meta['totalAmount'] ?? '',
+        ];
+    }
+
+    $summaryParts = [];
+    foreach ($items as $item) {
+        $name = trim((string)($item['itemName'] ?? ''));
+        if ($name === '') {
+            continue;
+        }
+        $itemQuantity = max(1, (int)($item['quantity'] ?? 1));
+        $summaryParts[] = $name . ' x' . $itemQuantity;
+    }
+
+    $itemsSummary = implode(', ', $summaryParts);
+    if ($itemsSummary === '') {
+        $itemsSummary = $itemName;
+    }
+    $totalQuantity = $items ? sum_item_quantities($items) : max(1, $quantity);
+    $itemCount = $items ? count($items) : ($itemName !== '' ? 1 : 0);
+
     $unitPrice = $meta['unitPrice'] ?? '';
     $amountValue = $record['amount'] ?? ($meta['totalAmount'] ?? '');
     $currency = (string)($record['currency'] ?? ($meta['currency'] ?? 'KES'));
@@ -377,8 +418,10 @@ function send_purchase_formspree_if_needed(
         '_replyto' => is_valid_email($buyerEmail) ? $buyerEmail : '',
         'fullName' => $buyerName,
         'context' => $contextLabel,
-        'itemName' => $itemName,
-        'quantity' => $quantity > 0 ? (string)$quantity : '',
+        'itemName' => $itemsSummary,
+        'quantity' => $totalQuantity > 0 ? (string)$totalQuantity : '',
+        'itemCount' => $itemCount > 0 ? (string)$itemCount : '',
+        'itemsSummary' => $itemsSummary,
         'unitPrice' => $unitPriceText,
         'total' => $amountText,
         'companyRef' => $companyRef,
@@ -393,4 +436,43 @@ function send_purchase_formspree_if_needed(
     }
 
     return [$record];
+}
+
+function normalize_items($value): array
+{
+    if (!is_array($value)) {
+        return [];
+    }
+
+    $normalized = [];
+    foreach ($value as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $itemName = trim((string)($item['itemName'] ?? ''));
+        if ($itemName === '') {
+            continue;
+        }
+
+        $normalized[] = [
+            'itemId' => trim((string)($item['itemId'] ?? '')),
+            'itemName' => $itemName,
+            'quantity' => max(1, (int)($item['quantity'] ?? 1)),
+            'unitPrice' => $item['unitPrice'] ?? null,
+            'totalAmount' => $item['totalAmount'] ?? null,
+        ];
+    }
+
+    return $normalized;
+}
+
+function sum_item_quantities(array $items): int
+{
+    $total = 0;
+    foreach ($items as $item) {
+        $total += max(1, (int)($item['quantity'] ?? 1));
+    }
+
+    return $total;
 }

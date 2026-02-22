@@ -1,221 +1,41 @@
 import { useState } from "react";
-import { CheckCircle, Loader } from "lucide-react";
+import { CheckCircle, Loader, Ticket } from "lucide-react";
+import { Link } from "react-router-dom";
 import Button from "../shared/Button";
-import culturalEvent from "../../assets/Screenshot-2026-02-20_10-06-49.webp";
-import communityPainting from "../../assets/community-painting-wood-medium-shot.webp";
-import footballCircle from "../../assets/top-view-childs-feet-around-football-ball.webp";
-import  charityHome from "../../assets/pic20.webp";
-
-type PaymentStatus = "idle" | "processing" | "success" | "error";
-
-type CartItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-  lineTotal: number;
-};
-
-const events = [
-  {
-    id: "charity-home",
-    name: "Charity home",
-    price: 1500,
-    tag: "Care",
-    image: charityHome,
-  },
-  {
-    id: "gala-dinner",
-    name: "Cultural concert/performance",
-    price: 4500,
-    tag: "Live",
-    image: culturalEvent,
-  },
-  {
-    id: "quiz-evening",
-    name: "Quiz evening",
-    price: 1200,
-    tag: "Interactive",
-    image: communityPainting,
-  },
-  {
-    id: "sport-tournaments",
-    name: "Sport tournaments",
-    price: 2000,
-    tag: "All ages",
-    image: footballCircle,
-  },
-];
+import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
+import { villageEvents as events } from "../../data/storefrontCatalog";
 
 const FeaturedEvents = () => {
-  const [quantities, setQuantities] = useState(
-    Object.fromEntries(events.map((event) => [event.id, 1])) as Record<
-      string,
-      number
-    >,
-  );
   const [selectedEventId, setSelectedEventId] = useState(events[0].id);
-  const [cart, setCart] = useState<Record<string, number>>({});
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerEmail, setBuyerEmail] = useState("");
-  const [status, setStatus] = useState<PaymentStatus>("idle");
-  const [statusMessage, setStatusMessage] = useState("");
-
-  const cartItems: CartItem[] = events
-    .map((event) => {
-      const quantity = cart[event.id] ?? 0;
-      if (quantity <= 0) {
-        return null;
-      }
-
-      return {
-        id: event.id,
-        name: event.name,
-        quantity,
-        unitPrice: event.price,
-        lineTotal: event.price * quantity,
-      };
-    })
-    .filter((item): item is CartItem => item !== null);
-
-  const cartTotal = cartItems.reduce((total, item) => total + item.lineTotal, 0);
-  const cartItemCount = cartItems.reduce(
-    (count, item) => count + item.quantity,
-    0,
-  );
-
-  const updateQuantity = (eventId: string, nextValue: number) => {
-    const safeValue = Math.max(1, Math.min(99, nextValue));
-    setQuantities((prev) => ({ ...prev, [eventId]: safeValue }));
-  };
+  const {
+    quantities,
+    buyerName,
+    buyerEmail,
+    status,
+    statusMessage,
+    cartItems,
+    cartTotal,
+    cartItemCount,
+    setBuyerName,
+    setBuyerEmail,
+    updateQuantity,
+    addToCart,
+    updateCartItemQuantity,
+    clearCart,
+    scrollToCheckout,
+    handleCheckout,
+  } = useStorefrontCheckout({
+    catalog: events.map(({ id, name, price }) => ({ id, name, price })),
+    context: "uburu_village",
+    purchaseType: "event_purchase",
+    emptyCartMessage: "Please add at least one ticket to your cart.",
+    storageKey: "uburu_village_cart",
+  });
 
   const handleBuyClick = (eventId: string) => {
     setSelectedEventId(eventId);
-    const quantityToAdd = quantities[eventId] ?? 1;
-    setCart((prev) => {
-      const nextQuantity = Math.max(
-        1,
-        Math.min(99, (prev[eventId] ?? 0) + quantityToAdd),
-      );
-      return { ...prev, [eventId]: nextQuantity };
-    });
-    setStatus("idle");
-    setStatusMessage("");
-    const checkoutElement = document.getElementById("uburu-village-checkout");
-    if (checkoutElement) {
-      checkoutElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
-
-  const updateCartItemQuantity = (eventId: string, nextValue: number) => {
-    const safeValue = Math.max(0, Math.min(99, nextValue));
-    setCart((prev) => {
-      if (safeValue <= 0) {
-        const next = { ...prev };
-        delete next[eventId];
-        return next;
-      }
-      return { ...prev, [eventId]: safeValue };
-    });
-    setStatus("idle");
-    setStatusMessage("");
-  };
-
-  const clearCart = () => {
-    setCart({});
-    setStatus("idle");
-    setStatusMessage("");
-  };
-
-  const getFriendlyErrorMessage = (message: string) => {
-    const trimmedMessage = message.trim();
-    if (trimmedMessage.toLowerCase().includes("invalid amount")) {
-      return "Please check the total amount and try again.";
-    }
-    if (trimmedMessage.toLowerCase().includes("unsupported currency")) {
-      return "This currency is not supported.";
-    }
-    if (trimmedMessage.toLowerCase().includes("missing payment url")) {
-      return "We could not start the payment. Please try again.";
-    }
-    return trimmedMessage || "Payment failed. Please try again.";
-  };
-
-  const handleCheckout = async () => {
-    if (cartItems.length === 0 || cartTotal <= 0) {
-      setStatus("error");
-      setStatusMessage("Please add at least one ticket to your cart.");
-      return;
-    }
-    if (!buyerName.trim()) {
-      setStatus("error");
-      setStatusMessage("Please enter your full name.");
-      return;
-    }
-    if (!buyerEmail.trim()) {
-      setStatus("error");
-      setStatusMessage("Please enter your email address.");
-      return;
-    }
-
-    setStatus("processing");
-    setStatusMessage("");
-
-    try {
-      const response = await fetch("/api/dpo/create-token.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: cartTotal,
-          currency: "KES",
-          customer: {
-            name: buyerName.trim(),
-            email: buyerEmail.trim(),
-            phone: undefined,
-          },
-          context: "uburu_village",
-          meta: {
-            type: "event_purchase",
-            itemCount: cartItemCount,
-            items: cartItems.map((item) => ({
-              itemId: item.id,
-              itemName: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalAmount: item.lineTotal,
-            })),
-            totalAmount: cartTotal,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const contentType = response.headers.get("content-type") || "";
-        const errorPayload = contentType.includes("application/json")
-          ? await response.json()
-          : null;
-        const errorText = !errorPayload ? await response.text() : "";
-        const apiMessage = errorPayload?.error || errorText;
-        throw new Error(apiMessage || "Unable to start payment.");
-      }
-
-      const data = await response.json();
-      if (!data?.paymentUrl) {
-        const apiError = data?.error ? ` ${data.error}` : "";
-        throw new Error(`Missing payment URL. Please try again.${apiError}`);
-      }
-
-      setStatus("success");
-      setStatusMessage("Redirecting you to DPO to complete payment.");
-      window.location.href = data.paymentUrl;
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Payment failed. Please try again.";
-      setStatus("error");
-      setStatusMessage(getFriendlyErrorMessage(message));
-    }
+    addToCart(eventId);
+    scrollToCheckout("uburu-village-checkout");
   };
 
   return (
@@ -237,13 +57,25 @@ const FeaturedEvents = () => {
               Grab tickets for the next adventure and keep community programs moving.
             </p>
           </div>
-            <div className="flex items-center gap-3">
-              <span className="rounded-full border border-[#dbe7f3] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-[#5c6f86]">
-                {events.length} events
+          <div className="flex items-center gap-3">
+            <span className="rounded-full border border-[#dbe7f3] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-[#5c6f86]">
+              {events.length} events
+            </span>
+            <Button
+              onClick={() => scrollToCheckout("uburu-village-checkout")}
+              className="bg-[#f2c15d] px-6 py-3 text-xs font-black uppercase tracking-[0.25em] text-[#1c3b57] hover:bg-[#ffd886]"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Ticket className="h-4 w-4" />
+                Tray ({cartItemCount})
               </span>
-            <Button className="bg-[#f2c15d] text-[#1c3b57] hover:bg-[#ffd886] px-6 py-3 text-xs font-black uppercase tracking-[0.3em]">
-              View all
             </Button>
+            <Link
+              to="/checkout?source=village"
+              className="rounded-full border border-[#dbe7f3] px-5 py-3 text-xs font-black uppercase tracking-[0.25em] text-[#1c3b57] transition-colors hover:bg-[#eef4fc]"
+            >
+              Checkout page
+            </Link>
           </div>
         </div>
 
@@ -274,9 +106,7 @@ const FeaturedEvents = () => {
               <div className="p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-black text-[#1c3b57]">
-                      {event.name}
-                    </h3>
+                    <h3 className="text-lg font-black text-[#1c3b57]">{event.name}</h3>
                     <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">
                       Uburu Village
                     </p>
@@ -319,9 +149,9 @@ const FeaturedEvents = () => {
                 </div>
                 <Button
                   onClick={() => handleBuyClick(event.id)}
-                  className="mt-5 w-full bg-[#2f6f99] text-white hover:bg-[#3b83b4] py-3 text-xs font-black uppercase tracking-[0.3em]"
+                  className="mt-5 w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
                 >
-                  Buy now
+                  Add to tray
                 </Button>
               </div>
             </div>
@@ -337,9 +167,7 @@ const FeaturedEvents = () => {
               <p className="text-xs font-black uppercase tracking-[0.3em] text-[#5c6f86]">
                 Checkout
               </p>
-              <h3 className="mt-2 text-2xl font-black text-[#1c3b57]">
-                Complete your purchase
-              </h3>
+              <h3 className="mt-2 text-2xl font-black text-[#1c3b57]">Complete your purchase</h3>
               <p className="mt-2 text-sm font-semibold text-[#5c6f86]">
                 Payments are processed securely via DPO.
               </p>
@@ -350,10 +178,14 @@ const FeaturedEvents = () => {
             </div>
           </div>
 
+          <div className="mt-4 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#5c6f86]">
+            Checkout summary: {cartItems.length} line item(s) · KES {cartTotal.toLocaleString("en-KE")}
+          </div>
+
           <div className="mt-6 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] p-4">
             {cartItems.length === 0 ? (
               <p className="text-sm font-semibold text-[#5c6f86]">
-                Your cart is empty. Tap Buy now on any event card to add tickets and jump here.
+                Your cart is empty. Tap Add to tray on any event card to add tickets and jump here.
               </p>
             ) : (
               <div className="space-y-3">
@@ -407,7 +239,7 @@ const FeaturedEvents = () => {
               <div className="mt-4 flex justify-end">
                 <Button
                   onClick={clearCart}
-                  className="bg-[#dbe7f3] text-[#1c3b57] hover:bg-[#c9ddef] px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em]"
+                  className="bg-[#dbe7f3] px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#1c3b57] hover:bg-[#c9ddef]"
                 >
                   Clear cart
                 </Button>
@@ -453,7 +285,7 @@ const FeaturedEvents = () => {
             <Button
               onClick={handleCheckout}
               disabled={status === "processing" || cartItems.length === 0}
-              className="w-full bg-[#f2c15d] text-[#1c3b57] hover:bg-[#ffd886] py-4 text-sm font-black uppercase tracking-[0.3em]"
+              className="w-full bg-[#f2c15d] py-4 text-sm font-black uppercase tracking-[0.3em] text-[#1c3b57] hover:bg-[#ffd886]"
             >
               {status === "processing" ? (
                 <span className="flex items-center justify-center gap-2">

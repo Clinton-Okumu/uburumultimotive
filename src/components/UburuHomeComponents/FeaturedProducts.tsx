@@ -1,234 +1,43 @@
 import { useState } from "react";
-import { CheckCircle, Loader } from "lucide-react";
+import { CheckCircle, Loader, ShoppingBag } from "lucide-react";
+import { Link } from "react-router-dom";
 import Button from "../shared/Button";
-import ebook from "../../assets/ebook.webp";
-import shirt from "../../assets/shirt.webp";
-import cap from "../../assets/cap.webp";
-import hoodie from "../../assets/hoodie.webp";
-import waterBottle from "../../assets/waterbottle.webp";
-
-type PaymentStatus = "idle" | "processing" | "success" | "error";
-
-type CartItem = {
-  id: string;
-  name: string;
-  quantity: number;
-  unitPrice: number;
-  lineTotal: number;
-};
-
-const products = [
-  {
-    id: "ebooks",
-    name: "Ebooks",
-    price: 1200,
-    tag: "Digital",
-    image: ebook,
-  },
-  {
-    id: "tshirts",
-    name: "T-shirts",
-    price: 1800,
-    tag: "Apparel",
-    image: shirt,
-  },
-  {
-    id: "caps",
-    name: "Caps",
-    price: 900,
-    tag: "Everyday",
-    image: cap,
-  },
-  {
-    id: "hoodies",
-    name: "Hoodies",
-    price: 2800,
-    tag: "Cozy",
-    image: hoodie,
-  },
-  {
-    id: "reusable-bottles",
-    name: "Reusable bottles",
-    price: 1500,
-    tag: "Eco",
-    image: waterBottle,
-  },
-];
+import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
+import { homeProducts as products } from "../../data/storefrontCatalog";
 
 const FeaturedProducts = () => {
-  const [quantities, setQuantities] = useState(
-    Object.fromEntries(products.map((product) => [product.id, 1])) as Record<
-      string,
-      number
-    >,
-  );
   const [selectedProductId, setSelectedProductId] = useState(products[0].id);
-  const [cart, setCart] = useState<Record<string, number>>({});
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerEmail, setBuyerEmail] = useState("");
-  const [status, setStatus] = useState<PaymentStatus>("idle");
-  const [statusMessage, setStatusMessage] = useState("");
-
-  const cartItems: CartItem[] = products
-    .map((product) => {
-      const quantity = cart[product.id] ?? 0;
-      if (quantity <= 0) {
-        return null;
-      }
-
-      return {
-        id: product.id,
-        name: product.name,
-        quantity,
-        unitPrice: product.price,
-        lineTotal: product.price * quantity,
-      };
-    })
-    .filter((item): item is CartItem => item !== null);
-
-  const cartTotal = cartItems.reduce((total, item) => total + item.lineTotal, 0);
-  const cartItemCount = cartItems.reduce(
-    (count, item) => count + item.quantity,
-    0,
-  );
-
-  const updateQuantity = (productId: string, nextValue: number) => {
-    const safeValue = Math.max(1, Math.min(99, nextValue));
-    setQuantities((prev) => ({ ...prev, [productId]: safeValue }));
-  };
-
-  const scrollToCheckout = () => {
-    const checkoutElement = document.getElementById("uburu-home-checkout");
-    if (checkoutElement) {
-      checkoutElement.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
+  const {
+    quantities,
+    buyerName,
+    buyerEmail,
+    status,
+    statusMessage,
+    cartItems,
+    cartTotal,
+    cartItemCount,
+    setBuyerName,
+    setBuyerEmail,
+    updateQuantity,
+    addToCart,
+    updateCartItemQuantity,
+    clearCart,
+    scrollToCheckout,
+    handleCheckout,
+  } = useStorefrontCheckout({
+    catalog: products.map(({ id, name, price }) => ({ id, name, price })),
+    context: "uburu_home",
+    purchaseType: "product_purchase",
+    emptyCartMessage: "Please add at least one item to your cart.",
+    storageKey: "uburu_home_cart",
+  });
 
   const handleBuyClick = (productId: string) => {
     setSelectedProductId(productId);
-    const quantityToAdd = quantities[productId] ?? 1;
-    setCart((prev) => {
-      const nextQuantity = Math.max(
-        1,
-        Math.min(99, (prev[productId] ?? 0) + quantityToAdd),
-      );
-      return { ...prev, [productId]: nextQuantity };
-    });
-    setStatus("idle");
-    setStatusMessage("");
-    scrollToCheckout();
+    addToCart(productId);
+    scrollToCheckout("uburu-home-checkout");
   };
 
-  const updateCartItemQuantity = (productId: string, nextValue: number) => {
-    const safeValue = Math.max(0, Math.min(99, nextValue));
-    setCart((prev) => {
-      if (safeValue <= 0) {
-        const next = { ...prev };
-        delete next[productId];
-        return next;
-      }
-      return { ...prev, [productId]: safeValue };
-    });
-    setStatus("idle");
-    setStatusMessage("");
-  };
-
-  const clearCart = () => {
-    setCart({});
-    setStatus("idle");
-    setStatusMessage("");
-  };
-
-  const getFriendlyErrorMessage = (message: string) => {
-    const trimmedMessage = message.trim();
-    if (trimmedMessage.toLowerCase().includes("invalid amount")) {
-      return "Please check the total amount and try again.";
-    }
-    if (trimmedMessage.toLowerCase().includes("unsupported currency")) {
-      return "This currency is not supported.";
-    }
-    if (trimmedMessage.toLowerCase().includes("missing payment url")) {
-      return "We could not start the payment. Please try again.";
-    }
-    return trimmedMessage || "Payment failed. Please try again.";
-  };
-
-  const handleCheckout = async () => {
-    if (cartItems.length === 0 || cartTotal <= 0) {
-      setStatus("error");
-      setStatusMessage("Please add at least one item to your cart.");
-      return;
-    }
-    if (!buyerName.trim()) {
-      setStatus("error");
-      setStatusMessage("Please enter your full name.");
-      return;
-    }
-    if (!buyerEmail.trim()) {
-      setStatus("error");
-      setStatusMessage("Please enter your email address.");
-      return;
-    }
-
-    setStatus("processing");
-    setStatusMessage("");
-
-    try {
-      const response = await fetch("/api/dpo/create-token.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: cartTotal,
-          currency: "KES",
-          customer: {
-            name: buyerName.trim(),
-            email: buyerEmail.trim(),
-            phone: undefined,
-          },
-          context: "uburu_home",
-          meta: {
-            type: "product_purchase",
-            itemCount: cartItemCount,
-            items: cartItems.map((item) => ({
-              itemId: item.id,
-              itemName: item.name,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              totalAmount: item.lineTotal,
-            })),
-            totalAmount: cartTotal,
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const contentType = response.headers.get("content-type") || "";
-        const errorPayload = contentType.includes("application/json")
-          ? await response.json()
-          : null;
-        const errorText = !errorPayload ? await response.text() : "";
-        const apiMessage = errorPayload?.error || errorText;
-        throw new Error(apiMessage || "Unable to start payment.");
-      }
-
-      const data = await response.json();
-      if (!data?.paymentUrl) {
-        const apiError = data?.error ? ` ${data.error}` : "";
-        throw new Error(`Missing payment URL. Please try again.${apiError}`);
-      }
-
-      setStatus("success");
-      setStatusMessage("Redirecting you to DPO to complete payment.");
-      window.location.href = data.paymentUrl;
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Payment failed. Please try again.";
-      setStatus("error");
-      setStatusMessage(getFriendlyErrorMessage(message));
-    }
-  };
   return (
     <section id="featured" className="relative bg-black px-6 py-20 text-white">
       <div className="absolute inset-0 pointer-events-none">
@@ -252,9 +61,21 @@ const FeaturedProducts = () => {
             <span className="rounded-full border border-yellow-500/40 bg-black px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-yellow-300">
               {products.length} items
             </span>
-            <Button className="bg-yellow-400 text-black hover:bg-yellow-300 px-6 py-3 text-xs font-black uppercase tracking-[0.3em]">
-              View all
+            <Button
+              onClick={() => scrollToCheckout("uburu-home-checkout")}
+              className="bg-yellow-400 text-black hover:bg-yellow-300 px-6 py-3 text-xs font-black uppercase tracking-[0.25em]"
+            >
+              <span className="inline-flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4" />
+                Tray ({cartItemCount})
+              </span>
             </Button>
+            <Link
+              to="/checkout?source=home"
+              className="rounded-full border border-yellow-500/40 px-5 py-3 text-xs font-black uppercase tracking-[0.25em] text-yellow-200 transition-colors hover:bg-neutral-900"
+            >
+              Checkout page
+            </Link>
           </div>
         </div>
 
@@ -285,9 +106,7 @@ const FeaturedProducts = () => {
               <div className="p-6">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-black text-white">
-                      {product.name}
-                    </h3>
+                    <h3 className="text-lg font-black text-white">{product.name}</h3>
                     <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-yellow-200/70">
                       Uburu Home
                     </p>
@@ -297,19 +116,19 @@ const FeaturedProducts = () => {
                   </div>
                 </div>
 
-              <div className="mt-5 flex items-center justify-between rounded-2xl border border-neutral-800 bg-neutral-900 px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) - 1)}
-                  className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
-                  aria-label={`Decrease ${product.name} quantity`}
-                >
-                  -
-                </button>
-                <span className="text-xs font-black uppercase tracking-widest text-yellow-200/70">
-                  Qty:
-                </span>
-                <input
+                <div className="mt-5 flex items-center justify-between rounded-2xl border border-neutral-800 bg-neutral-900 px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) - 1)}
+                    className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
+                    aria-label={`Decrease ${product.name} quantity`}
+                  >
+                    -
+                  </button>
+                  <span className="text-xs font-black uppercase tracking-widest text-yellow-200/70">
+                    Qty:
+                  </span>
+                  <input
                     type="number"
                     min={1}
                     max={99}
@@ -317,22 +136,22 @@ const FeaturedProducts = () => {
                     onChange={(event) =>
                       updateQuantity(product.id, Number(event.target.value) || 1)
                     }
-                  className="w-16 bg-transparent text-center text-sm font-black text-white focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) + 1)}
-                  className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
-                  aria-label={`Increase ${product.name} quantity`}
-                >
-                  +
-                </button>
-              </div>
+                    className="w-16 bg-transparent text-center text-sm font-black text-white focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) + 1)}
+                    className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
+                    aria-label={`Increase ${product.name} quantity`}
+                  >
+                    +
+                  </button>
+                </div>
                 <Button
                   onClick={() => handleBuyClick(product.id)}
-                  className="mt-5 w-full bg-red-600 text-white hover:bg-red-500 py-3 text-xs font-black uppercase tracking-[0.3em]"
+                  className="mt-5 w-full bg-red-600 py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-red-500"
                 >
-                  Buy now
+                  Add to tray
                 </Button>
               </div>
             </div>
@@ -348,9 +167,7 @@ const FeaturedProducts = () => {
               <p className="text-xs font-black uppercase tracking-[0.3em] text-yellow-300">
                 Checkout
               </p>
-              <h3 className="mt-2 text-2xl font-black text-yellow-400">
-                Complete your purchase
-              </h3>
+              <h3 className="mt-2 text-2xl font-black text-yellow-400">Complete your purchase</h3>
               <p className="mt-2 text-sm font-semibold text-white/70">
                 Payments are processed securely via DPO.
               </p>
@@ -361,10 +178,14 @@ const FeaturedProducts = () => {
             </div>
           </div>
 
+          <div className="mt-4 rounded-2xl border border-neutral-800 bg-black/50 px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white/70">
+            Checkout summary: {cartItems.length} line item(s) · KES {cartTotal.toLocaleString("en-KE")}
+          </div>
+
           <div className="mt-6 rounded-2xl border border-neutral-800 bg-black/70 p-4">
             {cartItems.length === 0 ? (
               <p className="text-sm font-semibold text-white/60">
-                Your cart is empty. Tap Buy now on any product card to add it and jump here.
+                Your cart is empty. Tap Add to tray on any product card to add it and jump here.
               </p>
             ) : (
               <div className="space-y-3">
@@ -382,9 +203,7 @@ const FeaturedProducts = () => {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() =>
-                          updateCartItemQuantity(item.id, item.quantity - 1)
-                        }
+                        onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
                         className="h-8 w-8 rounded-lg bg-neutral-800 text-sm font-black text-yellow-300"
                         aria-label={`Decrease ${item.name} quantity in cart`}
                       >
@@ -395,9 +214,7 @@ const FeaturedProducts = () => {
                       </span>
                       <button
                         type="button"
-                        onClick={() =>
-                          updateCartItemQuantity(item.id, item.quantity + 1)
-                        }
+                        onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
                         className="h-8 w-8 rounded-lg bg-neutral-800 text-sm font-black text-yellow-300"
                         aria-label={`Increase ${item.name} quantity in cart`}
                       >
@@ -422,7 +239,7 @@ const FeaturedProducts = () => {
               <div className="mt-4 flex justify-end">
                 <Button
                   onClick={clearCart}
-                  className="bg-neutral-800 text-white hover:bg-neutral-700 px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em]"
+                  className="bg-neutral-800 px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-white hover:bg-neutral-700"
                 >
                   Clear cart
                 </Button>
@@ -468,7 +285,7 @@ const FeaturedProducts = () => {
             <Button
               onClick={handleCheckout}
               disabled={status === "processing" || cartItems.length === 0}
-              className="w-full bg-yellow-400 text-black hover:bg-yellow-300 py-4 text-sm font-black uppercase tracking-[0.3em]"
+              className="w-full bg-yellow-400 py-4 text-sm font-black uppercase tracking-[0.3em] text-black hover:bg-yellow-300"
             >
               {status === "processing" ? (
                 <span className="flex items-center justify-center gap-2">

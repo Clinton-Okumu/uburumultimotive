@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import Therapy from './pages/Therapy';
 import UburuHome from './pages/UburuHome';
 import UburuVillage from './pages/UburuVillage';
+import Checkout from './pages/Checkout';
 
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
                     <Route path="/get/therapy" element={<Therapy />} />
                     <Route path="/get/home" element={<UburuHome />} />
                     <Route path="/get/village" element={<UburuVillage />} />
+                    <Route path="/checkout" element={<Checkout />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

@@ -21,7 +21,55 @@ const NavbarLinks: NavLink[] = [
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [trayCount, setTrayCount] = useState(0);
   const location = useLocation();
+
+  const getStoredCartCount = (storageKey: string) => {
+    if (typeof window === "undefined") {
+      return 0;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (!raw) {
+        return 0;
+      }
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      if (!parsed || typeof parsed !== "object") {
+        return 0;
+      }
+      return Object.values(parsed).reduce<number>((total, value) => {
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+          return total;
+        }
+        return total + Math.max(0, Math.trunc(value));
+      }, 0);
+    } catch {
+      return 0;
+    }
+  };
+
+  const getTrayMeta = (pathname: string) => {
+    if (pathname === "/get/home") {
+      return {
+        count: getStoredCartCount("uburu_home_cart"),
+        label: "Home tray",
+        link: "/checkout?source=home",
+      };
+    }
+
+    if (pathname === "/get/village") {
+      return {
+        count: getStoredCartCount("uburu_village_cart"),
+        label: "Village tray",
+        link: "/checkout?source=village",
+      };
+    }
+
+    return null;
+  };
+
+  const trayMeta = getTrayMeta(location.pathname);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -32,6 +80,22 @@ const Navbar = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    const refreshTrayCount = () => {
+      const meta = getTrayMeta(location.pathname);
+      setTrayCount(meta?.count ?? 0);
+    };
+
+    refreshTrayCount();
+    window.addEventListener("storage", refreshTrayCount);
+    window.addEventListener("uburu:cart-updated", refreshTrayCount);
+
+    return () => {
+      window.removeEventListener("storage", refreshTrayCount);
+      window.removeEventListener("uburu:cart-updated", refreshTrayCount);
+    };
+  }, [location.pathname]);
 
   return (
     <nav
@@ -74,6 +138,14 @@ const Navbar = () => {
               />
             </Link>
           ))}
+          {trayMeta && (
+            <Link
+              to={trayMeta.link}
+              className="rounded-full border border-yellow-500/40 bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-yellow-300 transition-colors hover:bg-neutral-800"
+            >
+              {trayMeta.label}: {trayCount}
+            </Link>
+          )}
         </div>
 
 
@@ -98,6 +170,14 @@ const Navbar = () => {
         }`}
       >
         <div className="p-8 space-y-6">
+          {trayMeta && (
+            <Link
+              to={trayMeta.link}
+              className="block rounded-xl border border-yellow-500/40 bg-black px-4 py-3 text-sm font-black uppercase tracking-[0.2em] text-yellow-300"
+            >
+              {trayMeta.label}: {trayCount}
+            </Link>
+          )}
           {NavbarLinks.map((link) => (
             <Link
               key={link.id}

@@ -294,7 +294,7 @@ const Checkout = () => {
   };
 
   return (
-    <section className="relative bg-slate-950 px-6 py-24 text-white">
+    <section className="relative min-h-screen bg-slate-950 px-6 py-24 text-white">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-20 left-10 h-56 w-56 rounded-full bg-yellow-500/20 blur-[120px]" />
         <div className="absolute bottom-0 right-0 h-56 w-56 rounded-full bg-cyan-500/15 blur-[140px]" />

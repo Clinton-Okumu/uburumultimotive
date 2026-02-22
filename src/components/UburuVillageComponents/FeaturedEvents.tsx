@@ -1,41 +1,30 @@
 import { useState } from "react";
-import { CheckCircle, Loader, Ticket } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Ticket } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Button from "../shared/Button";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { villageEvents as events } from "../../data/storefrontCatalog";
 
 const FeaturedEvents = () => {
+  const navigate = useNavigate();
   const [selectedEventId, setSelectedEventId] = useState(events[0].id);
-  const {
-    quantities,
-    buyerName,
-    buyerEmail,
-    status,
-    statusMessage,
-    cartItems,
-    cartTotal,
-    cartItemCount,
-    setBuyerName,
-    setBuyerEmail,
-    updateQuantity,
-    addToCart,
-    updateCartItemQuantity,
-    clearCart,
-    scrollToCheckout,
-    handleCheckout,
-  } = useStorefrontCheckout({
-    catalog: events.map(({ id, name, price }) => ({ id, name, price })),
-    context: "uburu_village",
-    purchaseType: "event_purchase",
-    emptyCartMessage: "Please add at least one ticket to your cart.",
-    storageKey: "uburu_village_cart",
-  });
+  const { quantities, cartItemCount, updateQuantity, addToCart } =
+    useStorefrontCheckout({
+      catalog: events.map(({ id, name, price }) => ({ id, name, price })),
+      context: "uburu_village",
+      purchaseType: "event_purchase",
+      emptyCartMessage: "Please add at least one ticket to your cart.",
+      storageKey: "uburu_village_cart",
+    });
+
+  const goToCheckout = () => {
+    navigate("/checkout?source=village");
+  };
 
   const handleBuyClick = (eventId: string) => {
     setSelectedEventId(eventId);
     addToCart(eventId);
-    scrollToCheckout("uburu-village-checkout");
+    goToCheckout();
   };
 
   return (
@@ -62,20 +51,14 @@ const FeaturedEvents = () => {
               {events.length} events
             </span>
             <Button
-              onClick={() => scrollToCheckout("uburu-village-checkout")}
+              onClick={goToCheckout}
               className="bg-[#f2c15d] px-6 py-3 text-xs font-black uppercase tracking-[0.25em] text-[#1c3b57] hover:bg-[#ffd886]"
             >
               <span className="inline-flex items-center gap-2">
                 <Ticket className="h-4 w-4" />
-                Tray ({cartItemCount})
+                Checkout ({cartItemCount})
               </span>
             </Button>
-            <Link
-              to="/checkout?source=village"
-              className="rounded-full border border-[#dbe7f3] px-5 py-3 text-xs font-black uppercase tracking-[0.25em] text-[#1c3b57] transition-colors hover:bg-[#eef4fc]"
-            >
-              Checkout page
-            </Link>
           </div>
         </div>
 
@@ -156,147 +139,6 @@ const FeaturedEvents = () => {
               </div>
             </div>
           ))}
-        </div>
-
-        <div
-          id="uburu-village-checkout"
-          className="mt-12 rounded-[2.5rem] border border-[#dbe7f3] bg-white p-8 shadow-lg"
-        >
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-[#5c6f86]">
-                Checkout
-              </p>
-              <h3 className="mt-2 text-2xl font-black text-[#1c3b57]">Complete your purchase</h3>
-              <p className="mt-2 text-sm font-semibold text-[#5c6f86]">
-                Payments are processed securely via DPO.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-[#dbe7f3] bg-white px-5 py-4 text-sm font-bold text-[#3b4b74]">
-              Cart total: <span className="text-[#1c3b57]">KES {cartTotal.toLocaleString("en-KE")}</span>
-              <span className="ml-3 text-[#5c6f86]">Items: {cartItemCount}</span>
-            </div>
-          </div>
-
-          <div className="mt-4 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-[#5c6f86]">
-            Checkout summary: {cartItems.length} line item(s) · KES {cartTotal.toLocaleString("en-KE")}
-          </div>
-
-          <div className="mt-6 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] p-4">
-            {cartItems.length === 0 ? (
-              <p className="text-sm font-semibold text-[#5c6f86]">
-                Your cart is empty. Tap Add to tray on any event card to add tickets and jump here.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col gap-3 rounded-xl border border-[#dbe7f3] bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-black text-[#1c3b57]">{item.name}</p>
-                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">
-                        KES {item.unitPrice.toLocaleString("en-KE")} each
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
-                        className="h-8 w-8 rounded-lg bg-white text-sm font-black text-[#1c3b57] shadow-sm"
-                        aria-label={`Decrease ${item.name} quantity in cart`}
-                      >
-                        -
-                      </button>
-                      <span className="min-w-8 text-center text-sm font-black text-[#1c3b57]">
-                        {item.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
-                        className="h-8 w-8 rounded-lg bg-white text-sm font-black text-[#1c3b57] shadow-sm"
-                        aria-label={`Increase ${item.name} quantity in cart`}
-                      >
-                        +
-                      </button>
-                      <span className="ml-3 text-sm font-black text-[#1c3b57]">
-                        KES {item.lineTotal.toLocaleString("en-KE")}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => updateCartItemQuantity(item.id, 0)}
-                        className="ml-3 rounded-lg border border-[#dbe7f3] px-2 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#5c6f86]"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {cartItems.length > 0 && (
-              <div className="mt-4 flex justify-end">
-                <Button
-                  onClick={clearCart}
-                  className="bg-[#dbe7f3] px-4 py-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#1c3b57] hover:bg-[#c9ddef]"
-                >
-                  Clear cart
-                </Button>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <input
-              type="text"
-              value={buyerName}
-              onChange={(eventInput) => setBuyerName(eventInput.target.value)}
-              placeholder="Full name"
-              className="w-full rounded-2xl border border-[#dbe7f3] bg-white px-5 py-4 text-sm font-bold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#f2c15d]"
-            />
-            <input
-              type="email"
-              value={buyerEmail}
-              onChange={(eventInput) => setBuyerEmail(eventInput.target.value)}
-              placeholder="Email address"
-              className="w-full rounded-2xl border border-[#dbe7f3] bg-white px-5 py-4 text-sm font-bold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#f2c15d]"
-            />
-          </div>
-
-          {status !== "idle" && (
-            <div
-              className={`mt-5 flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm font-bold ${
-                status === "error"
-                  ? "border-red-200 bg-red-50 text-red-700"
-                  : "border-green-200 bg-green-50 text-green-700"
-              }`}
-            >
-              {status === "error" ? (
-                <span className="mt-0.5">!</span>
-              ) : (
-                <CheckCircle className="mt-0.5 h-4 w-4" />
-              )}
-              <span>{statusMessage}</span>
-            </div>
-          )}
-
-          <div className="mt-6">
-            <Button
-              onClick={handleCheckout}
-              disabled={status === "processing" || cartItems.length === 0}
-              className="w-full bg-[#f2c15d] py-4 text-sm font-black uppercase tracking-[0.3em] text-[#1c3b57] hover:bg-[#ffd886]"
-            >
-              {status === "processing" ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader className="h-4 w-4 animate-spin" />
-                  Redirecting...
-                </span>
-              ) : (
-                "PAY"
-              )}
-            </Button>
-          </div>
         </div>
       </div>
     </section>

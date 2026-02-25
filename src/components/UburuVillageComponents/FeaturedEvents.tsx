@@ -3,14 +3,62 @@ import { Ticket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../shared/Button";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
-import { villageEvents as events } from "../../data/storefrontCatalog";
+import {
+  villageEventOptions,
+  type VillageEventOption,
+  type VillageTicketType,
+} from "../../data/storefrontCatalog";
+
+type VillageEventCard = {
+  id: string;
+  name: string;
+  image: string;
+  tag: string;
+  individualOption: VillageEventOption;
+  groupOption: VillageEventOption;
+};
+
+const eventCards: VillageEventCard[] = (() => {
+  const grouped = new Map<string, VillageEventCard>();
+
+  villageEventOptions.forEach((option) => {
+    const existing = grouped.get(option.baseEventId);
+
+    if (!existing) {
+      grouped.set(option.baseEventId, {
+        id: option.baseEventId,
+        name: option.name.replace(" (Individual)", "").replace(" (Group of 5)", ""),
+        image: option.image,
+        tag: "Tickets",
+        individualOption: option,
+        groupOption: option,
+      });
+      return;
+    }
+
+    if (option.ticketType === "individual") {
+      existing.individualOption = option;
+    } else {
+      existing.groupOption = option;
+    }
+  });
+
+  return Array.from(grouped.values());
+})();
 
 const FeaturedEvents = () => {
   const navigate = useNavigate();
-  const [selectedEventId, setSelectedEventId] = useState(events[0].id);
+  const [selectedEventId, setSelectedEventId] = useState(eventCards[0]?.id ?? "");
+  const [ticketTypeByEventId, setTicketTypeByEventId] = useState<
+    Record<string, VillageTicketType>
+  >(() =>
+    Object.fromEntries(
+      eventCards.map((event) => [event.id, "individual"] as const),
+    ),
+  );
   const { quantities, cartItemCount, updateQuantity, addToCart } =
     useStorefrontCheckout({
-      catalog: events.map(({ id, name, price }) => ({ id, name, price })),
+      catalog: villageEventOptions.map(({ id, name, price }) => ({ id, name, price })),
       context: "uburu_village",
       purchaseType: "event_purchase",
       emptyCartMessage: "Please add at least one ticket to your cart.",
@@ -21,9 +69,15 @@ const FeaturedEvents = () => {
     navigate("/checkout?source=village");
   };
 
-  const handleBuyClick = (eventId: string) => {
-    setSelectedEventId(eventId);
-    addToCart(eventId);
+  const getSelectedOption = (event: VillageEventCard) =>
+    ticketTypeByEventId[event.id] === "group"
+      ? event.groupOption
+      : event.individualOption;
+
+  const handleBuyClick = (event: VillageEventCard) => {
+    const selectedOption = getSelectedOption(event);
+    setSelectedEventId(event.id);
+    addToCart(selectedOption.id);
     goToCheckout();
   };
 
@@ -48,7 +102,7 @@ const FeaturedEvents = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-[#dbe7f3] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-[#5c6f86]">
-              {events.length} events
+              {eventCards.length} events
             </span>
             <Button
               onClick={goToCheckout}
@@ -63,7 +117,11 @@ const FeaturedEvents = () => {
         </div>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {events.map((event) => (
+          {eventCards.map((event) => {
+            const selectedOption = getSelectedOption(event);
+            const ticketType = ticketTypeByEventId[event.id] ?? "individual";
+
+            return (
             <div
               key={event.id}
               className={`group overflow-hidden rounded-3xl border bg-white shadow-lg transition-transform duration-300 hover:-translate-y-1 ${
@@ -95,50 +153,105 @@ const FeaturedEvents = () => {
                     </p>
                   </div>
                   <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                    KES {event.price.toLocaleString("en-KE")}
+                    KES {selectedOption.price.toLocaleString("en-KE")}
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-3 py-2">
+                <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
                   <button
                     type="button"
-                    onClick={() => updateQuantity(event.id, (quantities[event.id] ?? 1) - 1)}
-                    className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                    aria-label={`Decrease ${event.name} ticket quantity`}
-                  >
-                    -
-                  </button>
-                  <span className="text-xs font-black uppercase tracking-widest text-[#6a7c92]">
-                    Qty:
-                  </span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={99}
-                    value={quantities[event.id] ?? 1}
-                    onChange={(eventInput) =>
-                      updateQuantity(event.id, Number(eventInput.target.value) || 1)
+                    onClick={() =>
+                      setTicketTypeByEventId((prev) => ({
+                        ...prev,
+                        [event.id]: "individual",
+                      }))
                     }
-                    className="w-16 bg-transparent text-center text-sm font-black text-[#1c3b57] focus:outline-none"
-                  />
+                    className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition ${
+                      ticketType === "individual"
+                        ? "bg-[#2f6f99] text-white"
+                        : "bg-white text-[#5c6f86]"
+                    }`}
+                  >
+                    Individual
+                  </button>
                   <button
                     type="button"
-                    onClick={() => updateQuantity(event.id, (quantities[event.id] ?? 1) + 1)}
-                    className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                    aria-label={`Increase ${event.name} ticket quantity`}
+                    onClick={() =>
+                      setTicketTypeByEventId((prev) => ({
+                        ...prev,
+                        [event.id]: "group",
+                      }))
+                    }
+                    className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition ${
+                      ticketType === "group"
+                        ? "bg-[#2f6f99] text-white"
+                        : "bg-white text-[#5c6f86]"
+                    }`}
                   >
-                    +
+                    Group (5)
                   </button>
                 </div>
+
+                {ticketType === "individual" ? (
+                  <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          selectedOption.id,
+                          (quantities[selectedOption.id] ?? 1) - 1,
+                        )
+                      }
+                      className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
+                      aria-label={`Decrease ${event.name} ticket quantity`}
+                    >
+                      -
+                    </button>
+                    <span className="text-xs font-black uppercase tracking-widest text-[#6a7c92]">
+                      Qty:
+                    </span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={quantities[selectedOption.id] ?? 1}
+                      onChange={(eventInput) =>
+                        updateQuantity(
+                          selectedOption.id,
+                          Number(eventInput.target.value) || 1,
+                        )
+                      }
+                      className="w-16 bg-transparent text-center text-sm font-black text-[#1c3b57] focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateQuantity(
+                          selectedOption.id,
+                          (quantities[selectedOption.id] ?? 1) + 1,
+                        )
+                      }
+                      className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
+                      aria-label={`Increase ${event.name} ticket quantity`}
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-[#5c6f86]">
+                    Group package: fixed at 5 people
+                  </div>
+                )}
                 <Button
-                  onClick={() => handleBuyClick(event.id)}
+                  onClick={() => handleBuyClick(event)}
                   className="mt-5 w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
                 >
-                  Add to tray
+                  {ticketType === "group" ? "Proceed to checkout" : "Add to tray"}
                 </Button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

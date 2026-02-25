@@ -6,7 +6,7 @@ import waterBottle from "../assets/waterbottle.webp";
 import culturalEvent from "../assets/Screenshot-2026-02-20_10-06-49.webp";
 import communityPainting from "../assets/community-painting-wood-medium-shot.webp";
 import footballCircle from "../assets/top-view-childs-feet-around-football-ball.webp";
-import charityHome from "../assets/pic20.webp";
+import olooluaNatureTrail from "../assets/uburuvillge2.webp";
 
 export type StorefrontSource = "home" | "village";
 
@@ -16,6 +16,13 @@ export type StorefrontItem = {
   price: number;
   tag: string;
   image: string;
+};
+
+export type VillageTicketType = "individual" | "group";
+
+export type VillageEventOption = StorefrontItem & {
+  baseEventId: string;
+  ticketType: VillageTicketType;
 };
 
 export const homeProducts: StorefrontItem[] = [
@@ -56,13 +63,13 @@ export const homeProducts: StorefrontItem[] = [
   },
 ];
 
-export const villageEvents: StorefrontItem[] = [
+const villageBaseEvents: StorefrontItem[] = [
   {
     id: "charity-home",
-    name: "Charity home",
+    name: "Oloolua nature trail",
     price: 1500,
     tag: "Care",
-    image: charityHome,
+    image: olooluaNatureTrail,
   },
   {
     id: "gala-dinner",
@@ -86,3 +93,28 @@ export const villageEvents: StorefrontItem[] = [
     image: footballCircle,
   },
 ];
+
+export const villageEventOptions: VillageEventOption[] = villageBaseEvents.flatMap(
+  (event) => [
+    {
+      id: `${event.id}-individual`,
+      baseEventId: event.id,
+      ticketType: "individual",
+      name: `${event.name} (Individual)`,
+      price: event.price,
+      tag: "Individual",
+      image: event.image,
+    },
+    {
+      id: `${event.id}-group`,
+      baseEventId: event.id,
+      ticketType: "group",
+      name: `${event.name} (Group of 5)`,
+      price: event.price * 5,
+      tag: "Group of 5",
+      image: event.image,
+    },
+  ],
+);
+
+export const villageEvents: StorefrontItem[] = villageEventOptions;

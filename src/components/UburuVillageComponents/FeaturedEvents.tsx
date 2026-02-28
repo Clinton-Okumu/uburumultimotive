@@ -46,16 +46,24 @@ const eventCards: VillageEventCard[] = (() => {
   return Array.from(grouped.values());
 })();
 
+const visibleEventCards = eventCards.slice(0, 1);
+
 const FeaturedEvents = () => {
   const navigate = useNavigate();
-  const [selectedEventId, setSelectedEventId] = useState(eventCards[0]?.id ?? "");
+  const [selectedEventId, setSelectedEventId] = useState(visibleEventCards[0]?.id ?? "");
   const [ticketTypeByEventId, setTicketTypeByEventId] = useState<
     Record<string, VillageTicketType>
   >(() =>
     Object.fromEntries(
-      eventCards.map((event) => [event.id, "individual"] as const),
+      visibleEventCards.map((event) => [event.id, "individual"] as const),
     ),
   );
+  const [groupActionByEventId, setGroupActionByEventId] = useState<
+    Record<string, "pay_now" | "pay_later">
+  >(() => Object.fromEntries(visibleEventCards.map((event) => [event.id, "pay_now"] as const)));
+  const [payLaterStatusByEventId, setPayLaterStatusByEventId] = useState<
+    Record<string, { state: "idle" | "sending" | "sent" | "error"; message: string }>
+  >(() => Object.fromEntries(visibleEventCards.map((event) => [event.id, { state: "idle", message: "" }] as const)));
   const { quantities, cartItemCount, updateQuantity, addToCart } =
     useStorefrontCheckout({
       catalog: villageEventOptions.map(({ id, name, price }) => ({ id, name, price })),
@@ -81,6 +89,87 @@ const FeaturedEvents = () => {
     goToCheckout();
   };
 
+  const handlePayLaterSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+    event: VillageEventCard,
+  ) => {
+    e.preventDefault();
+    const status = payLaterStatusByEventId[event.id]?.state;
+    if (status === "sending") return;
+
+    setPayLaterStatusByEventId((prev) => ({
+      ...prev,
+      [event.id]: { state: "sending", message: "" },
+    }));
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const fullName = (formData.get("fullName") || "").toString().trim();
+    const phone = (formData.get("phone") || "").toString().trim();
+    const email = (formData.get("email") || "").toString().trim();
+
+    if (!phone && !email) {
+      setPayLaterStatusByEventId((prev) => ({
+        ...prev,
+        [event.id]: {
+          state: "error",
+          message: "Add a phone number or email so we can reach you.",
+        },
+      }));
+      return;
+    }
+
+    const selectedOption = getSelectedOption(event);
+    const submitData = new FormData();
+    submitData.set("name", fullName);
+    submitData.set("email", email || "no-reply@uburumultimovehs.org");
+    submitData.set("phone", phone);
+    submitData.set("eventName", event.name);
+    submitData.set("ticketOption", selectedOption.name);
+    submitData.set("message", `Pay later request for ${event.name} (${selectedOption.name}). Contact: ${phone || "N/A"} / ${email || "N/A"}.`);
+    submitData.set("_subject", "Uburu Village: Group booking pay later request");
+
+    try {
+      const response = await fetch("https://formspree.io/f/xpqjaolz", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: submitData,
+      });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        const errorMessage =
+          data?.error ||
+          data?.errors
+            ?.map?.((item: { message?: string }) => item?.message)
+            .filter(Boolean)
+            .join(", ") ||
+          "Unable to send your details right now.";
+        throw new Error(errorMessage);
+      }
+
+      setPayLaterStatusByEventId((prev) => ({
+        ...prev,
+        [event.id]: {
+          state: "sent",
+          message: "Received. We will contact you shortly to complete your booking.",
+        },
+      }));
+      form.reset();
+    } catch (error) {
+      setPayLaterStatusByEventId((prev) => ({
+        ...prev,
+        [event.id]: {
+          state: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Unable to send your details right now.",
+        },
+      }));
+    }
+  };
+
   return (
     <section id="events" className="relative bg-[#f8fbff] px-6 py-20">
       <div className="absolute inset-0 pointer-events-none">
@@ -102,7 +191,7 @@ const FeaturedEvents = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-[#dbe7f3] bg-white px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-[#5c6f86]">
-              {eventCards.length} events
+               {visibleEventCards.length} event
             </span>
             <Button
               onClick={goToCheckout}
@@ -117,9 +206,14 @@ const FeaturedEvents = () => {
         </div>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {eventCards.map((event) => {
+          {visibleEventCards.map((event) => {
             const selectedOption = getSelectedOption(event);
             const ticketType = ticketTypeByEventId[event.id] ?? "individual";
+            const groupAction = groupActionByEventId[event.id] ?? "pay_now";
+            const payLaterStatus = payLaterStatusByEventId[event.id] ?? {
+              state: "idle",
+              message: "",
+            };
 
             return (
             <div
@@ -238,12 +332,93 @@ const FeaturedEvents = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-[#5c6f86]">
-                    Group package: fixed at 5 people
-                  </div>
+                  <>
+                    <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-[#5c6f86]">
+                      Group package: fixed at 5 people
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setGroupActionByEventId((prev) => ({
+                            ...prev,
+                            [event.id]: "pay_now",
+                          }))
+                        }
+                        className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition ${
+                          groupAction === "pay_now"
+                            ? "bg-[#2f6f99] text-white"
+                            : "bg-white text-[#5c6f86]"
+                        }`}
+                      >
+                        Pay now
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setGroupActionByEventId((prev) => ({
+                            ...prev,
+                            [event.id]: "pay_later",
+                          }))
+                        }
+                        className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition ${
+                          groupAction === "pay_later"
+                            ? "bg-[#2f6f99] text-white"
+                            : "bg-white text-[#5c6f86]"
+                        }`}
+                      >
+                        Pay later
+                      </button>
+                    </div>
+
+                    {groupAction === "pay_later" && (
+                      <form className="mt-4 space-y-3" onSubmit={(e) => handlePayLaterSubmit(e, event)}>
+                        <input
+                          type="text"
+                          name="fullName"
+                          placeholder="Full name"
+                          required
+                          className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                        />
+                        <input
+                          type="tel"
+                          name="phone"
+                          placeholder="Phone number"
+                          className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                        />
+                        <input
+                          type="email"
+                          name="email"
+                          placeholder="Email (optional)"
+                          className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                        />
+                        {payLaterStatus.state !== "idle" && (
+                          <div
+                            className={`rounded-xl border px-3 py-2 text-xs font-bold ${
+                              payLaterStatus.state === "sent"
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : "border-red-200 bg-red-50 text-red-700"
+                            }`}
+                          >
+                            {payLaterStatus.message}
+                          </div>
+                        )}
+                        <Button
+                          type="submit"
+                          className="w-full bg-[#f2c15d] py-3 text-xs font-black uppercase tracking-[0.2em] text-[#1c3b57] hover:bg-[#ffd886]"
+                          disabled={payLaterStatus.state === "sending"}
+                        >
+                          {payLaterStatus.state === "sending"
+                            ? "Sending..."
+                            : "Send pay later request"}
+                        </Button>
+                      </form>
+                    )}
+                  </>
                 )}
                 <Button
                   onClick={() => handleBuyClick(event)}
+                  disabled={ticketType === "group" && groupAction === "pay_later"}
                   className="mt-5 w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
                 >
                   {ticketType === "group" ? "Proceed to checkout" : "Add to tray"}

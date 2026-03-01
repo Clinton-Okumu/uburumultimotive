@@ -112,8 +112,19 @@ const PurchaseReturn = () => {
     verify();
   }, [transactionToken, companyRef]);
 
-  const contextLabel = context === "uburu_home" ? "Uburu Home" : "Uburu Village";
-  const returnPath = context === "uburu_home" ? "/get/home" : "/get/village";
+  const isTherapyContext = context === "therapy_booking";
+  const contextLabel =
+    context === "uburu_home"
+      ? "Uburu Home"
+      : context === "therapy_booking"
+        ? "Uburu Therapy"
+        : "Uburu Village";
+  const returnPath =
+    context === "uburu_home"
+      ? "/get/home"
+      : context === "therapy_booking"
+        ? "/get/therapy"
+        : "/get/village";
   const amountLabel = amount ? `${currency} ${amount}`.trim() : "";
 
   return (
@@ -124,7 +135,7 @@ const PurchaseReturn = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Verifying your payment
             </h2>
-            <p className="text-gray-600">Please wait while we confirm your purchase.</p>
+            <p className="text-gray-600">Please wait while we confirm your payment.</p>
           </>
         )}
 
@@ -134,7 +145,9 @@ const PurchaseReturn = () => {
               Payment confirmed
             </h2>
             <p className="text-gray-700 mb-2">
-              Thank you for supporting {contextLabel}.
+              {isTherapyContext
+                ? "Thank you. Your therapy booking payment is confirmed."
+                : `Thank you for supporting ${contextLabel}.`}
             </p>
             {itemCount && itemCount > 1 && (
               <p className="text-sm text-gray-600">Items: {itemCount}</p>
@@ -237,7 +250,7 @@ const PurchaseReturn = () => {
               to={returnPath}
               className="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-400 text-black py-3 px-6 rounded-xl text-base font-semibold transition-all duration-300"
             >
-              Back to {contextLabel}
+              {isTherapyContext ? "Back to Therapy" : `Back to ${contextLabel}`}
             </Link>
           </div>
         )}

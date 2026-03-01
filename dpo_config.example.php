@@ -17,6 +17,7 @@ return [
     'purchase_descriptions' => [
         'uburu_village' => 'Uburu Village Tickets',
         'uburu_home' => 'Uburu Home Purchase',
+        'therapy_booking' => 'Uburu Therapy Session',
     ],
     'formspree_purchase_url' => 'https://formspree.io/f/xpqjaolz',
     'company_ref_prefix' => 'DON',

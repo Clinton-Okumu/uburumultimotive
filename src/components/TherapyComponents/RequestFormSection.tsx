@@ -2,6 +2,96 @@ import { useState } from "react";
 import Button from "../shared/Button";
 import { Mail, Phone, User } from "lucide-react";
 
+type TherapyPricingOption = {
+  id: string;
+  category: "Individual" | "Couples";
+  mode: "Online" | "Physical";
+  sessions: number;
+  amount: number;
+  label: string;
+};
+
+const THERAPY_PRICING_OPTIONS: TherapyPricingOption[] = [
+  {
+    id: "individual-online-1",
+    category: "Individual",
+    mode: "Online",
+    sessions: 1,
+    amount: 1600,
+    label: "Online individual - 1 session (KES 1,600)",
+  },
+  {
+    id: "individual-online-4",
+    category: "Individual",
+    mode: "Online",
+    sessions: 4,
+    amount: 5000,
+    label: "Online individual - 4 sessions (KES 5,000)",
+  },
+  {
+    id: "individual-online-6",
+    category: "Individual",
+    mode: "Online",
+    sessions: 6,
+    amount: 7500,
+    label: "Online individual - 6 sessions (KES 7,500)",
+  },
+  {
+    id: "individual-online-8",
+    category: "Individual",
+    mode: "Online",
+    sessions: 8,
+    amount: 10000,
+    label: "Online individual - 8 sessions (KES 10,000)",
+  },
+  {
+    id: "individual-physical-1",
+    category: "Individual",
+    mode: "Physical",
+    sessions: 1,
+    amount: 1800,
+    label: "Physical individual - 1 session (KES 1,800)",
+  },
+  {
+    id: "individual-physical-4",
+    category: "Individual",
+    mode: "Physical",
+    sessions: 4,
+    amount: 6500,
+    label: "Physical individual - 4 sessions (KES 6,500)",
+  },
+  {
+    id: "couples-online-1",
+    category: "Couples",
+    mode: "Online",
+    sessions: 1,
+    amount: 3000,
+    label: "Couples online - 1 session (KES 3,000)",
+  },
+  {
+    id: "couples-physical-1",
+    category: "Couples",
+    mode: "Physical",
+    sessions: 1,
+    amount: 3500,
+    label: "Couples physical - 1 session (KES 3,500)",
+  },
+];
+
+const getFriendlyPaymentErrorMessage = (message: string) => {
+  const normalizedMessage = message.trim().toLowerCase();
+  if (normalizedMessage.includes("invalid amount")) {
+    return "Your selected package amount is invalid. Please reselect the package and try again.";
+  }
+  if (normalizedMessage.includes("unsupported currency")) {
+    return "This payment currency is not supported right now.";
+  }
+  if (normalizedMessage.includes("missing payment url")) {
+    return "We could not start the payment. Please try again.";
+  }
+  return message.trim() || "Unable to start payment. Please try again.";
+};
+
 const RequestFormSection = () => {
   type FormData = {
     fullName: string;
@@ -20,6 +110,7 @@ const RequestFormSection = () => {
     assistanceReason: string[];
     assistanceReasonOther: string;
     medication: string;
+    pricingOptionId: string;
     termsAccepted: boolean;
   };
 
@@ -40,6 +131,7 @@ const RequestFormSection = () => {
     assistanceReason: [],
     assistanceReasonOther: "",
     medication: "",
+    pricingOptionId: "",
     termsAccepted: false,
   });
 
@@ -81,9 +173,19 @@ const RequestFormSection = () => {
     e.preventDefault();
     if (status === "sending") return;
 
+    const selectedPricingOption = THERAPY_PRICING_OPTIONS.find(
+      (option) => option.id === formData.pricingOptionId,
+    );
+
     if (formData.assistanceReason.length === 0) {
       setStatus("error");
       setStatusMessage("Please select at least one reason for assistance.");
+      return;
+    }
+
+    if (!selectedPricingOption) {
+      setStatus("error");
+      setStatusMessage("Please select a therapy package before continuing.");
       return;
     }
 
@@ -110,6 +212,11 @@ const RequestFormSection = () => {
       submitData.set("assistanceReason", formData.assistanceReason.join(", "));
       submitData.set("assistanceReasonOther", formData.assistanceReasonOther);
       submitData.set("medication", formData.medication);
+      submitData.set("sessionPackage", selectedPricingOption.label);
+      submitData.set("sessionCategory", selectedPricingOption.category);
+      submitData.set("sessionMode", selectedPricingOption.mode);
+      submitData.set("sessionCount", String(selectedPricingOption.sessions));
+      submitData.set("sessionAmountKes", String(selectedPricingOption.amount));
       submitData.set("termsAccepted", formData.termsAccepted ? "yes" : "no");
       submitData.set("company", "");
 
@@ -127,10 +234,62 @@ const RequestFormSection = () => {
         throw new Error(errorMessage);
       }
 
+      const paymentResponse = await fetch("/api/dpo/create-token.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: selectedPricingOption.amount,
+          currency: "KES",
+          customer: {
+            name: formData.fullName.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim() || undefined,
+          },
+          context: "therapy_booking",
+          meta: {
+            type: "therapy_booking",
+            packageId: selectedPricingOption.id,
+            packageLabel: selectedPricingOption.label,
+            itemName: selectedPricingOption.label,
+            quantity: 1,
+            category: selectedPricingOption.category,
+            mode: selectedPricingOption.mode,
+            sessions: selectedPricingOption.sessions,
+            amountKes: selectedPricingOption.amount,
+            totalAmount: selectedPricingOption.amount,
+            currency: "KES",
+            items: [
+              {
+                itemId: selectedPricingOption.id,
+                itemName: selectedPricingOption.label,
+                quantity: 1,
+                unitPrice: selectedPricingOption.amount,
+                totalAmount: selectedPricingOption.amount,
+              },
+            ],
+            assistanceType: formData.assistanceType,
+          },
+        }),
+      });
+
+      if (!paymentResponse.ok) {
+        const contentType = paymentResponse.headers.get("content-type") || "";
+        const errorPayload = contentType.includes("application/json")
+          ? await paymentResponse.json()
+          : null;
+        const errorText = !errorPayload ? await paymentResponse.text() : "";
+        const apiMessage = errorPayload?.error || errorText;
+        throw new Error(apiMessage || "Unable to start payment.");
+      }
+
+      const paymentData = await paymentResponse.json();
+      if (!paymentData?.paymentUrl) {
+        const apiError = paymentData?.error ? ` ${paymentData.error}` : "";
+        throw new Error(`Missing payment URL. Please try again.${apiError}`);
+      }
+
       setStatus("sent");
-      setStatusMessage(
-        "Submitted successfully. The support team will reach out to help you with booking",
-      );
+      setStatusMessage("Request received. Redirecting you to secure payment.");
       setFormData({
         fullName: "",
         email: "",
@@ -148,12 +307,17 @@ const RequestFormSection = () => {
         assistanceReason: [],
         assistanceReasonOther: "",
         medication: "",
+        pricingOptionId: "",
         termsAccepted: false,
       });
+
+      window.location.href = paymentData.paymentUrl;
     } catch (error) {
       setStatus("error");
       setStatusMessage(
-        error instanceof Error ? error.message : "Unable to submit the request.",
+        error instanceof Error
+          ? getFriendlyPaymentErrorMessage(error.message)
+          : "Unable to submit the request.",
       );
     } finally {
       setStatus((current) => (current === "sending" ? "idle" : current));
@@ -179,6 +343,29 @@ const RequestFormSection = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white rounded-2xl border border-amber-100 p-6 shadow-sm">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Therapy Pricing</h3>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <p className="font-semibold text-gray-800">Online individual</p>
+                  <p className="text-gray-600">1 session - KES 1,600</p>
+                  <p className="text-gray-600">4 sessions - KES 5,000</p>
+                  <p className="text-gray-600">6 sessions - KES 7,500</p>
+                  <p className="text-gray-600">8 sessions - KES 10,000</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800">Physical individual</p>
+                  <p className="text-gray-600">1 session - KES 1,800</p>
+                  <p className="text-gray-600">4 sessions - KES 6,500</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800">Couples therapy</p>
+                  <p className="text-gray-600">Online 1 session - KES 3,000</p>
+                  <p className="text-gray-600">Physical 1 session - KES 3,500</p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white shadow-lg">
               <h3 className="text-xl font-bold mb-2">Privacy Notice</h3>
               <p className="text-yellow-50 mb-4">
@@ -326,6 +513,29 @@ const RequestFormSection = () => {
               <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Service preferences</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                      Select therapy package and pricing *
+                    </label>
+                    <select
+                      name="pricingOptionId"
+                      value={formData.pricingOptionId}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+                    >
+                      <option value="">Select package</option>
+                      {THERAPY_PRICING_OPTIONS.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-sm text-gray-500">
+                      You will be redirected to secure payment after submitting this form.
+                    </p>
+                  </div>
+
                   <div className="space-y-2 md:col-span-2">
                     <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
                       What type of Assistance are you looking for? *
@@ -623,7 +833,7 @@ const RequestFormSection = () => {
                 disabled={status === "sending"}
                 className="w-full bg-yellow-500 text-black hover:bg-yellow-400 py-4 text-lg"
               >
-                {status === "sending" ? "Submitting..." : "Submit"}
+                {status === "sending" ? "Submitting..." : "Submit & proceed to payment"}
               </Button>
             </form>
           </div>

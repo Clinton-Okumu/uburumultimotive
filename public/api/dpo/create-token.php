@@ -76,7 +76,7 @@ $serviceDate = date('Y/m/d H:i');
 
 $redirectUrl = trim((string)($config['redirect_url'] ?? ''));
 $backUrl = trim((string)($config['back_url'] ?? ''));
-$purchaseContexts = ['uburu_village', 'uburu_home'];
+$purchaseContexts = ['uburu_village', 'uburu_home', 'therapy_booking'];
 if (in_array($context, $purchaseContexts, true)) {
     $purchaseRedirect = trim((string)($config['purchase_redirect_url'] ?? ''));
     $purchaseBack = trim((string)($config['purchase_back_url'] ?? ''));
@@ -115,6 +115,9 @@ $purchaseDescriptions = is_array($config['purchase_descriptions'] ?? null)
     : [];
 if ($context !== '' && isset($purchaseDescriptions[$context])) {
     $serviceDescription = trim((string)$purchaseDescriptions[$context]) ?: $serviceDescription;
+}
+if ($context === 'therapy_booking' && !isset($purchaseDescriptions[$context])) {
+    $serviceDescription = 'Uburu Therapy Session';
 }
 
 $xml = <<<XML

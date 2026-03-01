@@ -110,6 +110,7 @@ $recordMeta = [];
 $recordAmount = '';
 $recordCurrency = '';
 $recordCustomer = [];
+$recordTicket = null;
 
 if ($storeHandle) {
     $refKey = $resolvedCompanyRef ?: find_ref_by_token($storeData, $transactionToken);
@@ -128,12 +129,19 @@ if ($storeHandle) {
             $resolvedCompanyRef ?: $refKey
         );
 
+        [$record] = issue_village_ticket_if_needed(
+            $record,
+            $status,
+            $resolvedCompanyRef ?: $refKey
+        );
+
         $storeData['donations'][$refKey] = $record;
         $recordContext = (string)($record['context'] ?? '');
         $recordMeta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
         $recordAmount = (string)($record['amount'] ?? '');
         $recordCurrency = (string)($record['currency'] ?? '');
         $recordCustomer = is_array($record['customer'] ?? null) ? $record['customer'] : [];
+        $recordTicket = is_array($record['ticket'] ?? null) ? $record['ticket'] : null;
 
         save_store($storeHandle, $storagePath, $storeData);
     } else {
@@ -177,6 +185,7 @@ echo json_encode([
     'items' => $items ?: null,
     'amount' => $amountValue !== '' ? $amountValue : null,
     'currency' => $currencyValue !== '' ? $currencyValue : null,
+    'ticket' => $recordTicket,
 ]);
 
 function curl_xml(string $url, string $xml, int $retries = 0): array
@@ -429,6 +438,12 @@ function send_purchase_formspree_if_needed(
         'sendBuyerReceipt' => 'yes',
     ];
 
+    $ticket = is_array($record['ticket'] ?? null) ? $record['ticket'] : [];
+    $ticketId = trim((string)($ticket['ticketId'] ?? ''));
+    if ($ticketId !== '') {
+        $payload['ticketId'] = $ticketId;
+    }
+
     $ok = post_formspree($formspreeUrl, $payload);
     if ($ok) {
         $emailSent['formspree'] = date('c');
@@ -436,6 +451,68 @@ function send_purchase_formspree_if_needed(
     }
 
     return [$record];
+}
+
+function issue_village_ticket_if_needed(array $record, string $status, string $companyRef): array
+{
+    if ($status !== 'PAID') {
+        return [$record];
+    }
+
+    $context = strtolower((string)($record['context'] ?? ''));
+    if ($context !== 'uburu_village') {
+        return [$record];
+    }
+
+    if (is_array($record['ticket'] ?? null) && !empty($record['ticket']['ticketId'])) {
+        return [$record];
+    }
+
+    $meta = is_array($record['meta'] ?? null) ? $record['meta'] : [];
+    $items = normalize_items($meta['items'] ?? null);
+    $legacyItemName = trim((string)($meta['itemName'] ?? ''));
+    $legacyQuantity = (int)($meta['quantity'] ?? 0);
+    if (!$items && $legacyItemName !== '') {
+        $items[] = [
+            'itemName' => $legacyItemName,
+            'quantity' => max(1, $legacyQuantity),
+        ];
+    }
+
+    $eventName = $items
+        ? trim((string)($items[0]['itemName'] ?? ''))
+        : $legacyItemName;
+    $attendees = $items ? sum_item_quantities($items) : max(1, $legacyQuantity);
+
+    $customer = is_array($record['customer'] ?? null) ? $record['customer'] : [];
+    $buyerName = trim((string)($customer['name'] ?? ''));
+    $buyerEmail = trim((string)($customer['email'] ?? ''));
+
+    $ticketId = generate_village_ticket_id($companyRef);
+    $record['ticket'] = [
+        'ticketId' => $ticketId,
+        'companyRef' => $companyRef,
+        'context' => 'uburu_village',
+        'eventName' => $eventName,
+        'attendees' => max(1, $attendees),
+        'buyerName' => $buyerName,
+        'buyerEmail' => $buyerEmail,
+        'amount' => (string)($record['amount'] ?? ''),
+        'currency' => (string)($record['currency'] ?? 'KES'),
+        'issuedAt' => date('c'),
+        'status' => 'ACTIVE',
+    ];
+
+    return [$record];
+}
+
+function generate_village_ticket_id(string $companyRef): string
+{
+    $prefix = 'UBV';
+    $datePart = date('Ymd');
+    $seed = $companyRef !== '' ? $companyRef : (string)microtime(true);
+    $hash = strtoupper(substr(hash('sha256', $seed . '|' . $datePart), 0, 10));
+    return $prefix . '-' . $datePart . '-' . $hash;
 }
 
 function normalize_items($value): array

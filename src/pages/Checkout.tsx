@@ -81,13 +81,14 @@ const readStoredCart = (source: StorefrontSource): Record<string, number> => {
       return {};
     }
 
+    const minQuantity = source === "village" ? 5 : 1;
     return Object.fromEntries(
       Object.entries(parsed)
         .filter(
           (entry): entry is [string, number] =>
             typeof entry[1] === "number" && Number.isFinite(entry[1]),
         )
-        .map(([id, value]) => [id, clampQuantity(Math.trunc(value), 1, 99)]),
+        .map(([id, value]) => [id, clampQuantity(Math.trunc(value), minQuantity, 99)]),
     );
   } catch {
     return {};
@@ -194,7 +195,8 @@ const Checkout = () => {
   const checkoutDisabled = status === "processing" || activeMetrics.items.length === 0;
 
   const setItemQuantity = (itemId: string, nextValue: number) => {
-    const safe = clampQuantity(nextValue, 0, 99);
+    const minQuantity = activeSource === "village" ? 5 : 1;
+    const safe = nextValue <= 0 ? 0 : clampQuantity(nextValue, minQuantity, 99);
     setCarts((prev) => {
       const current = prev[activeSource];
       if (safe === 0) {

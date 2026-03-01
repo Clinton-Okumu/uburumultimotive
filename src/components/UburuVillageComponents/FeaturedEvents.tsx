@@ -6,7 +6,6 @@ import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import {
   villageEventOptions,
   type VillageEventOption,
-  type VillageTicketType,
 } from "../../data/storefrontCatalog";
 
 type VillageEventCard = {
@@ -18,6 +17,8 @@ type VillageEventCard = {
   groupOption: VillageEventOption;
 };
 
+const clampPeopleCount = (value: number) => Math.max(5, Math.min(99, value));
+
 const eventCards: VillageEventCard[] = (() => {
   const grouped = new Map<string, VillageEventCard>();
 
@@ -27,7 +28,7 @@ const eventCards: VillageEventCard[] = (() => {
     if (!existing) {
       grouped.set(option.baseEventId, {
         id: option.baseEventId,
-        name: option.name.replace(" (Individual)", "").replace(" (Group of 5)", ""),
+        name: option.name.replace(" (Individual)", "").replace(" (Group of 5)", "").replace(" (Group 5+)", ""),
         image: option.image,
         tag: "Tickets",
         individualOption: option,
@@ -51,21 +52,16 @@ const visibleEventCards = eventCards.slice(0, 1);
 const FeaturedEvents = () => {
   const navigate = useNavigate();
   const [selectedEventId, setSelectedEventId] = useState(visibleEventCards[0]?.id ?? "");
-  const [ticketTypeByEventId, setTicketTypeByEventId] = useState<
-    Record<string, VillageTicketType>
-  >(() =>
-    Object.fromEntries(
-      visibleEventCards.map((event) => [event.id, "individual"] as const),
-    ),
-  );
   const [groupActionByEventId, setGroupActionByEventId] = useState<
     Record<string, "pay_now" | "pay_later">
   >(() => Object.fromEntries(visibleEventCards.map((event) => [event.id, "pay_now"] as const)));
+  const [peopleCountByEventId, setPeopleCountByEventId] = useState<Record<string, number>>(() =>
+    Object.fromEntries(visibleEventCards.map((event) => [event.id, 5] as const)),
+  );
   const [payLaterStatusByEventId, setPayLaterStatusByEventId] = useState<
     Record<string, { state: "idle" | "sending" | "sent" | "error"; message: string }>
   >(() => Object.fromEntries(visibleEventCards.map((event) => [event.id, { state: "idle", message: "" }] as const)));
-  const { quantities, cartItemCount, updateQuantity, addToCart } =
-    useStorefrontCheckout({
+  const { cartItemCount, updateQuantity, addToCart } = useStorefrontCheckout({
       catalog: villageEventOptions.map(({ id, name, price }) => ({ id, name, price })),
       context: "uburu_village",
       purchaseType: "event_purchase",
@@ -77,14 +73,13 @@ const FeaturedEvents = () => {
     navigate("/checkout?source=village");
   };
 
-  const getSelectedOption = (event: VillageEventCard) =>
-    ticketTypeByEventId[event.id] === "group"
-      ? event.groupOption
-      : event.individualOption;
+  const getSelectedOption = (event: VillageEventCard) => event.groupOption;
 
   const handleBuyClick = (event: VillageEventCard) => {
     const selectedOption = getSelectedOption(event);
+    const peopleCount = clampPeopleCount(peopleCountByEventId[event.id] ?? 5);
     setSelectedEventId(event.id);
+    updateQuantity(selectedOption.id, peopleCount);
     addToCart(selectedOption.id);
     goToCheckout();
   };
@@ -120,13 +115,17 @@ const FeaturedEvents = () => {
     }
 
     const selectedOption = getSelectedOption(event);
+    const peopleCount = clampPeopleCount(peopleCountByEventId[event.id] ?? 5);
+    const totalAmount = selectedOption.price * peopleCount;
     const submitData = new FormData();
     submitData.set("name", fullName);
     submitData.set("email", email || "no-reply@uburumultimovehs.org");
     submitData.set("phone", phone);
     submitData.set("eventName", event.name);
     submitData.set("ticketOption", selectedOption.name);
-    submitData.set("message", `Pay later request for ${event.name} (${selectedOption.name}). Contact: ${phone || "N/A"} / ${email || "N/A"}.`);
+    submitData.set("peopleCount", String(peopleCount));
+    submitData.set("totalAmount", `KES ${totalAmount.toLocaleString("en-KE")}`);
+    submitData.set("message", `Pay later request for ${event.name} (${selectedOption.name}) for ${peopleCount} people at KES ${selectedOption.price.toLocaleString("en-KE")} per person. Total: KES ${totalAmount.toLocaleString("en-KE")}. Contact: ${phone || "N/A"} / ${email || "N/A"}.`);
     submitData.set("_subject", "Uburu Village: Group booking pay later request");
 
     try {
@@ -208,7 +207,8 @@ const FeaturedEvents = () => {
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {visibleEventCards.map((event) => {
             const selectedOption = getSelectedOption(event);
-            const ticketType = ticketTypeByEventId[event.id] ?? "individual";
+            const peopleCount = clampPeopleCount(peopleCountByEventId[event.id] ?? 5);
+            const totalPrice = selectedOption.price * peopleCount;
             const groupAction = groupActionByEventId[event.id] ?? "pay_now";
             const payLaterStatus = payLaterStatusByEventId[event.id] ?? {
               state: "idle",
@@ -247,96 +247,60 @@ const FeaturedEvents = () => {
                     </p>
                   </div>
                   <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                    KES {selectedOption.price.toLocaleString("en-KE")}
+                    KES {totalPrice.toLocaleString("en-KE")}
                   </div>
                 </div>
 
-                <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setTicketTypeByEventId((prev) => ({
-                        ...prev,
-                        [event.id]: "individual",
-                      }))
-                    }
-                    className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition ${
-                      ticketType === "individual"
-                        ? "bg-[#2f6f99] text-white"
-                        : "bg-white text-[#5c6f86]"
-                    }`}
-                  >
-                    Individual
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setTicketTypeByEventId((prev) => ({
-                        ...prev,
-                        [event.id]: "group",
-                      }))
-                    }
-                    className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-[0.18em] transition ${
-                      ticketType === "group"
-                        ? "bg-[#2f6f99] text-white"
-                        : "bg-white text-[#5c6f86]"
-                    }`}
-                  >
-                    Group (5)
-                  </button>
+                <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-[#5c6f86]">
+                  Group bookings only: minimum 5 people at KES 1,500 per person
                 </div>
-
-                {ticketType === "individual" ? (
-                  <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-3 py-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateQuantity(
-                          selectedOption.id,
-                          (quantities[selectedOption.id] ?? 1) - 1,
-                        )
-                      }
-                      className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                      aria-label={`Decrease ${event.name} ticket quantity`}
-                    >
-                      -
-                    </button>
-                    <span className="text-xs font-black uppercase tracking-widest text-[#6a7c92]">
-                      Qty:
-                    </span>
+                <div className="mt-4 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPeopleCountByEventId((prev) => ({
+                        ...prev,
+                        [event.id]: clampPeopleCount((prev[event.id] ?? 5) - 1),
+                      }))
+                    }
+                    className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
+                    aria-label={`Decrease ${event.name} people count`}
+                  >
+                    -
+                  </button>
+                  <div className="text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6a7c92]">
+                      Number of people
+                    </p>
                     <input
                       type="number"
-                      min={1}
+                      min={5}
                       max={99}
-                      value={quantities[selectedOption.id] ?? 1}
+                      value={peopleCount}
                       onChange={(eventInput) =>
-                        updateQuantity(
-                          selectedOption.id,
-                          Number(eventInput.target.value) || 1,
-                        )
+                        setPeopleCountByEventId((prev) => ({
+                          ...prev,
+                          [event.id]: clampPeopleCount(Number(eventInput.target.value) || 5),
+                        }))
                       }
-                      className="w-16 bg-transparent text-center text-sm font-black text-[#1c3b57] focus:outline-none"
+                      className="w-20 bg-transparent text-center text-base font-black text-[#1c3b57] focus:outline-none"
                     />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        updateQuantity(
-                          selectedOption.id,
-                          (quantities[selectedOption.id] ?? 1) + 1,
-                        )
-                      }
-                      className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                      aria-label={`Increase ${event.name} ticket quantity`}
-                    >
-                      +
-                    </button>
                   </div>
-                ) : (
-                  <>
-                    <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-xs font-black uppercase tracking-[0.18em] text-[#5c6f86]">
-                      Group package: fixed at 5 people
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPeopleCountByEventId((prev) => ({
+                        ...prev,
+                        [event.id]: clampPeopleCount((prev[event.id] ?? 5) + 1),
+                      }))
+                    }
+                    className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
+                    aria-label={`Increase ${event.name} people count`}
+                  >
+                    +
+                  </button>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
                       <button
                         type="button"
                         onClick={() =>
@@ -369,59 +333,57 @@ const FeaturedEvents = () => {
                       >
                         Pay later
                       </button>
-                    </div>
+                </div>
 
-                    {groupAction === "pay_later" && (
-                      <form className="mt-4 space-y-3" onSubmit={(e) => handlePayLaterSubmit(e, event)}>
-                        <input
-                          type="text"
-                          name="fullName"
-                          placeholder="Full name"
-                          required
-                          className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
-                        />
-                        <input
-                          type="tel"
-                          name="phone"
-                          placeholder="Phone number"
-                          className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
-                        />
-                        <input
-                          type="email"
-                          name="email"
-                          placeholder="Email (optional)"
-                          className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
-                        />
-                        {payLaterStatus.state !== "idle" && (
-                          <div
-                            className={`rounded-xl border px-3 py-2 text-xs font-bold ${
-                              payLaterStatus.state === "sent"
-                                ? "border-green-200 bg-green-50 text-green-700"
-                                : "border-red-200 bg-red-50 text-red-700"
-                            }`}
-                          >
-                            {payLaterStatus.message}
-                          </div>
-                        )}
-                        <Button
-                          type="submit"
-                          className="w-full bg-[#f2c15d] py-3 text-xs font-black uppercase tracking-[0.2em] text-[#1c3b57] hover:bg-[#ffd886]"
-                          disabled={payLaterStatus.state === "sending"}
-                        >
-                          {payLaterStatus.state === "sending"
-                            ? "Sending..."
-                            : "Send pay later request"}
-                        </Button>
-                      </form>
+                {groupAction === "pay_later" && (
+                  <form className="mt-4 space-y-3" onSubmit={(e) => handlePayLaterSubmit(e, event)}>
+                    <input
+                      type="text"
+                      name="fullName"
+                      placeholder="Full name"
+                      required
+                      className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                    />
+                    <input
+                      type="tel"
+                      name="phone"
+                      placeholder="Phone number"
+                      className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                    />
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="Email (optional)"
+                      className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                    />
+                    {payLaterStatus.state !== "idle" && (
+                      <div
+                        className={`rounded-xl border px-3 py-2 text-xs font-bold ${
+                          payLaterStatus.state === "sent"
+                            ? "border-green-200 bg-green-50 text-green-700"
+                            : "border-red-200 bg-red-50 text-red-700"
+                        }`}
+                      >
+                        {payLaterStatus.message}
+                      </div>
                     )}
-                  </>
+                    <Button
+                      type="submit"
+                      className="w-full bg-[#f2c15d] py-3 text-xs font-black uppercase tracking-[0.2em] text-[#1c3b57] hover:bg-[#ffd886]"
+                      disabled={payLaterStatus.state === "sending"}
+                    >
+                      {payLaterStatus.state === "sending"
+                        ? "Sending..."
+                        : "Send pay later request"}
+                    </Button>
+                  </form>
                 )}
                 <Button
                   onClick={() => handleBuyClick(event)}
-                  disabled={ticketType === "group" && groupAction === "pay_later"}
+                  disabled={groupAction === "pay_later"}
                   className="mt-5 w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
                 >
-                  {ticketType === "group" ? "Proceed to checkout" : "Add to tray"}
+                  Proceed to checkout
                 </Button>
               </div>
             </div>

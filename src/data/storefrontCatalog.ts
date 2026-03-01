@@ -6,7 +6,7 @@ import waterBottle from "../assets/waterbottle.webp";
 import culturalEvent from "../assets/Screenshot-2026-02-20_10-06-49.webp";
 import communityPainting from "../assets/community-painting-wood-medium-shot.webp";
 import footballCircle from "../assets/top-view-childs-feet-around-football-ball.webp";
-import olooluaNatureTrail from "../assets/uburuvillge2.webp";
+import olooluaNatureTrail from "../assets/oloolua.webp";
 
 export type StorefrontSource = "home" | "village";
 
@@ -109,9 +109,9 @@ export const villageEventOptions: VillageEventOption[] = villageBaseEvents.flatM
       id: `${event.id}-group`,
       baseEventId: event.id,
       ticketType: "group",
-      name: `${event.name} (Group of 5)`,
-      price: event.price * 5,
-      tag: "Group of 5",
+      name: `${event.name} (Group 5+)`,
+      price: 1500,
+      tag: "Group 5+",
       image: event.image,
     },
   ],

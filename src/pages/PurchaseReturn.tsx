@@ -15,6 +15,19 @@ type PurchasedItem = {
   quantity: number;
 };
 
+type IssuedTicket = {
+  ticketId: string;
+  companyRef?: string;
+  eventName?: string;
+  attendees?: number;
+  buyerName?: string;
+  buyerEmail?: string;
+  amount?: string;
+  currency?: string;
+  issuedAt?: string;
+  status?: string;
+};
+
 const PurchaseReturn = () => {
   const [status, setStatus] = useState<VerifyStatus>("checking");
   const [message, setMessage] = useState("");
@@ -26,6 +39,7 @@ const PurchaseReturn = () => {
   const [items, setItems] = useState<PurchasedItem[]>([]);
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("");
+  const [ticket, setTicket] = useState<IssuedTicket | null>(null);
 
   const { transactionToken, companyRef } = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
@@ -103,6 +117,11 @@ const PurchaseReturn = () => {
         );
         setAmount(data?.amount || "");
         setCurrency(data?.currency || "");
+        setTicket(
+          data?.ticket && typeof data.ticket === "object"
+            ? (data.ticket as IssuedTicket)
+            : null,
+        );
       } catch (error) {
         setStatus("error");
         setMessage(error instanceof Error ? error.message : "Unable to verify payment.");
@@ -126,6 +145,50 @@ const PurchaseReturn = () => {
         ? "/get/therapy"
         : "/get/village";
   const amountLabel = amount ? `${currency} ${amount}`.trim() : "";
+
+  const handleDownloadTicket = () => {
+    if (!ticket?.ticketId) {
+      return;
+    }
+
+    const ticketEventName = ticket.eventName || itemName || "Uburu Village Event";
+    const ticketAttendees =
+      typeof ticket.attendees === "number" && ticket.attendees > 0
+        ? ticket.attendees
+        : quantity || itemCount || 1;
+    const ticketAmount = ticket.amount ? `${ticket.currency || "KES"} ${ticket.amount}` : amountLabel;
+    const issuedAtLabel = ticket.issuedAt
+      ? new Date(ticket.issuedAt).toLocaleString()
+      : new Date().toLocaleString();
+
+    const content = [
+      "UBURU VILLAGE TICKET",
+      "",
+      `Ticket ID: ${ticket.ticketId}`,
+      `Reference: ${ticket.companyRef || reference}`,
+      `Event: ${ticketEventName}`,
+      `Attendees: ${ticketAttendees}`,
+      `Buyer: ${ticket.buyerName || "-"}`,
+      `Email: ${ticket.buyerEmail || "-"}`,
+      `Amount: ${ticketAmount || "-"}`,
+      `Issued At: ${issuedAtLabel}`,
+      "Status: ACTIVE",
+    ].join("\n");
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `uburu-village-ticket-${ticket.ticketId}.txt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrintTicket = () => {
+    window.print();
+  };
 
   return (
     <div className="w-full bg-slate-50 py-16 px-4 md:px-0">
@@ -177,6 +240,39 @@ const PurchaseReturn = () => {
             )}
             {reference && (
               <p className="text-sm text-gray-500 mt-3">Reference: {reference}</p>
+            )}
+
+            {context === "uburu_village" && ticket?.ticketId && (
+              <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-left">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green-700">
+                  Your ticket
+                </p>
+                <p className="mt-2 text-base font-black text-green-900">
+                  Ticket ID: {ticket.ticketId}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-green-800">
+                  Attendees: {ticket.attendees || quantity || itemCount || 1}
+                </p>
+                <p className="mt-1 text-sm text-green-800">
+                  Event: {ticket.eventName || itemName || "Uburu Village Event"}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadTicket}
+                    className="rounded-xl bg-green-700 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-white transition hover:bg-green-800"
+                  >
+                    Download ticket
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePrintTicket}
+                    className="rounded-xl border border-green-700 bg-transparent px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-green-700 transition hover:bg-green-100"
+                  >
+                    Print ticket
+                  </button>
+                </div>
+              </div>
             )}
           </>
         )}

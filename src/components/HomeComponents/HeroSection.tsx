@@ -60,7 +60,7 @@ const HeroSection = () => {
             </Button>
 
             {isGetOpen && (
-              <div className="absolute bottom-full mb-2 left-0 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl z-50 sm:bottom-auto sm:mb-0 sm:top-full sm:mt-2">
+              <div className="absolute bottom-full mb-2 left-0 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl z-50 lg:bottom-auto lg:mb-0 lg:top-full lg:mt-2">
                 <div className="p-2">
                   {getDropdownItems.map((item, index) => (
                     <a

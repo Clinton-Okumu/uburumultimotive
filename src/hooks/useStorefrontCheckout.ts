@@ -247,7 +247,7 @@ export const useStorefrontCheckout = ({
       }
 
       setStatus("success");
-      setStatusMessage("Redirecting you to DPO to complete payment.");
+      setStatusMessage("Redirecting you to complete payment.");
       window.location.href = data.paymentUrl;
     } catch (error) {
       const message =

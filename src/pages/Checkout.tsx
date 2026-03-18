@@ -5,6 +5,7 @@ import Button from "../components/shared/Button";
 import {
   homeProducts,
   villageEvents,
+  type CurrencyCode,
   type StorefrontItem,
   type StorefrontSource,
 } from "../data/storefrontCatalog";
@@ -19,6 +20,7 @@ type CartItem = {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  currency: CurrencyCode;
 };
 
 const SOURCE_KEYS: Record<StorefrontSource, string> = {
@@ -81,7 +83,7 @@ const readStoredCart = (source: StorefrontSource): Record<string, number> => {
       return {};
     }
 
-    const minQuantity = source === "village" ? 5 : 1;
+    const minQuantity = 1;
     return Object.fromEntries(
       Object.entries(parsed)
         .filter(
@@ -93,6 +95,11 @@ const readStoredCart = (source: StorefrontSource): Record<string, number> => {
   } catch {
     return {};
   }
+};
+
+const formatAmount = (amount: number, currency: CurrencyCode) => {
+  const locale = currency === "KES" ? "en-KE" : "en-US";
+  return `${currency} ${amount.toLocaleString(locale)}`;
 };
 
 const getFriendlyErrorMessage = (message: string) => {
@@ -157,9 +164,18 @@ const Checkout = () => {
   }, [carts]);
 
   const metrics = useMemo(() => {
-    const next: Record<StorefrontSource, { items: CartItem[]; total: number; count: number }> = {
-      home: { items: [], total: 0, count: 0 },
-      village: { items: [], total: 0, count: 0 },
+    const next: Record<
+      StorefrontSource,
+      {
+        items: CartItem[];
+        total: number;
+        count: number;
+        currency: CurrencyCode | null;
+        hasMixedCurrencies: boolean;
+      }
+    > = {
+      home: { items: [], total: 0, count: 0, currency: null, hasMixedCurrencies: false },
+      village: { items: [], total: 0, count: 0, currency: null, hasMixedCurrencies: false },
     };
 
     (Object.keys(catalogBySource) as StorefrontSource[]).forEach((source) => {
@@ -177,14 +193,23 @@ const Checkout = () => {
             quantity,
             unitPrice: item.price,
             lineTotal: item.price * quantity,
+            currency: item.currency,
           };
         })
         .filter((item): item is CartItem => item !== null);
+
+      const uniqueCurrencies = new Set(items.map((item) => item.currency));
+      const hasMixedCurrencies = uniqueCurrencies.size > 1;
+      const selectedCurrency = hasMixedCurrencies
+        ? null
+        : items[0]?.currency ?? null;
 
       next[source] = {
         items,
         total: items.reduce((sum, item) => sum + item.lineTotal, 0),
         count: items.reduce((sum, item) => sum + item.quantity, 0),
+        currency: selectedCurrency,
+        hasMixedCurrencies,
       };
     });
 
@@ -192,10 +217,13 @@ const Checkout = () => {
   }, [carts]);
 
   const activeMetrics = metrics[activeSource];
-  const checkoutDisabled = status === "processing" || activeMetrics.items.length === 0;
+  const checkoutDisabled =
+    status === "processing" ||
+    activeMetrics.items.length === 0 ||
+    activeMetrics.hasMixedCurrencies;
 
   const setItemQuantity = (itemId: string, nextValue: number) => {
-    const minQuantity = activeSource === "village" ? 5 : 1;
+    const minQuantity = 1;
     const safe = nextValue <= 0 ? 0 : clampQuantity(nextValue, minQuantity, 99);
     setCarts((prev) => {
       const current = prev[activeSource];
@@ -226,6 +254,11 @@ const Checkout = () => {
       setStatusMessage("Please add at least one item to your tray.");
       return;
     }
+    if (activeMetrics.hasMixedCurrencies || !activeMetrics.currency) {
+      setStatus("error");
+      setStatusMessage("Please checkout items with the same currency together.");
+      return;
+    }
     if (!buyerName.trim()) {
       setStatus("error");
       setStatusMessage("Please enter your full name.");
@@ -246,7 +279,7 @@ const Checkout = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: activeMetrics.total,
-          currency: "KES",
+          currency: activeMetrics.currency,
           customer: {
             name: buyerName.trim(),
             email: buyerEmail.trim(),
@@ -262,8 +295,10 @@ const Checkout = () => {
               quantity: item.quantity,
               unitPrice: item.unitPrice,
               totalAmount: item.lineTotal,
+              currency: item.currency,
             })),
             totalAmount: activeMetrics.total,
+            currency: activeMetrics.currency,
           },
         }),
       });
@@ -285,7 +320,7 @@ const Checkout = () => {
       }
 
       setStatus("success");
-      setStatusMessage("Redirecting you to DPO to complete payment.");
+      setStatusMessage("Redirecting you to complete payment.");
       window.location.href = data.paymentUrl;
     } catch (error) {
       const message =
@@ -345,7 +380,11 @@ const Checkout = () => {
                 </p>
                 <p className="mt-2 text-2xl font-black text-white">{sourceMetrics.count} item(s)</p>
                 <p className="mt-1 text-sm font-semibold text-white/75">
-                  KES {sourceMetrics.total.toLocaleString("en-KE")}
+                  {sourceMetrics.items.length === 0
+                    ? "KES 0"
+                    : sourceMetrics.hasMixedCurrencies
+                      ? "Mixed currencies"
+                      : formatAmount(sourceMetrics.total, sourceMetrics.currency ?? "KES")}
                 </p>
               </button>
             );
@@ -359,7 +398,12 @@ const Checkout = () => {
                 {SOURCE_LABEL[activeSource]} tray
               </p>
               <p className="mt-2 text-xl font-black text-white">
-                Total: KES {activeMetrics.total.toLocaleString("en-KE")}
+                Total:{" "}
+                {activeMetrics.items.length === 0
+                  ? "KES 0"
+                  : activeMetrics.hasMixedCurrencies
+                    ? "Mixed currencies"
+                    : formatAmount(activeMetrics.total, activeMetrics.currency ?? "KES")}
               </p>
             </div>
             {activeMetrics.items.length > 0 && (
@@ -377,6 +421,11 @@ const Checkout = () => {
               <p className="text-sm font-semibold text-white/70">
                 This tray is empty. Add items from {SOURCE_LABEL[activeSource]} to continue.
               </p>
+            ) : activeMetrics.hasMixedCurrencies ? (
+              <p className="text-sm font-semibold text-red-200">
+                This tray contains mixed currencies. Remove items so all entries use one currency,
+                then checkout.
+              </p>
             ) : (
               <div className="space-y-3">
                 {activeMetrics.items.map((item) => (
@@ -387,7 +436,7 @@ const Checkout = () => {
                     <div>
                       <p className="text-sm font-black text-white">{item.name}</p>
                       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60">
-                        KES {item.unitPrice.toLocaleString("en-KE")} each
+                        {formatAmount(item.unitPrice, item.currency)} each
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -411,7 +460,7 @@ const Checkout = () => {
                         +
                       </button>
                       <span className="ml-1 text-sm font-black text-yellow-300 sm:ml-3">
-                        KES {item.lineTotal.toLocaleString("en-KE")}
+                        {formatAmount(item.lineTotal, item.currency)}
                       </span>
                       <button
                         type="button"

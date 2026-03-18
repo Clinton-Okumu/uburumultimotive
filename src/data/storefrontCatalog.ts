@@ -10,19 +10,38 @@ import olooluaNatureTrail from "../assets/oloolua.webp";
 
 export type StorefrontSource = "home" | "village";
 
+export type CurrencyCode = "KES" | "USD";
+
 export type StorefrontItem = {
   id: string;
   name: string;
   price: number;
+  currency: CurrencyCode;
   tag: string;
   image: string;
 };
 
-export type VillageTicketType = "individual" | "group";
+export type VillageTravelMonth = "july" | "august" | "september" | "october";
+
+export type VillageResidencyType = "resident" | "non_resident";
+
+export type VillageCampRate = {
+  campId: string;
+  campName: string;
+  mealPlanLabel: string;
+  availableMonths: VillageTravelMonth[];
+  residentPriceKes: number;
+  nonResidentPriceUsd: number;
+  image: string;
+};
 
 export type VillageEventOption = StorefrontItem & {
-  baseEventId: string;
-  ticketType: VillageTicketType;
+  packageId: string;
+  campId: string;
+  campName: string;
+  residencyType: VillageResidencyType;
+  mealPlanLabel: string;
+  availableMonths: VillageTravelMonth[];
 };
 
 export const homeProducts: StorefrontItem[] = [
@@ -30,6 +49,7 @@ export const homeProducts: StorefrontItem[] = [
     id: "ebooks",
     name: "Ebooks",
     price: 1200,
+    currency: "KES",
     tag: "Digital",
     image: ebook,
   },
@@ -37,6 +57,7 @@ export const homeProducts: StorefrontItem[] = [
     id: "tshirts",
     name: "T-shirts",
     price: 1800,
+    currency: "KES",
     tag: "Apparel",
     image: shirt,
   },
@@ -44,6 +65,7 @@ export const homeProducts: StorefrontItem[] = [
     id: "caps",
     name: "Caps",
     price: 900,
+    currency: "KES",
     tag: "Everyday",
     image: cap,
   },
@@ -51,6 +73,7 @@ export const homeProducts: StorefrontItem[] = [
     id: "hoodies",
     name: "Hoodies",
     price: 2800,
+    currency: "KES",
     tag: "Cozy",
     image: hoodie,
   },
@@ -58,63 +81,142 @@ export const homeProducts: StorefrontItem[] = [
     id: "reusable-bottles",
     name: "Reusable bottles",
     price: 1500,
+    currency: "KES",
     tag: "Eco",
     image: waterBottle,
   },
 ];
 
-const villageBaseEvents: StorefrontItem[] = [
+export const villageCampRates: VillageCampRate[] = [
   {
-    id: "charity-home",
-    name: "Oloolua nature trail",
-    price: 1500,
-    tag: "Care",
+    campId: "mara-budget-camps",
+    campName: "Mara Budget Camps",
+    mealPlanLabel: "July - Oct",
+    availableMonths: ["july", "august", "september", "october"],
+    residentPriceKes: 27500,
+    nonResidentPriceUsd: 250,
     image: olooluaNatureTrail,
   },
   {
-    id: "gala-dinner",
-    name: "Cultural concert/performance",
-    price: 4500,
-    tag: "Live",
+    campId: "kipekee-zuri-camp",
+    campName: "Kipekee Zuri Camp",
+    mealPlanLabel: "July - Oct",
+    availableMonths: ["july", "august", "september", "october"],
+    residentPriceKes: 44300,
+    nonResidentPriceUsd: 330,
     image: culturalEvent,
   },
   {
-    id: "quiz-evening",
-    name: "Quiz evening",
-    price: 1200,
-    tag: "Interactive",
+    campId: "enkorok-mara-camp",
+    campName: "Enkorok Mara Camp",
+    mealPlanLabel: "July - Sept",
+    availableMonths: ["july", "august", "september"],
+    residentPriceKes: 46300,
+    nonResidentPriceUsd: 360,
     image: communityPainting,
   },
   {
-    id: "sport-tournaments",
-    name: "Sport tournaments",
-    price: 2000,
-    tag: "All ages",
+    campId: "mara-chui-resort",
+    campName: "Mara Chui Resort",
+    mealPlanLabel: "July - Sept",
+    availableMonths: ["july", "august", "september"],
+    residentPriceKes: 46300,
+    nonResidentPriceUsd: 360,
     image: footballCircle,
+  },
+  {
+    campId: "enkorok-safari-camp",
+    campName: "Enkorok Safari Camp",
+    mealPlanLabel: "July - Sept",
+    availableMonths: ["july", "august", "september"],
+    residentPriceKes: 57600,
+    nonResidentPriceUsd: 495,
+    image: olooluaNatureTrail,
+  },
+  {
+    campId: "jambo-mara-safari-lodge",
+    campName: "Jambo Mara Safari Lodge",
+    mealPlanLabel: "July - Aug",
+    availableMonths: ["july", "august"],
+    residentPriceKes: 59000,
+    nonResidentPriceUsd: 595,
+    image: footballCircle,
+  },
+  {
+    campId: "mara-sopa-lodge",
+    campName: "Mara Sopa Lodge",
+    mealPlanLabel: "July - Aug",
+    availableMonths: ["july", "august"],
+    residentPriceKes: 61500,
+    nonResidentPriceUsd: 680,
+    image: culturalEvent,
+  },
+  {
+    campId: "emayian-luxury-camp",
+    campName: "Emayian Luxury Camp",
+    mealPlanLabel: "July - Aug",
+    availableMonths: ["july", "august"],
+    residentPriceKes: 63600,
+    nonResidentPriceUsd: 680,
+    image: communityPainting,
+  },
+  {
+    campId: "alama-mara-camp",
+    campName: "Alama Mara Camp",
+    mealPlanLabel: "July - Sept",
+    availableMonths: ["july", "august", "september"],
+    residentPriceKes: 71300,
+    nonResidentPriceUsd: 800,
+    image: culturalEvent,
   },
 ];
 
-export const villageEventOptions: VillageEventOption[] = villageBaseEvents.flatMap(
-  (event) => [
+export const villageEventOptions: VillageEventOption[] = villageCampRates.flatMap(
+  (camp) => [
     {
-      id: `${event.id}-individual`,
-      baseEventId: event.id,
-      ticketType: "individual",
-      name: `${event.name} (Individual)`,
-      price: event.price,
-      tag: "Individual",
-      image: event.image,
+      id: `${camp.campId}-resident`,
+      packageId: "maasai-mara-daily-group-departures-2026",
+      campId: camp.campId,
+      campName: camp.campName,
+      residencyType: "resident",
+      mealPlanLabel: camp.mealPlanLabel,
+      availableMonths: camp.availableMonths,
+      name: `${camp.campName} (Resident)`,
+      price: camp.residentPriceKes,
+      currency: "KES",
+      tag: "Resident",
+      image: camp.image,
     },
     {
-      id: `${event.id}-group`,
-      baseEventId: event.id,
-      ticketType: "group",
-      name: `${event.name} (Group 5+)`,
-      price: 1500,
-      tag: "Group 5+",
-      image: event.image,
+      id: `${camp.campId}-non-resident`,
+      packageId: "maasai-mara-daily-group-departures-2026",
+      campId: camp.campId,
+      campName: camp.campName,
+      residencyType: "non_resident",
+      mealPlanLabel: camp.mealPlanLabel,
+      availableMonths: camp.availableMonths,
+      name: `${camp.campName} (Non-resident)`,
+      price: camp.nonResidentPriceUsd,
+      currency: "USD",
+      tag: "Non-resident",
+      image: camp.image,
     },
   ],
 );
+
+villageEventOptions.push({
+  id: "oloolua-nature-trail-group",
+  packageId: "oloolua-nature-trail",
+  campId: "oloolua-nature-trail",
+  campName: "Oloolua nature trail",
+  residencyType: "resident",
+  mealPlanLabel: "All year",
+  availableMonths: ["july", "august", "september", "october"],
+  name: "Oloolua nature trail (Group 5+)",
+  price: 1500,
+  currency: "KES",
+  tag: "Group 5+",
+  image: olooluaNatureTrail,
+});
 
 export const villageEvents: StorefrontItem[] = villageEventOptions;

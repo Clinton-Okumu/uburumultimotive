@@ -34,6 +34,29 @@ $customerPhone = trim((string)($customer['phone'] ?? ''));
 $context = strtolower(trim((string)($payload['context'] ?? '')));
 $meta = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
 
+if ($context === 'uburu_village') {
+    $metaItems = normalize_checkout_items($meta['items'] ?? null);
+    if (!$metaItems) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Please choose a valid Maasai Mara package before checkout.']);
+        exit;
+    }
+
+    [$pricingError, $calculated] = calculate_village_checkout_totals($metaItems);
+    if ($pricingError !== null) {
+        http_response_code(400);
+        echo json_encode(['error' => $pricingError]);
+        exit;
+    }
+
+    $amount = $calculated['amount'];
+    $currency = $calculated['currency'];
+    $meta['items'] = $calculated['items'];
+    $meta['itemCount'] = $calculated['itemCount'];
+    $meta['totalAmount'] = number_format((float)$calculated['amount'], 2, '.', '');
+    $meta['currency'] = $calculated['currency'];
+}
+
 if (!is_numeric($amount)) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid amount']);
@@ -330,4 +353,102 @@ function generate_company_ref(string $prefix, array $storeData): string
     }
 
     return sprintf('%s-%s', $prefix, bin2hex(random_bytes(6)));
+}
+
+function normalize_checkout_items($value): array
+{
+    if (!is_array($value)) {
+        return [];
+    }
+
+    $items = [];
+    foreach ($value as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $itemId = trim((string)($item['itemId'] ?? ''));
+        if ($itemId === '') {
+            continue;
+        }
+
+        $items[] = [
+            'itemId' => $itemId,
+            'quantity' => max(1, (int)($item['quantity'] ?? 1)),
+        ];
+    }
+
+    return $items;
+}
+
+function calculate_village_checkout_totals(array $items): array
+{
+    $rateMap = [
+        'oloolua-nature-trail-group' => ['name' => 'Oloolua nature trail (Group 5+)', 'currency' => 'KES', 'price' => 1500],
+        'mara-budget-camps-resident' => ['name' => 'Mara Budget Camps (Resident)', 'currency' => 'KES', 'price' => 27500],
+        'mara-budget-camps-non-resident' => ['name' => 'Mara Budget Camps (Non-resident)', 'currency' => 'USD', 'price' => 250],
+        'kipekee-zuri-camp-resident' => ['name' => 'Kipekee Zuri Camp (Resident)', 'currency' => 'KES', 'price' => 44300],
+        'kipekee-zuri-camp-non-resident' => ['name' => 'Kipekee Zuri Camp (Non-resident)', 'currency' => 'USD', 'price' => 330],
+        'enkorok-mara-camp-resident' => ['name' => 'Enkorok Mara Camp (Resident)', 'currency' => 'KES', 'price' => 46300],
+        'enkorok-mara-camp-non-resident' => ['name' => 'Enkorok Mara Camp (Non-resident)', 'currency' => 'USD', 'price' => 360],
+        'mara-chui-resort-resident' => ['name' => 'Mara Chui Resort (Resident)', 'currency' => 'KES', 'price' => 46300],
+        'mara-chui-resort-non-resident' => ['name' => 'Mara Chui Resort (Non-resident)', 'currency' => 'USD', 'price' => 360],
+        'enkorok-safari-camp-resident' => ['name' => 'Enkorok Safari Camp (Resident)', 'currency' => 'KES', 'price' => 57600],
+        'enkorok-safari-camp-non-resident' => ['name' => 'Enkorok Safari Camp (Non-resident)', 'currency' => 'USD', 'price' => 495],
+        'jambo-mara-safari-lodge-resident' => ['name' => 'Jambo Mara Safari Lodge (Resident)', 'currency' => 'KES', 'price' => 59000],
+        'jambo-mara-safari-lodge-non-resident' => ['name' => 'Jambo Mara Safari Lodge (Non-resident)', 'currency' => 'USD', 'price' => 595],
+        'mara-sopa-lodge-resident' => ['name' => 'Mara Sopa Lodge (Resident)', 'currency' => 'KES', 'price' => 61500],
+        'mara-sopa-lodge-non-resident' => ['name' => 'Mara Sopa Lodge (Non-resident)', 'currency' => 'USD', 'price' => 680],
+        'emayian-luxury-camp-resident' => ['name' => 'Emayian Luxury Camp (Resident)', 'currency' => 'KES', 'price' => 63600],
+        'emayian-luxury-camp-non-resident' => ['name' => 'Emayian Luxury Camp (Non-resident)', 'currency' => 'USD', 'price' => 680],
+        'alama-mara-camp-resident' => ['name' => 'Alama Mara Camp (Resident)', 'currency' => 'KES', 'price' => 71300],
+        'alama-mara-camp-non-resident' => ['name' => 'Alama Mara Camp (Non-resident)', 'currency' => 'USD', 'price' => 800],
+    ];
+
+    $totalAmount = 0.0;
+    $currency = null;
+    $normalized = [];
+    $itemCount = 0;
+
+    foreach ($items as $item) {
+        $itemId = (string)($item['itemId'] ?? '');
+        $quantity = max(1, (int)($item['quantity'] ?? 1));
+        if (!isset($rateMap[$itemId])) {
+            return ['Selected package is not available for checkout.', null];
+        }
+
+        $rate = $rateMap[$itemId];
+        $rateCurrency = (string)$rate['currency'];
+        $unitPrice = (float)$rate['price'];
+        if ($currency !== null && $currency !== $rateCurrency) {
+            return ['Please checkout one currency at a time (KES or USD).', null];
+        }
+
+        $currency = $rateCurrency;
+        $lineTotal = $unitPrice * $quantity;
+        $totalAmount += $lineTotal;
+        $itemCount += $quantity;
+        $normalized[] = [
+            'itemId' => $itemId,
+            'itemName' => (string)$rate['name'],
+            'quantity' => $quantity,
+            'unitPrice' => $unitPrice,
+            'totalAmount' => $lineTotal,
+            'currency' => $rateCurrency,
+        ];
+    }
+
+    if ($currency === null || !$normalized) {
+        return ['Please add at least one valid package before checkout.', null];
+    }
+
+    return [
+        null,
+        [
+            'amount' => $totalAmount,
+            'currency' => $currency,
+            'itemCount' => $itemCount,
+            'items' => $normalized,
+        ],
+    ];
 }

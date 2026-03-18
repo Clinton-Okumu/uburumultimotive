@@ -63,7 +63,7 @@ const UburuVillageHero = () => {
           Uburu Village
         </h1>
         <p className="text-lg text-white/90 max-w-2xl leading-relaxed">
-          Outdoor events, guided trails, and community adventures that fund shelter work.
+          A space for recreational events Outdoor & Community bonding Healing & Social Recreation
         </p>
       </div>
     </section>

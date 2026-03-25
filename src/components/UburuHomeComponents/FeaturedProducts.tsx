@@ -1,13 +1,86 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../shared/Button";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
-import { homeProducts as products } from "../../data/storefrontCatalog";
+import {
+  homeApparelColorOptions,
+  homeBrandingConfigurableProductIds,
+  homeColorConfigurableProductIds,
+  homeLogoOptions,
+  homeProducts as products,
+  type HomeApparelColor,
+  type HomeLogoOption,
+} from "../../data/storefrontCatalog";
+
+const HOME_ITEM_OPTIONS_STORAGE_KEY = "uburu_home_item_options";
+
+type HomeItemOptionsState = Record<string, { color: HomeApparelColor; logo: HomeLogoOption }>;
+
+const defaultHomeItemOption = {
+  color: homeApparelColorOptions[0],
+  logo: homeLogoOptions[0],
+} as const;
+
+const readStoredHomeItemOptions = (): HomeItemOptionsState => {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(HOME_ITEM_OPTIONS_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object") {
+      return {};
+    }
+
+    const validColors = new Set<string>(homeApparelColorOptions);
+    const validLogos = new Set<string>(homeLogoOptions);
+
+    return Object.fromEntries(
+      Object.entries(parsed)
+        .filter((entry): entry is [string, Record<string, unknown>] => {
+          const option = entry[1];
+          return !!option && typeof option === "object";
+        })
+        .map(([productId, option]) => {
+          const nextColor = option.color;
+          const nextLogo = option.logo;
+          const color =
+            typeof nextColor === "string" && validColors.has(nextColor)
+              ? (nextColor as HomeApparelColor)
+              : defaultHomeItemOption.color;
+          const logo =
+            typeof nextLogo === "string" && validLogos.has(nextLogo)
+              ? (nextLogo as HomeLogoOption)
+              : defaultHomeItemOption.logo;
+
+          return [productId, { color, logo }];
+        }),
+    );
+  } catch {
+    return {};
+  }
+};
 
 const FeaturedProducts = () => {
   const navigate = useNavigate();
   const [selectedProductId, setSelectedProductId] = useState(products[0].id);
+  const colorConfigurableProductIds = useMemo(
+    () => new Set<string>(homeColorConfigurableProductIds),
+    [],
+  );
+  const brandingConfigurableProductIds = useMemo(
+    () => new Set<string>(homeBrandingConfigurableProductIds),
+    [],
+  );
+  const [itemOptions, setItemOptions] = useState<HomeItemOptionsState>(() =>
+    readStoredHomeItemOptions(),
+  );
   const { quantities, cartItemCount, updateQuantity, addToCart } =
     useStorefrontCheckout({
       catalog: products.map(({ id, name, price }) => ({ id, name, price })),
@@ -16,6 +89,54 @@ const FeaturedProducts = () => {
       emptyCartMessage: "Please add at least one item to your cart.",
       storageKey: "uburu_home_cart",
     });
+
+  useEffect(() => {
+    const configurableProducts = new Set<string>([
+      ...homeColorConfigurableProductIds,
+      ...homeBrandingConfigurableProductIds,
+    ]);
+    const needsDefaults = Array.from(configurableProducts).some(
+      (productId) => !itemOptions[productId],
+    );
+    if (!needsDefaults || typeof window === "undefined") {
+      return;
+    }
+
+    const nextOptions: HomeItemOptionsState = { ...itemOptions };
+    configurableProducts.forEach((productId) => {
+      if (!nextOptions[productId]) {
+        nextOptions[productId] = { ...defaultHomeItemOption };
+      }
+    });
+
+    setItemOptions(nextOptions);
+    window.localStorage.setItem(HOME_ITEM_OPTIONS_STORAGE_KEY, JSON.stringify(nextOptions));
+    window.dispatchEvent(new CustomEvent("uburu:home-options-updated"));
+  }, [itemOptions]);
+
+  const updateItemOption = (
+    productId: string,
+    field: "color" | "logo",
+    value: HomeApparelColor | HomeLogoOption,
+  ) => {
+    setItemOptions((prev) => {
+      const current = prev[productId] ?? { ...defaultHomeItemOption };
+      const next = {
+        ...prev,
+        [productId]: {
+          ...current,
+          [field]: value,
+        },
+      };
+
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(HOME_ITEM_OPTIONS_STORAGE_KEY, JSON.stringify(next));
+        window.dispatchEvent(new CustomEvent("uburu:home-options-updated"));
+      }
+
+      return next;
+    });
+  };
 
   const goToCheckout = () => {
     navigate("/checkout?source=home");
@@ -44,6 +165,9 @@ const FeaturedProducts = () => {
             </h2>
             <p className="mt-3 max-w-xl text-base font-semibold text-white/70">
               Each item is selected to support shelter programs, counseling, and reintegration.
+            </p>
+            <p className="mt-2 text-xs font-bold uppercase tracking-[0.16em] text-yellow-200/80">
+              Delivery charges are separate from item prices.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -130,6 +254,67 @@ const FeaturedProducts = () => {
                     +
                   </button>
                 </div>
+                {(colorConfigurableProductIds.has(product.id) ||
+                  brandingConfigurableProductIds.has(product.id)) && (
+                  <div className="mt-4 space-y-3 rounded-2xl border border-neutral-800 bg-black/25 p-3">
+                    {colorConfigurableProductIds.has(product.id) && (
+                      <div>
+                        <label
+                          htmlFor={`color-${product.id}`}
+                          className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
+                        >
+                          Color
+                        </label>
+                        <select
+                          id={`color-${product.id}`}
+                          value={itemOptions[product.id]?.color ?? defaultHomeItemOption.color}
+                          onChange={(event) =>
+                            updateItemOption(
+                              product.id,
+                              "color",
+                              event.target.value as HomeApparelColor,
+                            )
+                          }
+                          className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
+                        >
+                          {homeApparelColorOptions.map((color) => (
+                            <option key={`${product.id}-${color}`} value={color}>
+                              {color}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {brandingConfigurableProductIds.has(product.id) && (
+                      <div>
+                        <label
+                          htmlFor={`logo-${product.id}`}
+                          className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
+                        >
+                          Branding
+                        </label>
+                        <select
+                          id={`logo-${product.id}`}
+                          value={itemOptions[product.id]?.logo ?? defaultHomeItemOption.logo}
+                          onChange={(event) =>
+                            updateItemOption(
+                              product.id,
+                              "logo",
+                              event.target.value as HomeLogoOption,
+                            )
+                          }
+                          className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
+                        >
+                          {homeLogoOptions.map((logoOption) => (
+                            <option key={`${product.id}-${logoOption}`} value={logoOption}>
+                              {logoOption}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <Button
                   onClick={() => handleBuyClick(product.id)}
                   className="mt-5 w-full bg-red-600 py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-red-500"

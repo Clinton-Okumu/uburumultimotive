@@ -21,6 +21,23 @@ export type StorefrontItem = {
   image: string;
 };
 
+export const homeApparelColorOptions = ["White", "Yellow", "Grey", "Green", "Blue"] as const;
+
+export type HomeApparelColor = (typeof homeApparelColorOptions)[number];
+
+export const homeLogoOptions = ["With logo", "Without logo"] as const;
+
+export type HomeLogoOption = (typeof homeLogoOptions)[number];
+
+export const homeColorConfigurableProductIds = ["tshirts", "caps", "hoodies"] as const;
+
+export const homeBrandingConfigurableProductIds = [
+  "tshirts",
+  "caps",
+  "hoodies",
+  "reusable-bottles",
+] as const;
+
 export type VillageTravelMonth = "july" | "august" | "september" | "october";
 
 export type VillageResidencyType = "resident" | "non_resident";
@@ -56,7 +73,7 @@ export const homeProducts: StorefrontItem[] = [
   {
     id: "tshirts",
     name: "T-shirts",
-    price: 1800,
+    price: 1000,
     currency: "KES",
     tag: "Apparel",
     image: shirt,

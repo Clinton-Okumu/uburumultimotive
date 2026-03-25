@@ -3,9 +3,15 @@ import { CheckCircle, Loader } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import Button from "../components/shared/Button";
 import {
+  homeApparelColorOptions,
+  homeBrandingConfigurableProductIds,
+  homeColorConfigurableProductIds,
+  homeLogoOptions,
   homeProducts,
   villageEvents,
   type CurrencyCode,
+  type HomeApparelColor,
+  type HomeLogoOption,
   type StorefrontItem,
   type StorefrontSource,
 } from "../data/storefrontCatalog";
@@ -23,10 +29,25 @@ type CartItem = {
   currency: CurrencyCode;
 };
 
+type HomeItemOptions = {
+  color: HomeApparelColor;
+  logo: HomeLogoOption;
+};
+
 const SOURCE_KEYS: Record<StorefrontSource, string> = {
   home: "uburu_home_cart",
   village: "uburu_village_cart",
 };
+
+const HOME_ITEM_OPTIONS_STORAGE_KEY = "uburu_home_item_options";
+
+const DEFAULT_HOME_ITEM_OPTIONS: HomeItemOptions = {
+  color: homeApparelColorOptions[0],
+  logo: homeLogoOptions[0],
+};
+
+const HOME_COLOR_PRODUCT_SET = new Set<string>(homeColorConfigurableProductIds);
+const HOME_BRANDING_PRODUCT_SET = new Set<string>(homeBrandingConfigurableProductIds);
 
 const SOURCE_CONTEXT: Record<StorefrontSource, "uburu_home" | "uburu_village"> = {
   home: "uburu_home",
@@ -97,6 +118,49 @@ const readStoredCart = (source: StorefrontSource): Record<string, number> => {
   }
 };
 
+const readStoredHomeItemOptions = (): Record<string, HomeItemOptions> => {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(HOME_ITEM_OPTIONS_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object") {
+      return {};
+    }
+
+    const validColors = new Set<string>(homeApparelColorOptions);
+    const validLogos = new Set<string>(homeLogoOptions);
+
+    return Object.fromEntries(
+      Object.entries(parsed)
+        .filter((entry): entry is [string, Record<string, unknown>] => {
+          const value = entry[1];
+          return !!value && typeof value === "object";
+        })
+        .map(([productId, value]) => {
+          const color =
+            typeof value.color === "string" && validColors.has(value.color)
+              ? (value.color as HomeApparelColor)
+              : DEFAULT_HOME_ITEM_OPTIONS.color;
+          const logo =
+            typeof value.logo === "string" && validLogos.has(value.logo)
+              ? (value.logo as HomeLogoOption)
+              : DEFAULT_HOME_ITEM_OPTIONS.logo;
+
+          return [productId, { color, logo }];
+        }),
+    );
+  } catch {
+    return {};
+  }
+};
+
 const formatAmount = (amount: number, currency: CurrencyCode) => {
   const locale = currency === "KES" ? "en-KE" : "en-US";
   return `${currency} ${amount.toLocaleString(locale)}`;
@@ -128,6 +192,23 @@ const Checkout = () => {
   const [buyerEmail, setBuyerEmail] = useState("");
   const [status, setStatus] = useState<PaymentStatus>("idle");
   const [statusMessage, setStatusMessage] = useState("");
+  const [homeItemOptions, setHomeItemOptions] = useState<Record<string, HomeItemOptions>>(
+    () => readStoredHomeItemOptions(),
+  );
+
+  useEffect(() => {
+    const syncHomeOptions = () => setHomeItemOptions(readStoredHomeItemOptions());
+    window.addEventListener("storage", syncHomeOptions);
+    window.addEventListener("uburu:home-options-updated", syncHomeOptions as EventListener);
+
+    return () => {
+      window.removeEventListener("storage", syncHomeOptions);
+      window.removeEventListener(
+        "uburu:home-options-updated",
+        syncHomeOptions as EventListener,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     const sourceFromUrl = parseSource(
@@ -296,6 +377,24 @@ const Checkout = () => {
               unitPrice: item.unitPrice,
               totalAmount: item.lineTotal,
               currency: item.currency,
+              ...(activeSource === "home"
+                ? {
+                    ...(HOME_COLOR_PRODUCT_SET.has(item.id)
+                      ? {
+                          color:
+                            homeItemOptions[item.id]?.color ??
+                            DEFAULT_HOME_ITEM_OPTIONS.color,
+                        }
+                      : {}),
+                    ...(HOME_BRANDING_PRODUCT_SET.has(item.id)
+                      ? {
+                          logoOption:
+                            homeItemOptions[item.id]?.logo ??
+                            DEFAULT_HOME_ITEM_OPTIONS.logo,
+                        }
+                      : {}),
+                  }
+                : {}),
             })),
             totalAmount: activeMetrics.total,
             currency: activeMetrics.currency,
@@ -405,6 +504,9 @@ const Checkout = () => {
                     ? "Mixed currencies"
                     : formatAmount(activeMetrics.total, activeMetrics.currency ?? "KES")}
               </p>
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-yellow-200/85">
+                Delivery charges are separate from item prices.
+              </p>
             </div>
             {activeMetrics.items.length > 0 && (
               <Button
@@ -438,6 +540,22 @@ const Checkout = () => {
                       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60">
                         {formatAmount(item.unitPrice, item.currency)} each
                       </p>
+                      {activeSource === "home" &&
+                        (HOME_COLOR_PRODUCT_SET.has(item.id) ||
+                          HOME_BRANDING_PRODUCT_SET.has(item.id)) && (
+                        <p className="mt-1 text-[11px] font-semibold text-yellow-200/85">
+                          {HOME_COLOR_PRODUCT_SET.has(item.id)
+                            ? `Color: ${homeItemOptions[item.id]?.color ?? DEFAULT_HOME_ITEM_OPTIONS.color}`
+                            : null}
+                          {HOME_COLOR_PRODUCT_SET.has(item.id) &&
+                          HOME_BRANDING_PRODUCT_SET.has(item.id)
+                            ? " | "
+                            : null}
+                          {HOME_BRANDING_PRODUCT_SET.has(item.id)
+                            ? `Branding: ${homeItemOptions[item.id]?.logo ?? DEFAULT_HOME_ITEM_OPTIONS.logo}`
+                            : null}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                       <button

@@ -190,6 +190,8 @@ const FeaturedProducts = () => {
           {products.map((product) => (
             <div
               key={product.id}
+              onMouseEnter={() => setSelectedProductId(product.id)}
+              onFocusCapture={() => setSelectedProductId(product.id)}
               className={`group overflow-hidden rounded-3xl border bg-neutral-900 shadow-lg transition-transform duration-300 hover:-translate-y-1 ${
                 selectedProductId === product.id
                   ? "border-yellow-400 ring-2 ring-yellow-400/30"

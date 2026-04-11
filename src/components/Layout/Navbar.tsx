@@ -12,10 +12,11 @@ type NavLink = {
 const NavbarLinks: NavLink[] = [
   { id: 1, title: "Home", link: "/" },
   { id: 2, title: "About", link: "/about" },
-  { id: 3, title: "Causes", link: "/causes" },
-  { id: 4, title: "Gallery", link: "/gallery" },
-  { id: 5, title: "Contact", link: "/contact" },
-  { id: 6, title: "Volunteer", link: "/volunteer" },
+  { id: 3, title: "Founder", link: "/founder" },
+  { id: 4, title: "Causes", link: "/causes" },
+  { id: 5, title: "Gallery", link: "/gallery" },
+  { id: 6, title: "Contact", link: "/contact" },
+  { id: 7, title: "Volunteer", link: "/volunteer" },
 ];
 
 const Navbar = () => {

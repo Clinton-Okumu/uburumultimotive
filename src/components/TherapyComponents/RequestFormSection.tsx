@@ -183,6 +183,24 @@ const RequestFormSection = () => {
       return;
     }
 
+    if (
+      formData.assistanceType === "Other" &&
+      formData.assistanceOther.trim() === ""
+    ) {
+      setStatus("error");
+      setStatusMessage("Please specify the other assistance type.");
+      return;
+    }
+
+    if (
+      formData.assistanceReason.includes("Others") &&
+      formData.assistanceReasonOther.trim() === ""
+    ) {
+      setStatus("error");
+      setStatusMessage("Please specify the other reason for assistance.");
+      return;
+    }
+
     if (!selectedPricingOption) {
       setStatus("error");
       setStatusMessage("Please select a therapy package before continuing.");
@@ -560,13 +578,14 @@ const RequestFormSection = () => {
                   {formData.assistanceType === "Other" && (
                     <div className="space-y-2 md:col-span-2">
                       <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                        Other assistance type
+                        Other assistance type *
                       </label>
                       <input
                         type="text"
                         name="assistanceOther"
                         value={formData.assistanceOther}
                         onChange={handleChange}
+                        required={formData.assistanceType === "Other"}
                         className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                         placeholder="Please specify"
                       />
@@ -775,13 +794,14 @@ const RequestFormSection = () => {
                   {formData.assistanceReason.includes("Others") && (
                     <div className="space-y-2 md:col-span-2">
                       <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                        Others
+                        Others *
                       </label>
                       <input
                         type="text"
                         name="assistanceReasonOther"
                         value={formData.assistanceReasonOther}
                         onChange={handleChange}
+                        required={formData.assistanceReason.includes("Others")}
                         className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
                         placeholder="Share a brief reason"
                       />

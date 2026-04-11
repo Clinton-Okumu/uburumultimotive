@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import About from './pages/About';
+import Founder from './pages/Founder';
 import Gallery from './pages/Gallery';
 import Causes from './pages/Causes';
 import Contact from './pages/Contact';
@@ -25,6 +26,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/About" element={<About />} />
+                    <Route path="/founder" element={<Founder />} />
                     <Route path="/Causes" element={<Causes />} />
                     <Route path="/Gallery" element={<Gallery />} />
                     <Route path="/Contact" element={<Contact />} />

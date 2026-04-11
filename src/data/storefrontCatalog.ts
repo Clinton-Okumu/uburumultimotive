@@ -1,4 +1,4 @@
-import ebook from "../assets/ebook.webp";
+import ebook from "../assets/ebook1.jpg";
 import shirt from "../assets/shirt.webp";
 import cap from "../assets/cap.webp";
 import hoodie from "../assets/hoodie.webp";
@@ -29,7 +29,17 @@ export const homeLogoOptions = ["With logo", "Without logo"] as const;
 
 export type HomeLogoOption = (typeof homeLogoOptions)[number];
 
+export const homeEbookTitleOptions = [
+  "Destined to Reign",
+  "Live the Let Go Life",
+  "Unmerited Favor",
+] as const;
+
+export type HomeEbookTitleOption = (typeof homeEbookTitleOptions)[number];
+
 export const homeColorConfigurableProductIds = ["tshirts", "caps", "hoodies"] as const;
+
+export const homeEbookConfigurableProductIds = ["ebooks"] as const;
 
 export const homeBrandingConfigurableProductIds = [
   "tshirts",

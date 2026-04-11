@@ -7,19 +7,26 @@ import {
   homeApparelColorOptions,
   homeBrandingConfigurableProductIds,
   homeColorConfigurableProductIds,
+  homeEbookConfigurableProductIds,
+  homeEbookTitleOptions,
   homeLogoOptions,
   homeProducts as products,
   type HomeApparelColor,
+  type HomeEbookTitleOption,
   type HomeLogoOption,
 } from "../../data/storefrontCatalog";
 
 const HOME_ITEM_OPTIONS_STORAGE_KEY = "uburu_home_item_options";
 
-type HomeItemOptionsState = Record<string, { color: HomeApparelColor; logo: HomeLogoOption }>;
+type HomeItemOptionsState = Record<
+  string,
+  { color: HomeApparelColor; logo: HomeLogoOption; ebookTitle: HomeEbookTitleOption }
+>;
 
 const defaultHomeItemOption = {
   color: homeApparelColorOptions[0],
   logo: homeLogoOptions[0],
+  ebookTitle: homeEbookTitleOptions[0],
 } as const;
 
 const readStoredHomeItemOptions = (): HomeItemOptionsState => {
@@ -40,6 +47,7 @@ const readStoredHomeItemOptions = (): HomeItemOptionsState => {
 
     const validColors = new Set<string>(homeApparelColorOptions);
     const validLogos = new Set<string>(homeLogoOptions);
+    const validEbookTitles = new Set<string>(homeEbookTitleOptions);
 
     return Object.fromEntries(
       Object.entries(parsed)
@@ -50,6 +58,7 @@ const readStoredHomeItemOptions = (): HomeItemOptionsState => {
         .map(([productId, option]) => {
           const nextColor = option.color;
           const nextLogo = option.logo;
+          const nextEbookTitle = option.ebookTitle;
           const color =
             typeof nextColor === "string" && validColors.has(nextColor)
               ? (nextColor as HomeApparelColor)
@@ -58,8 +67,12 @@ const readStoredHomeItemOptions = (): HomeItemOptionsState => {
             typeof nextLogo === "string" && validLogos.has(nextLogo)
               ? (nextLogo as HomeLogoOption)
               : defaultHomeItemOption.logo;
+          const ebookTitle =
+            typeof nextEbookTitle === "string" && validEbookTitles.has(nextEbookTitle)
+              ? (nextEbookTitle as HomeEbookTitleOption)
+              : defaultHomeItemOption.ebookTitle;
 
-          return [productId, { color, logo }];
+          return [productId, { color, logo, ebookTitle }];
         }),
     );
   } catch {
@@ -78,6 +91,10 @@ const FeaturedProducts = () => {
     () => new Set<string>(homeBrandingConfigurableProductIds),
     [],
   );
+  const ebookConfigurableProductIds = useMemo(
+    () => new Set<string>(homeEbookConfigurableProductIds),
+    [],
+  );
   const [itemOptions, setItemOptions] = useState<HomeItemOptionsState>(() =>
     readStoredHomeItemOptions(),
   );
@@ -94,6 +111,7 @@ const FeaturedProducts = () => {
     const configurableProducts = new Set<string>([
       ...homeColorConfigurableProductIds,
       ...homeBrandingConfigurableProductIds,
+      ...homeEbookConfigurableProductIds,
     ]);
     const needsDefaults = Array.from(configurableProducts).some(
       (productId) => !itemOptions[productId],
@@ -116,8 +134,8 @@ const FeaturedProducts = () => {
 
   const updateItemOption = (
     productId: string,
-    field: "color" | "logo",
-    value: HomeApparelColor | HomeLogoOption,
+    field: "color" | "logo" | "ebookTitle",
+    value: HomeApparelColor | HomeLogoOption | HomeEbookTitleOption,
   ) => {
     setItemOptions((prev) => {
       const current = prev[productId] ?? { ...defaultHomeItemOption };
@@ -257,8 +275,39 @@ const FeaturedProducts = () => {
                   </button>
                 </div>
                 {(colorConfigurableProductIds.has(product.id) ||
-                  brandingConfigurableProductIds.has(product.id)) && (
+                  brandingConfigurableProductIds.has(product.id) ||
+                  ebookConfigurableProductIds.has(product.id)) && (
                   <div className="mt-4 space-y-3 rounded-2xl border border-neutral-800 bg-black/25 p-3">
+                    {ebookConfigurableProductIds.has(product.id) && (
+                      <div>
+                        <label
+                          htmlFor={`ebook-${product.id}`}
+                          className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
+                        >
+                          Ebook title
+                        </label>
+                        <select
+                          id={`ebook-${product.id}`}
+                          value={
+                            itemOptions[product.id]?.ebookTitle ?? defaultHomeItemOption.ebookTitle
+                          }
+                          onChange={(event) =>
+                            updateItemOption(
+                              product.id,
+                              "ebookTitle",
+                              event.target.value as HomeEbookTitleOption,
+                            )
+                          }
+                          className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
+                        >
+                          {homeEbookTitleOptions.map((ebookTitle) => (
+                            <option key={`${product.id}-${ebookTitle}`} value={ebookTitle}>
+                              {ebookTitle}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     {colorConfigurableProductIds.has(product.id) && (
                       <div>
                         <label

@@ -17,6 +17,10 @@ import img1 from "../../assets/pic19.webp";
 import img5 from "../../assets/pic2.webp";
 import img2 from "../../assets/pic20.webp";
 import img4 from "../../assets/pic3.webp";
+import img7 from "../../assets/pic30.jpg";
+import img8 from "../../assets/pic31.jpg";
+import img9 from "../../assets/pic32.jpg";
+import img10 from "../../assets/pic33.jpg";
 import img6 from "../../assets/pic4.webp";
 import img3 from "../../assets/pic6.webp";
 
@@ -102,6 +106,58 @@ const galleryImages = [
     impact: { volunteers: 35, residentsBenefited: 65, tasksCompleted: 89 },
     testimonial: "It feels like a new home now.",
     testimonialAuthor: "Elderly Resident",
+  },
+  {
+    id: 7,
+    image: img7,
+    category: "Community",
+    icon: Users,
+    title: "Community Moments",
+    description: "Captured another uplifting moment from the Uburu community outreach.",
+    fullStory:
+      "This gallery addition highlights one more real moment from our community work. It reflects the relationships, encouragement, and presence that shape every Uburu outreach. Replace this placeholder story with the exact activity details if you want the gallery card to tell the specific event behind the image.",
+    impact: { attendees: 24, familiesGifted: 8, volunteerHours: 16 },
+    testimonial: "Support like this reminds us that care can be seen and felt.",
+    testimonialAuthor: "Community Participant",
+  },
+  {
+    id: 8,
+    image: img8,
+    category: "Volunteer",
+    icon: Wrench,
+    title: "Serving With Purpose",
+    description: "A new volunteer-focused image added to showcase hands-on support in action.",
+    fullStory:
+      "This image expands the gallery with another view of practical service and volunteer involvement. It helps show the people behind the work and the consistency of Uburu's support model. The narrative can be updated later with the exact names, place, and activity from the day this image was taken.",
+    impact: { volunteers: 14, residentsBenefited: 21, tasksCompleted: 12 },
+    testimonial: "Every small act of service creates a bigger sense of hope.",
+    testimonialAuthor: "Volunteer Team Member",
+  },
+  {
+    id: 9,
+    image: img9,
+    category: "Therapy",
+    icon: Heart,
+    title: "Space for Healing",
+    description: "Another therapy-centered moment showing support, reflection, and care.",
+    fullStory:
+      "This added therapy image strengthens the gallery's emotional range by representing care beyond material support. It points to the importance of listening, healing, and creating safe spaces for personal restoration. If needed, the copy can be tailored to the exact context of the photo and the session it represents.",
+    impact: { participants: 10, sessionsHeld: 4, counselors: 2 },
+    testimonial: "Healing starts when someone makes space to truly listen.",
+    testimonialAuthor: "Therapy Participant",
+  },
+  {
+    id: 10,
+    image: img10,
+    category: "Food",
+    icon: Utensils,
+    title: "Sharing Daily Care",
+    description: "A fresh gallery image highlighting everyday care through outreach support.",
+    fullStory:
+      "This image helps broaden the visual story of Uburu's work by showing another everyday act of care. It fits the gallery's focus on dignity, consistency, and presence in the community. The supporting text can later be replaced with the exact details of the outreach represented in the photograph.",
+    impact: { familiesHelped: 18, mealsServed: 54, volunteers: 6 },
+    testimonial: "What looks simple in a photo can mean everything to a family.",
+    testimonialAuthor: "Outreach Volunteer",
   },
 ];
 

@@ -6,11 +6,14 @@ import {
   homeApparelColorOptions,
   homeBrandingConfigurableProductIds,
   homeColorConfigurableProductIds,
+  homeEbookConfigurableProductIds,
+  homeEbookTitleOptions,
   homeLogoOptions,
   homeProducts,
   villageEvents,
   type CurrencyCode,
   type HomeApparelColor,
+  type HomeEbookTitleOption,
   type HomeLogoOption,
   type StorefrontItem,
   type StorefrontSource,
@@ -32,6 +35,7 @@ type CartItem = {
 type HomeItemOptions = {
   color: HomeApparelColor;
   logo: HomeLogoOption;
+  ebookTitle: HomeEbookTitleOption;
 };
 
 const SOURCE_KEYS: Record<StorefrontSource, string> = {
@@ -44,10 +48,12 @@ const HOME_ITEM_OPTIONS_STORAGE_KEY = "uburu_home_item_options";
 const DEFAULT_HOME_ITEM_OPTIONS: HomeItemOptions = {
   color: homeApparelColorOptions[0],
   logo: homeLogoOptions[0],
+  ebookTitle: homeEbookTitleOptions[0],
 };
 
 const HOME_COLOR_PRODUCT_SET = new Set<string>(homeColorConfigurableProductIds);
 const HOME_BRANDING_PRODUCT_SET = new Set<string>(homeBrandingConfigurableProductIds);
+const HOME_EBOOK_PRODUCT_SET = new Set<string>(homeEbookConfigurableProductIds);
 
 const SOURCE_CONTEXT: Record<StorefrontSource, "uburu_home" | "uburu_village"> = {
   home: "uburu_home",
@@ -136,6 +142,7 @@ const readStoredHomeItemOptions = (): Record<string, HomeItemOptions> => {
 
     const validColors = new Set<string>(homeApparelColorOptions);
     const validLogos = new Set<string>(homeLogoOptions);
+    const validEbookTitles = new Set<string>(homeEbookTitleOptions);
 
     return Object.fromEntries(
       Object.entries(parsed)
@@ -152,8 +159,12 @@ const readStoredHomeItemOptions = (): Record<string, HomeItemOptions> => {
             typeof value.logo === "string" && validLogos.has(value.logo)
               ? (value.logo as HomeLogoOption)
               : DEFAULT_HOME_ITEM_OPTIONS.logo;
+          const ebookTitle =
+            typeof value.ebookTitle === "string" && validEbookTitles.has(value.ebookTitle)
+              ? (value.ebookTitle as HomeEbookTitleOption)
+              : DEFAULT_HOME_ITEM_OPTIONS.ebookTitle;
 
-          return [productId, { color, logo }];
+          return [productId, { color, logo, ebookTitle }];
         }),
     );
   } catch {
@@ -393,6 +404,13 @@ const Checkout = () => {
                             DEFAULT_HOME_ITEM_OPTIONS.logo,
                         }
                       : {}),
+                    ...(HOME_EBOOK_PRODUCT_SET.has(item.id)
+                      ? {
+                          ebookTitle:
+                            homeItemOptions[item.id]?.ebookTitle ??
+                            DEFAULT_HOME_ITEM_OPTIONS.ebookTitle,
+                        }
+                      : {}),
                   }
                 : {}),
             })),
@@ -542,8 +560,17 @@ const Checkout = () => {
                       </p>
                       {activeSource === "home" &&
                         (HOME_COLOR_PRODUCT_SET.has(item.id) ||
-                          HOME_BRANDING_PRODUCT_SET.has(item.id)) && (
+                          HOME_BRANDING_PRODUCT_SET.has(item.id) ||
+                          HOME_EBOOK_PRODUCT_SET.has(item.id)) && (
                         <p className="mt-1 text-[11px] font-semibold text-yellow-200/85">
+                          {HOME_EBOOK_PRODUCT_SET.has(item.id)
+                            ? `Title: ${homeItemOptions[item.id]?.ebookTitle ?? DEFAULT_HOME_ITEM_OPTIONS.ebookTitle}`
+                            : null}
+                          {HOME_EBOOK_PRODUCT_SET.has(item.id) &&
+                          (HOME_COLOR_PRODUCT_SET.has(item.id) ||
+                            HOME_BRANDING_PRODUCT_SET.has(item.id))
+                            ? " | "
+                            : null}
                           {HOME_COLOR_PRODUCT_SET.has(item.id)
                             ? `Color: ${homeItemOptions[item.id]?.color ?? DEFAULT_HOME_ITEM_OPTIONS.color}`
                             : null}

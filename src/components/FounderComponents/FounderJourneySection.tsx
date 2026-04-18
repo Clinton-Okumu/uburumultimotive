@@ -2,23 +2,23 @@ import { HandHeart, Lightbulb, MapPinned, Users } from "lucide-react";
 
 const milestones = [
   {
-    title: "The Beginning",
-    text: "A personal conviction to respond to hardship with practical support and human dignity.",
+    title: "Academic Foundation",
+    text: "Pursued Bachelor's in Counseling Psychology (MKU) and Master's in Psychology (UK).",
     icon: Lightbulb,
   },
   {
-    title: "Community Listening",
-    text: "The founder listened first, learning where people needed shelter, food, guidance, and hope.",
+    title: "Clinical Training",
+    text: "Trained and licensed as a therapist, building expertise in trauma-informed care.",
     icon: Users,
   },
   {
-    title: "Building Uburu",
-    text: "Uburu Multimove took shape as a platform for sustainable outreach, partnership, and restoration.",
+    title: " vision for Change",
+    text: "Recognized the need to integrate mental health services into homeless support systems.",
     icon: MapPinned,
   },
   {
-    title: "Ongoing Impact",
-    text: "The mission continues through consistent service, trusted relationships, and long-term care.",
+    title: "Uburu Multimove",
+    text: "Founded Uburu Multimove—combining therapy, safe housing, and empowerment programs.",
     icon: HandHeart,
   },
 ];
@@ -32,12 +32,13 @@ const FounderJourneySection = () => {
             Journey & Legacy
           </span>
           <h2 className="mt-6 text-4xl font-black tracking-tighter text-white md:text-5xl">
-            A founder journey shaped by <span className="italic text-yellow-400">service</span>
+            A journey rooted in <span className="italic text-yellow-400">psychology</span> and
+            purpose
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-gray-400">
-            This section gives you a clean way to present the founder timeline, values, and key
-            milestones. Replace the placeholder moments below with the real story as soon as you
-            have the exact details.
+            Joyeve's academic background and hands-on experience in mental health support shaped her
+            vision for a holistic approach to homelessness—one that combines therapy, safe housing,
+            and empowerment programs.
           </p>
         </div>
 

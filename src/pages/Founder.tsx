@@ -1,5 +1,4 @@
 import AboutHeroSection from "../components/AboutComponents/AboutHeroSection";
-import FounderJourneySection from "../components/FounderComponents/FounderJourneySection";
 import FounderStorySection from "../components/FounderComponents/FounderStorySection";
 import hero from "../assets/hero.webp";
 
@@ -15,7 +14,6 @@ const Founder = () => {
         image={hero}
       />
       <FounderStorySection />
-      <FounderJourneySection />
     </>
   );
 };

@@ -1,4 +1,7 @@
-import ebook from "../assets/ebook1.jpg";
+import ebook1 from "../assets/ebook1.jpg";
+import ebook2 from "../assets/ebook2.jpg";
+import ebook3 from "../assets/ebook3.jpg";
+import ebookCover from "../assets/ebook.webp";
 import shirt from "../assets/shirt.webp";
 import cap from "../assets/cap.webp";
 import hoodie from "../assets/hoodie.webp";
@@ -7,6 +10,7 @@ import culturalEvent from "../assets/Screenshot-2026-02-20_10-06-49.webp";
 import communityPainting from "../assets/community-painting-wood-medium-shot.webp";
 import footballCircle from "../assets/top-view-childs-feet-around-football-ball.webp";
 import olooluaNatureTrail from "../assets/oloolua.webp";
+import therapeuticTripImage from "../assets/event3.avif";
 
 export type StorefrontSource = "home" | "village";
 
@@ -19,6 +23,8 @@ export type StorefrontItem = {
   currency: CurrencyCode;
   tag: string;
   image: string;
+  isFolder?: boolean;
+  folderItems?: StorefrontItem[];
 };
 
 export const homeApparelColorOptions = ["White", "Yellow", "Grey", "Green", "Blue"] as const;
@@ -29,17 +35,7 @@ export const homeLogoOptions = ["With logo", "Without logo"] as const;
 
 export type HomeLogoOption = (typeof homeLogoOptions)[number];
 
-export const homeEbookTitleOptions = [
-  "Destined to Reign",
-  "Live the Let Go Life",
-  "Unmerited Favor",
-] as const;
-
-export type HomeEbookTitleOption = (typeof homeEbookTitleOptions)[number];
-
 export const homeColorConfigurableProductIds = ["tshirts", "caps", "hoodies"] as const;
-
-export const homeEbookConfigurableProductIds = ["ebooks"] as const;
 
 export const homeBrandingConfigurableProductIds = [
   "tshirts",
@@ -71,14 +67,79 @@ export type VillageEventOption = StorefrontItem & {
   availableMonths: VillageTravelMonth[];
 };
 
-export const homeProducts: StorefrontItem[] = [
+export const ebookProducts: StorefrontItem[] = [
   {
-    id: "ebooks",
-    name: "Ebooks",
+    id: "ebook-destined-to-reign",
+    name: "Destined to Reign",
     price: 1200,
     currency: "KES",
     tag: "Digital",
-    image: ebook,
+    image: ebook1,
+  },
+  {
+    id: "ebook-live-the-let-go-life",
+    name: "Live the Let Go Life",
+    price: 1200,
+    currency: "KES",
+    tag: "Digital",
+    image: ebook2,
+  },
+  {
+    id: "ebook-unmerited-favor",
+    name: "Unmerited Favor",
+    price: 1200,
+    currency: "KES",
+    tag: "Digital",
+    image: ebook3,
+  },
+];
+
+export const homeProducts: StorefrontItem[] = [
+  ...ebookProducts,
+  {
+    id: "tshirts",
+    name: "T-shirts",
+    price: 1000,
+    currency: "KES",
+    tag: "Apparel",
+    image: shirt,
+  },
+  {
+    id: "caps",
+    name: "Caps",
+    price: 900,
+    currency: "KES",
+    tag: "Everyday",
+    image: cap,
+  },
+  {
+    id: "hoodies",
+    name: "Hoodies",
+    price: 2800,
+    currency: "KES",
+    tag: "Cozy",
+    image: hoodie,
+  },
+  {
+    id: "reusable-bottles",
+    name: "Reusable bottles",
+    price: 1500,
+    currency: "KES",
+    tag: "Eco",
+    image: waterBottle,
+  },
+];
+
+export const homeFeaturedProducts: StorefrontItem[] = [
+  {
+    id: "ebook-collection",
+    name: "Ebook Collection",
+    price: 1200,
+    currency: "KES",
+    tag: "Digital",
+    image: ebookCover,
+    isFolder: true,
+    folderItems: ebookProducts,
   },
   {
     id: "tshirts",
@@ -245,5 +306,36 @@ villageEventOptions.push({
   tag: "Group 5+",
   image: olooluaNatureTrail,
 });
+
+villageEventOptions.push(
+  {
+    id: "therapeutic-trip-resident",
+    packageId: "therapeutic-trip",
+    campId: "therapeutic-trip",
+    campName: "Therapeutic trip",
+    residencyType: "resident",
+    mealPlanLabel: "All year",
+    availableMonths: ["july", "august", "september", "october"],
+    name: "Therapeutic trip (Resident)",
+    price: 3000,
+    currency: "KES",
+    tag: "Resident",
+    image: therapeuticTripImage,
+  },
+  {
+    id: "therapeutic-trip-non-resident",
+    packageId: "therapeutic-trip",
+    campId: "therapeutic-trip",
+    campName: "Therapeutic trip",
+    residencyType: "non_resident",
+    mealPlanLabel: "All year",
+    availableMonths: ["july", "august", "september", "october"],
+    name: "Therapeutic trip (Non-resident)",
+    price: 65,
+    currency: "USD",
+    tag: "Non-resident",
+    image: therapeuticTripImage,
+  },
+);
 
 export const villageEvents: StorefrontItem[] = villageEventOptions;

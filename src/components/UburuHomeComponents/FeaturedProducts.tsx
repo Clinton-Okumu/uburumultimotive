@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../shared/Button";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
@@ -7,12 +7,10 @@ import {
   homeApparelColorOptions,
   homeBrandingConfigurableProductIds,
   homeColorConfigurableProductIds,
-  homeEbookConfigurableProductIds,
-  homeEbookTitleOptions,
   homeLogoOptions,
-  homeProducts as products,
+  homeProducts,
+  homeFeaturedProducts as products,
   type HomeApparelColor,
-  type HomeEbookTitleOption,
   type HomeLogoOption,
 } from "../../data/storefrontCatalog";
 
@@ -20,13 +18,12 @@ const HOME_ITEM_OPTIONS_STORAGE_KEY = "uburu_home_item_options";
 
 type HomeItemOptionsState = Record<
   string,
-  { color: HomeApparelColor; logo: HomeLogoOption; ebookTitle: HomeEbookTitleOption }
+  { color: HomeApparelColor; logo: HomeLogoOption }
 >;
 
 const defaultHomeItemOption = {
   color: homeApparelColorOptions[0],
   logo: homeLogoOptions[0],
-  ebookTitle: homeEbookTitleOptions[0],
 } as const;
 
 const readStoredHomeItemOptions = (): HomeItemOptionsState => {
@@ -47,7 +44,6 @@ const readStoredHomeItemOptions = (): HomeItemOptionsState => {
 
     const validColors = new Set<string>(homeApparelColorOptions);
     const validLogos = new Set<string>(homeLogoOptions);
-    const validEbookTitles = new Set<string>(homeEbookTitleOptions);
 
     return Object.fromEntries(
       Object.entries(parsed)
@@ -58,7 +54,6 @@ const readStoredHomeItemOptions = (): HomeItemOptionsState => {
         .map(([productId, option]) => {
           const nextColor = option.color;
           const nextLogo = option.logo;
-          const nextEbookTitle = option.ebookTitle;
           const color =
             typeof nextColor === "string" && validColors.has(nextColor)
               ? (nextColor as HomeApparelColor)
@@ -67,12 +62,8 @@ const readStoredHomeItemOptions = (): HomeItemOptionsState => {
             typeof nextLogo === "string" && validLogos.has(nextLogo)
               ? (nextLogo as HomeLogoOption)
               : defaultHomeItemOption.logo;
-          const ebookTitle =
-            typeof nextEbookTitle === "string" && validEbookTitles.has(nextEbookTitle)
-              ? (nextEbookTitle as HomeEbookTitleOption)
-              : defaultHomeItemOption.ebookTitle;
 
-          return [productId, { color, logo, ebookTitle }];
+          return [productId, { color, logo }];
         }),
     );
   } catch {
@@ -83,6 +74,7 @@ const readStoredHomeItemOptions = (): HomeItemOptionsState => {
 const FeaturedProducts = () => {
   const navigate = useNavigate();
   const [selectedProductId, setSelectedProductId] = useState(products[0].id);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
   const colorConfigurableProductIds = useMemo(
     () => new Set<string>(homeColorConfigurableProductIds),
     [],
@@ -91,16 +83,12 @@ const FeaturedProducts = () => {
     () => new Set<string>(homeBrandingConfigurableProductIds),
     [],
   );
-  const ebookConfigurableProductIds = useMemo(
-    () => new Set<string>(homeEbookConfigurableProductIds),
-    [],
-  );
   const [itemOptions, setItemOptions] = useState<HomeItemOptionsState>(() =>
     readStoredHomeItemOptions(),
   );
   const { quantities, cartItemCount, updateQuantity, addToCart } =
     useStorefrontCheckout({
-      catalog: products.map(({ id, name, price }) => ({ id, name, price })),
+      catalog: homeProducts.map(({ id, name, price }) => ({ id, name, price })),
       context: "uburu_home",
       purchaseType: "product_purchase",
       emptyCartMessage: "Please add at least one item to your cart.",
@@ -111,7 +99,6 @@ const FeaturedProducts = () => {
     const configurableProducts = new Set<string>([
       ...homeColorConfigurableProductIds,
       ...homeBrandingConfigurableProductIds,
-      ...homeEbookConfigurableProductIds,
     ]);
     const needsDefaults = Array.from(configurableProducts).some(
       (productId) => !itemOptions[productId],
@@ -134,8 +121,8 @@ const FeaturedProducts = () => {
 
   const updateItemOption = (
     productId: string,
-    field: "color" | "logo" | "ebookTitle",
-    value: HomeApparelColor | HomeLogoOption | HomeEbookTitleOption,
+    field: "color" | "logo",
+    value: HomeApparelColor | HomeLogoOption,
   ) => {
     setItemOptions((prev) => {
       const current = prev[productId] ?? { ...defaultHomeItemOption };
@@ -190,7 +177,7 @@ const FeaturedProducts = () => {
           </div>
           <div className="flex items-center gap-3">
             <span className="rounded-full border border-yellow-500/40 bg-black px-4 py-2 text-[11px] font-black uppercase tracking-[0.25em] text-yellow-300">
-              {products.length} items
+              {products.length} categories
             </span>
             <Button
               onClick={goToCheckout}
@@ -227,7 +214,7 @@ const FeaturedProducts = () => {
                   {product.tag}
                 </span>
                 <span className="absolute bottom-4 left-4 rounded-full bg-black/70 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-300">
-                  In stock
+                  {product.isFolder ? "Collection" : "In stock"}
                 </span>
               </div>
               <div className="p-6">
@@ -238,145 +225,194 @@ const FeaturedProducts = () => {
                       Uburu Home
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-yellow-400/15 px-3 py-2 text-xs font-black uppercase tracking-widest text-yellow-200">
-                    KES {product.price.toLocaleString("en-KE")}
-                  </div>
+                  {!product.isFolder && (
+                    <div className="rounded-2xl bg-yellow-400/15 px-3 py-2 text-xs font-black uppercase tracking-widest text-yellow-200">
+                      KES {product.price.toLocaleString("en-KE")}
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-5 flex items-center justify-between rounded-2xl border border-neutral-800 bg-neutral-900 px-3 py-2">
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) - 1)}
-                    className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
-                    aria-label={`Decrease ${product.name} quantity`}
-                  >
-                    -
-                  </button>
-                  <span className="text-xs font-black uppercase tracking-widest text-yellow-200/70">
-                    Qty:
-                  </span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={99}
-                    value={quantities[product.id] ?? 1}
-                    onChange={(event) =>
-                      updateQuantity(product.id, Number(event.target.value) || 1)
-                    }
-                    className="w-16 bg-transparent text-center text-sm font-black text-white focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) + 1)}
-                    className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
-                    aria-label={`Increase ${product.name} quantity`}
-                  >
-                    +
-                  </button>
-                </div>
-                {(colorConfigurableProductIds.has(product.id) ||
-                  brandingConfigurableProductIds.has(product.id) ||
-                  ebookConfigurableProductIds.has(product.id)) && (
-                  <div className="mt-4 space-y-3 rounded-2xl border border-neutral-800 bg-black/25 p-3">
-                    {ebookConfigurableProductIds.has(product.id) && (
-                      <div>
-                        <label
-                          htmlFor={`ebook-${product.id}`}
-                          className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
-                        >
-                          Ebook title
-                        </label>
-                        <select
-                          id={`ebook-${product.id}`}
-                          value={
-                            itemOptions[product.id]?.ebookTitle ?? defaultHomeItemOption.ebookTitle
-                          }
-                          onChange={(event) =>
-                            updateItemOption(
-                              product.id,
-                              "ebookTitle",
-                              event.target.value as HomeEbookTitleOption,
-                            )
-                          }
-                          className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
-                        >
-                          {homeEbookTitleOptions.map((ebookTitle) => (
-                            <option key={`${product.id}-${ebookTitle}`} value={ebookTitle}>
-                              {ebookTitle}
-                            </option>
-                          ))}
-                        </select>
+                {!product.isFolder ? (
+                  <>
+                    <div className="mt-5 flex items-center justify-between rounded-2xl border border-neutral-800 bg-neutral-900 px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) - 1)}
+                        className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
+                        aria-label={`Decrease ${product.name} quantity`}
+                      >
+                        -
+                      </button>
+                      <span className="text-xs font-black uppercase tracking-widest text-yellow-200/70">
+                        Qty:
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={99}
+                        value={quantities[product.id] ?? 1}
+                        onChange={(event) =>
+                          updateQuantity(product.id, Number(event.target.value) || 1)
+                        }
+                        className="w-16 bg-transparent text-center text-sm font-black text-white focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(product.id, (quantities[product.id] ?? 1) + 1)}
+                        className="h-9 w-9 rounded-xl bg-black text-lg font-bold text-yellow-300 shadow-sm"
+                        aria-label={`Increase ${product.name} quantity`}
+                      >
+                        +
+                      </button>
+                    </div>
+                    {(colorConfigurableProductIds.has(product.id) ||
+                      brandingConfigurableProductIds.has(product.id)) && (
+                      <div className="mt-4 space-y-3 rounded-2xl border border-neutral-800 bg-black/25 p-3">
+                        {colorConfigurableProductIds.has(product.id) && (
+                          <div>
+                            <label
+                              htmlFor={`color-${product.id}`}
+                              className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
+                            >
+                              Color
+                            </label>
+                            <select
+                              id={`color-${product.id}`}
+                              value={itemOptions[product.id]?.color ?? defaultHomeItemOption.color}
+                              onChange={(event) =>
+                                updateItemOption(
+                                  product.id,
+                                  "color",
+                                  event.target.value as HomeApparelColor,
+                                )
+                              }
+                              className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
+                            >
+                              {homeApparelColorOptions.map((color) => (
+                                <option key={`${product.id}-${color}`} value={color}>
+                                  {color}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        {brandingConfigurableProductIds.has(product.id) && (
+                          <div>
+                            <label
+                              htmlFor={`logo-${product.id}`}
+                              className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
+                            >
+                              Branding
+                            </label>
+                            <select
+                              id={`logo-${product.id}`}
+                              value={itemOptions[product.id]?.logo ?? defaultHomeItemOption.logo}
+                              onChange={(event) =>
+                                updateItemOption(
+                                  product.id,
+                                  "logo",
+                                  event.target.value as HomeLogoOption,
+                                )
+                              }
+                              className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
+                            >
+                              {homeLogoOptions.map((logoOption) => (
+                                <option key={`${product.id}-${logoOption}`} value={logoOption}>
+                                  {logoOption}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
                       </div>
                     )}
-                    {colorConfigurableProductIds.has(product.id) && (
-                      <div>
-                        <label
-                          htmlFor={`color-${product.id}`}
-                          className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
-                        >
-                          Color
-                        </label>
-                        <select
-                          id={`color-${product.id}`}
-                          value={itemOptions[product.id]?.color ?? defaultHomeItemOption.color}
-                          onChange={(event) =>
-                            updateItemOption(
-                              product.id,
-                              "color",
-                              event.target.value as HomeApparelColor,
-                            )
-                          }
-                          className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
-                        >
-                          {homeApparelColorOptions.map((color) => (
-                            <option key={`${product.id}-${color}`} value={color}>
-                              {color}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    {brandingConfigurableProductIds.has(product.id) && (
-                      <div>
-                        <label
-                          htmlFor={`logo-${product.id}`}
-                          className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80"
-                        >
-                          Branding
-                        </label>
-                        <select
-                          id={`logo-${product.id}`}
-                          value={itemOptions[product.id]?.logo ?? defaultHomeItemOption.logo}
-                          onChange={(event) =>
-                            updateItemOption(
-                              product.id,
-                              "logo",
-                              event.target.value as HomeLogoOption,
-                            )
-                          }
-                          className="mt-2 w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
-                        >
-                          {homeLogoOptions.map((logoOption) => (
-                            <option key={`${product.id}-${logoOption}`} value={logoOption}>
-                              {logoOption}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
+                    <Button
+                      onClick={() => handleBuyClick(product.id)}
+                      className="mt-5 w-full bg-red-600 py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-red-500"
+                    >
+                      Add to tray
+                    </Button>
+                  </>
+                ) : (
+                  <div className="mt-5">
+                    <p className="mb-4 text-xs font-semibold text-white/60">
+                      Explore our digital library. Select individual titles to support our cause.
+                    </p>
+                    <Button
+                      onClick={() => setIsFolderOpen(true)}
+                      className="w-full border-2 border-yellow-400 bg-yellow-400 py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-yellow-500 hover:text-white"
+                    >
+                      Browse Collection
+                    </Button>
                   </div>
                 )}
-                <Button
-                  onClick={() => handleBuyClick(product.id)}
-                  className="mt-5 w-full bg-red-600 py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-red-500"
-                >
-                  Add to tray
-                </Button>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Ebook Folder Modal */}
+      {isFolderOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            onClick={() => setIsFolderOpen(false)}
+          />
+          <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] border border-white/20 bg-neutral-950 p-6 shadow-2xl sm:p-10">
+            <button
+              onClick={() => setIsFolderOpen(false)}
+              className="absolute right-6 top-6 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <div className="mb-10 text-center">
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-yellow-300">
+                Digital Library
+              </p>
+              <h3 className="mt-3 text-3xl font-black text-white sm:text-4xl">
+                Ebook Collection
+              </h3>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {products.find(p => p.isFolder)?.folderItems?.map((item) => (
+                <div
+                  key={item.id}
+                  className="group flex flex-col rounded-3xl border border-white/10 bg-white/[0.03] p-5 transition-all hover:border-yellow-400/50 hover:bg-white/[0.06]"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-2xl">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="mt-5 flex flex-col flex-grow">
+                    <div className="flex items-start justify-between gap-3">
+                      <h4 className="text-lg font-black text-white leading-tight">
+                        {item.name}
+                      </h4>
+                      <div className="shrink-0 rounded-xl bg-yellow-400/10 px-3 py-1 text-[11px] font-black text-yellow-300">
+                        KES {item.price.toLocaleString("en-KE")}
+                      </div>
+                    </div>
+                    <div className="mt-auto pt-6">
+                      <Button
+                        onClick={() => handleBuyClick(item.id)}
+                        className="w-full bg-red-600 py-3 text-xs font-black uppercase tracking-[0.2em] text-white hover:bg-red-500"
+                      >
+                        Add to tray
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

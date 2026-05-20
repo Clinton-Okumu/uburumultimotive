@@ -52,7 +52,7 @@ const VolunteerFormSection = () => {
     submitData.set("_subject", "Website: Volunteer form");
 
     try {
-      const response = await fetch("https://formspree.io/f/xpqjaolz", {
+      const response = await fetch(import.meta.env.VITE_FORMSPREE_VOLUNTEER_URL || "https://formspree.io/f/xpqjaolz", {
         method: "POST",
         headers: { Accept: "application/json" },
         body: submitData,
@@ -102,7 +102,7 @@ const VolunteerFormSection = () => {
 
             <form
               onSubmit={handleFormSubmit}
-              action="https://formspree.io/f/xpqjaolz"
+              action={import.meta.env.VITE_FORMSPREE_VOLUNTEER_URL || "https://formspree.io/f/xpqjaolz"}
               method="POST"
               className="space-y-6"
             >

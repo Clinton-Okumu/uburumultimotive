@@ -50,7 +50,7 @@ const DonationItemsSection = () => {
     submitData.set("_subject", "Website: Donate items");
 
     try {
-      const response = await fetch("https://formspree.io/f/xpqjaolz", {
+      const response = await fetch(import.meta.env.VITE_FORMSPREE_DONATE_ITEMS_URL || "https://formspree.io/f/xpqjaolz", {
         method: "POST",
         headers: { Accept: "application/json" },
         body: submitData,
@@ -98,11 +98,10 @@ const DonationItemsSection = () => {
 
             <form
               onSubmit={handleFormSubmit}
-              action="https://formspree.io/f/xpqjaolz"
+              action={import.meta.env.VITE_FORMSPREE_DONATE_ITEMS_URL || "https://formspree.io/f/xpqjaolz"}
               method="POST"
               className="space-y-6"
-            >
-              <input
+            >              <input
                 type="text"
                 name="company"
                 tabIndex={-1}

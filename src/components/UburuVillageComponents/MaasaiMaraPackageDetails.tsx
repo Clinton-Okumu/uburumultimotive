@@ -146,7 +146,7 @@ const MaasaiMaraPackageDetails = () => {
     submitData.set("_subject", "Uburu Village: Maasai Mara pay later request");
 
     try {
-      const response = await fetch("https://formspree.io/f/xpqjaolz", {
+      const response = await fetch(import.meta.env.VITE_FORMSPREE_VILLAGE_BOOKING_URL || "https://formspree.io/f/xpqjaolz", {
         method: "POST",
         headers: { Accept: "application/json" },
         body: submitData,

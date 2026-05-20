@@ -19,7 +19,7 @@ const Footer = () => {
       links: [
         { name: "Volunteer", url: "/volunteer" },
         { name: "Donate Now", url: "/donate" },
-        { name: "Partner With Us", url: "#" },
+        { name: "Partner With Us", url: "/partner" },
         { name: "FAQ", url: "#" },
       ],
     },
@@ -109,7 +109,7 @@ const Footer = () => {
           ))}
         </div>
 
-        {/* Newsletter Subscription Card */}
+        {/* Partner CTA Card */}
         <div className="bg-gradient-to-br from-neutral-900 to-neutral-950 rounded-[2rem] p-10 mb-16 border border-neutral-800 shadow-2xl relative overflow-hidden group">
           {/* Decorative radial glow */}
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl group-hover:bg-yellow-500/20 transition-all duration-700" />
@@ -117,27 +117,22 @@ const Footer = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center relative z-10">
             <div>
               <h3 className="text-2xl font-black mb-3 italic tracking-tight uppercase">
-                Subscribe to our <span className="text-yellow-400">Newsletter</span>
+                Partner <span className="text-yellow-400">With Us</span>
               </h3>
               <p className="text-gray-400 max-w-md">
-                Get monthly impact updates, urgent needs, and ways to get involved
-                in restoring dignity for families in our care.
+                Join our mission to create lasting community impact. Become a
+                partner today and help us restore dignity to families in care.
               </p>
             </div>
-            <form className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="flex-1 px-6 py-4 bg-neutral-800/50 text-white rounded-2xl border border-neutral-700 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all"
-              />
-              <button
-                type="submit"
-                className="bg-yellow-400 hover:bg-yellow-300 text-black px-8 py-4 rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-xl flex items-center justify-center gap-2 group/btn"
+            <div className="flex justify-start lg:justify-end">
+              <a
+                href="/partner"
+                className="bg-yellow-400 hover:bg-yellow-300 text-black px-10 py-4 rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 group/btn"
               >
-                Join Us
+                Become a Partner
                 <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-              </button>
-            </form>
+              </a>
+            </div>
           </div>
         </div>
 

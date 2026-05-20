@@ -17,6 +17,7 @@ const NavbarLinks: NavLink[] = [
   { id: 5, title: "Gallery", link: "/gallery" },
   { id: 6, title: "Contact", link: "/contact" },
   { id: 7, title: "Volunteer", link: "/volunteer" },
+  { id: 8, title: "Partner", link: "/partner" },
 ];
 
 const Navbar = () => {

@@ -237,12 +237,15 @@ const RequestFormSection = () => {
       submitData.set("sessionAmountKes", String(selectedPricingOption.amount));
       submitData.set("termsAccepted", formData.termsAccepted ? "yes" : "no");
       submitData.set("company", "");
-try {
-  const response = await fetch(import.meta.env.VITE_FORMSPREE_THERAPY_URL || "https://formspree.io/f/xpqjaolz", {
-    method: "POST",
-    headers: { Accept: "application/json" },
-    body: submitData,
-  });
+
+      const response = await fetch(
+        import.meta.env.VITE_FORMSPREE_THERAPY_URL || "https://formspree.io/f/xpqjaolz",
+        {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: submitData,
+        },
+      );
       const data = await response.json().catch(() => null);
       if (!response.ok) {
         const errorMessage =

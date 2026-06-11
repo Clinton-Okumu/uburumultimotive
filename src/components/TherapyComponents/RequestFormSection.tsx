@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "../shared/Button";
 import { Mail, Phone, User } from "lucide-react";
+import { Link } from "react-router-dom";
 
 type TherapyPricingOption = {
   id: string;
@@ -835,7 +836,16 @@ const RequestFormSection = () => {
                     required
                     className="mt-1 h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
                   />
-                  I have read and accept the terms and conditions above.
+                  <span>
+                    I have read and accept the{" "}
+                    <Link
+                      to="/get/therapy/terms"
+                      className="text-yellow-600 underline hover:text-yellow-700 transition-colors"
+                    >
+                      terms and conditions
+                    </Link>{" "}
+                    above.
+                  </span>
                 </label>
               </div>
 

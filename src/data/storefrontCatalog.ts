@@ -10,7 +10,8 @@ import culturalEvent from "../assets/Screenshot-2026-02-20_10-06-49.webp";
 import communityPainting from "../assets/community-painting-wood-medium-shot.webp";
 import footballCircle from "../assets/top-view-childs-feet-around-football-ball.webp";
 import olooluaNatureTrail from "../assets/oloolua.webp";
-import therapeuticTripImage from "../assets/event3.avif";
+import therapeuticTripImage from "../assets/kitengela.jpg";
+import paradiseLostImage from "../assets/paradiselost.jpg";
 
 export type StorefrontSource = "home" | "village";
 
@@ -312,29 +313,32 @@ villageEventOptions.push(
     id: "therapeutic-trip-resident",
     packageId: "therapeutic-trip",
     campId: "therapeutic-trip",
-    campName: "Therapeutic trip",
+    campName: "Therapeutic trip to (glassdoor Kitengela)",
     residencyType: "resident",
     mealPlanLabel: "All year",
     availableMonths: ["july", "august", "september", "october"],
-    name: "Therapeutic trip (Resident)",
+    name: "Therapeutic trip to (glassdoor Kitengela) (Resident)",
     price: 3000,
     currency: "KES",
     tag: "Resident",
     image: therapeuticTripImage,
   },
+);
+
+villageEventOptions.push(
   {
-    id: "therapeutic-trip-non-resident",
-    packageId: "therapeutic-trip",
-    campId: "therapeutic-trip",
-    campName: "Therapeutic trip",
-    residencyType: "non_resident",
+    id: "paradise-lost-resident",
+    packageId: "paradise-lost",
+    campId: "paradise-lost",
+    campName: "Paradise Lost excursion",
+    residencyType: "resident",
     mealPlanLabel: "All year",
     availableMonths: ["july", "august", "september", "october"],
-    name: "Therapeutic trip (Non-resident)",
-    price: 65,
-    currency: "USD",
-    tag: "Non-resident",
-    image: therapeuticTripImage,
+    name: "Paradise Lost excursion (Resident)",
+    price: 2000,
+    currency: "KES",
+    tag: "Resident",
+    image: paradiseLostImage,
   },
 );
 

@@ -1,12 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { Ticket, X, Maximize2 } from "lucide-react";
+import { Ticket, X, Maximize2, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../shared/Button";
+import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { villageEventOptions } from "../../data/storefrontCatalog";
 import olooluaNatureTrail from "../../assets/oloolua.webp";
 import maa from "../../assets/maa.webp";
-import therapeuticTripImage from "../../assets/event3.avif";
+import therapeuticTripImage from "../../assets/kitengela.jpg";
+import paradiseLostImage from "../../assets/paradiselost.jpg";
 
 const clampPeopleCount = (value: number, min: number) => Math.max(min, Math.min(99, value));
 
@@ -26,10 +28,16 @@ const FeaturedEvents = () => {
     message: string;
   }>({ state: "idle", message: "" });
 
-  const [therapyResidency, setTherapyResidency] = useState<"resident" | "non_resident">("resident");
-  const [therapyPeopleCount, setTherapyPeopleCount] = useState(6);
+  const [therapyPeopleCount, setTherapyPeopleCount] = useState(1);
   const [therapyPaymentAction, setTherapyPaymentAction] = useState<"pay_now" | "pay_later">("pay_now");
   const [therapyPayLaterStatus, setTherapyPayLaterStatus] = useState<{
+    state: "idle" | "sending" | "sent" | "error";
+    message: string;
+  }>({ state: "idle", message: "" });
+
+  const [paradisePeopleCount, setParadisePeopleCount] = useState(1);
+  const [paradisePaymentAction, setParadisePaymentAction] = useState<"pay_now" | "pay_later">("pay_now");
+  const [paradisePayLaterStatus, setParadisePayLaterStatus] = useState<{
     state: "idle" | "sending" | "sent" | "error";
     message: string;
   }>({ state: "idle", message: "" });
@@ -41,11 +49,14 @@ const FeaturedEvents = () => {
   const therapyResidentOption = villageEventOptions.find(
     (option) => option.id === "therapeutic-trip-resident",
   );
-  const therapyNonResidentOption = villageEventOptions.find(
-    (option) => option.id === "therapeutic-trip-non-resident",
+
+  const activeTherapyOption = therapyResidentOption;
+
+  const paradiseResidentOption = villageEventOptions.find(
+    (option) => option.id === "paradise-lost-resident",
   );
 
-  const activeTherapyOption = therapyResidency === "resident" ? therapyResidentOption : therapyNonResidentOption;
+  const activeParadiseOption = paradiseResidentOption;
 
   const { cartItemCount, updateQuantity, addToCart } = useStorefrontCheckout({
     catalog: villageEventOptions.map(({ id, name, price }) => ({ id, name, price })),
@@ -61,6 +72,15 @@ const FeaturedEvents = () => {
 
   const goToMaasaiPackage = () => {
     navigate("/get/village/maasai-mara");
+  };
+
+  const handleShareEvent = (eventId: string, eventName: string) => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}#${eventId}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      toast.success(`Link for "${eventName}" copied to clipboard!`);
+    }).catch(() => {
+      toast.error("Failed to copy link");
+    });
   };
 
   const handleOlooluaCheckout = () => {
@@ -79,9 +99,20 @@ const FeaturedEvents = () => {
       return;
     }
 
-    const safePeopleCount = clampPeopleCount(therapyPeopleCount, 6);
+    const safePeopleCount = clampPeopleCount(therapyPeopleCount, 1);
     updateQuantity(activeTherapyOption.id, safePeopleCount);
     addToCart(activeTherapyOption.id);
+    goToCheckout();
+  };
+
+  const handleParadiseCheckout = () => {
+    if (!activeParadiseOption) {
+      return;
+    }
+
+    const safePeopleCount = clampPeopleCount(paradisePeopleCount, 1);
+    updateQuantity(activeParadiseOption.id, safePeopleCount);
+    addToCart(activeParadiseOption.id);
     goToCheckout();
   };
 
@@ -152,6 +183,7 @@ const FeaturedEvents = () => {
 
   const olooluaTotal = (olooluaOption?.price ?? 1500) * clampPeopleCount(olooluaPeopleCount, 5);
   const therapyTotal = (activeTherapyOption?.price ?? 0) * clampPeopleCount(therapyPeopleCount, 1);
+  const paradiseTotal = (activeParadiseOption?.price ?? 0) * clampPeopleCount(paradisePeopleCount, 1);
 
   return (
     <section id="events" className="relative bg-[#f8fbff] px-6 py-20">
@@ -171,20 +203,22 @@ const FeaturedEvents = () => {
               Handpicked experiences to support our shelter and therapeutic programs.
             </p>
           </div>
-          <Button
-            onClick={goToCheckout}
-            className="bg-[#f2c15d] px-6 py-3 text-xs font-black uppercase tracking-[0.25em] text-[#1c3b57] hover:bg-[#ffd886]"
-          >
-            <span className="inline-flex items-center gap-2">
-              <Ticket className="h-4 w-4" />
-              Checkout ({cartItemCount})
-            </span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={goToCheckout}
+              className="bg-[#f2c15d] px-6 py-3 text-xs font-black uppercase tracking-[0.25em] text-[#1c3b57] hover:bg-[#ffd886]"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Ticket className="h-4 w-4" />
+                Checkout ({cartItemCount})
+              </span>
+            </Button>
+          </div>
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {/* Oloolua Nature Trail */}
-          <div className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
+          <div id="oloolua-nature-trail" className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
             <div 
               className="relative h-56 cursor-zoom-in overflow-hidden"
               onClick={() => setActiveImage(olooluaNatureTrail)}
@@ -204,11 +238,24 @@ const FeaturedEvents = () => {
             <div className="flex flex-grow flex-col p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-2xl font-black text-[#1c3b57]">Oloolua nature trail</h3>
+                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
+                    Oloolua nature trail
+                  </h3>
                   <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
                 </div>
-                <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                  {formatAmount(olooluaTotal)}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
+                    {formatAmount(olooluaTotal)}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleShareEvent("oloolua-nature-trail", "Oloolua nature trail")}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
+                    title="Share event"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    Share
+                  </button>
                 </div>
               </div>
 
@@ -293,15 +340,15 @@ const FeaturedEvents = () => {
             </div>
           </div>
 
-          {/* Therapeutic Trip */}
-          <div className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
+          {/* Therapeutic Trip to (glassdoor Kitengela) */}
+          <div id="therapeutic-trip" className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
             <div 
               className="relative h-56 cursor-zoom-in overflow-hidden"
               onClick={() => setActiveImage(therapeuticTripImage)}
             >
               <img
                 src={therapeuticTripImage}
-                alt="Therapeutic trip"
+                alt="Therapeutic trip to (glassdoor Kitengela)"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
@@ -314,43 +361,31 @@ const FeaturedEvents = () => {
             <div className="flex flex-grow flex-col p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-2xl font-black text-[#1c3b57]">Therapeutic trip</h3>
+                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
+                    Therapeutic trip to (glassdoor Kitengela)
+                  </h3>
                   <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
                 </div>
-                <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                  {formatAmount(therapyTotal, activeTherapyOption?.currency)}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
+                    {formatAmount(therapyTotal, activeTherapyOption?.currency)}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleShareEvent("therapeutic-trip", "Therapeutic trip to (glassdoor Kitengela)")}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
+                    title="Share event"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    Share
+                  </button>
                 </div>
               </div>
 
-              <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#5c6f86]">
-                Group bookings: min 6 people required
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
+              <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 py-2">
                 <button
                   type="button"
-                  onClick={() => setTherapyResidency("resident")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    therapyResidency === "resident" ? "bg-[#f2c15d] text-[#1c3b57]" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Resident
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTherapyResidency("non_resident")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    therapyResidency === "non_resident" ? "bg-[#f2c15d] text-[#1c3b57]" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Non-resident
-                </button>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => setTherapyPeopleCount((prev) => clampPeopleCount(prev - 1, 6))}
+                  onClick={() => setTherapyPeopleCount((prev) => clampPeopleCount(prev - 1, 1))}
                   className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
                 >
                   -
@@ -359,15 +394,15 @@ const FeaturedEvents = () => {
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6a7c92]">People</p>
                   <input
                     type="number"
-                    min={6}
+                    min={1}
                     value={therapyPeopleCount}
-                    onChange={(e) => setTherapyPeopleCount(clampPeopleCount(Number(e.target.value) || 6, 6))}
+                    onChange={(e) => setTherapyPeopleCount(clampPeopleCount(Number(e.target.value) || 1, 1))}
                     className="w-16 bg-transparent text-center text-base font-black text-[#1c3b57] focus:outline-none"
                   />
                 </div>
                 <button
                   type="button"
-                  onClick={() => setTherapyPeopleCount((prev) => clampPeopleCount(prev + 1, 6))}
+                  onClick={() => setTherapyPeopleCount((prev) => clampPeopleCount(prev + 1, 1))}
                   className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
                 >
                   +
@@ -398,7 +433,7 @@ const FeaturedEvents = () => {
               {therapyPaymentAction === "pay_later" && (
                 <form 
                   className="mt-4 space-y-3" 
-                  onSubmit={(e) => handlePayLaterSubmit(e, "Therapeutic trip", therapyPeopleCount, activeTherapyOption?.price ?? 0, activeTherapyOption?.currency ?? "KES", setTherapyPayLaterStatus)}
+                  onSubmit={(e) => handlePayLaterSubmit(e, "Therapeutic trip to (glassdoor Kitengela)", therapyPeopleCount, activeTherapyOption?.price ?? 0, activeTherapyOption?.currency ?? "KES", setTherapyPayLaterStatus)}
                 >
                   <input type="text" name="fullName" placeholder="Full name" required className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
                   <input type="tel" name="phone" placeholder="Phone" className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
@@ -424,8 +459,127 @@ const FeaturedEvents = () => {
             </div>
           </div>
 
+          {/* Paradise Lost Excursion */}
+          <div id="paradise-lost" className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
+            <div 
+              className="relative h-56 cursor-zoom-in overflow-hidden"
+              onClick={() => setActiveImage(paradiseLostImage)}
+            >
+              <img
+                src={paradiseLostImage}
+                alt="Paradise Lost excursion"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                <div className="rounded-full bg-white/90 p-3 text-[#1c3b57] shadow-xl">
+                  <Maximize2 className="h-5 w-5" />
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-grow flex-col p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
+                    Paradise Lost excursion
+                  </h3>
+                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
+                    {formatAmount(paradiseTotal, activeParadiseOption?.currency)}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleShareEvent("paradise-lost", "Paradise Lost excursion")}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
+                    title="Share event"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    Share
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => setParadisePeopleCount((prev) => clampPeopleCount(prev - 1, 1))}
+                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
+                >
+                  -
+                </button>
+                <div className="text-center">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6a7c92]">People</p>
+                  <input
+                    type="number"
+                    min={1}
+                    value={paradisePeopleCount}
+                    onChange={(e) => setParadisePeopleCount(clampPeopleCount(Number(e.target.value) || 1, 1))}
+                    className="w-16 bg-transparent text-center text-base font-black text-[#1c3b57] focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setParadisePeopleCount((prev) => clampPeopleCount(prev + 1, 1))}
+                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
+                >
+                  +
+                </button>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
+                <button
+                  type="button"
+                  onClick={() => setParadisePaymentAction("pay_now")}
+                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
+                    paradisePaymentAction === "pay_now" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
+                  }`}
+                >
+                  Pay now
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setParadisePaymentAction("pay_later")}
+                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
+                    paradisePaymentAction === "pay_later" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
+                  }`}
+                >
+                  Pay later
+                </button>
+              </div>
+
+              {paradisePaymentAction === "pay_later" && (
+                <form 
+                  className="mt-4 space-y-3" 
+                  onSubmit={(e) => handlePayLaterSubmit(e, "Paradise Lost excursion", paradisePeopleCount, activeParadiseOption?.price ?? 0, activeParadiseOption?.currency ?? "KES", setParadisePayLaterStatus)}
+                >
+                  <input type="text" name="fullName" placeholder="Full name" required className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
+                  <input type="tel" name="phone" placeholder="Phone" className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
+                  {paradisePayLaterStatus.state !== "idle" && (
+                    <div className={`rounded-xl border px-3 py-2 text-[10px] font-bold ${paradisePayLaterStatus.state === "sent" ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}`}>
+                      {paradisePayLaterStatus.message}
+                    </div>
+                  )}
+                  <Button type="submit" className="w-full bg-[#f2c15d] py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#1c3b57]" disabled={paradisePayLaterStatus.state === "sending"}>
+                    Confirm booking
+                  </Button>
+                </form>
+              )}
+
+              {paradisePaymentAction === "pay_now" && (
+                <Button
+                  onClick={handleParadiseCheckout}
+                  className="mt-auto w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
+                >
+                  Proceed
+                </Button>
+              )}
+            </div>
+          </div>
+
           {/* Maasai Mara Migration */}
-          <div className="group flex flex-col overflow-hidden rounded-3xl border border-[#e6eef7] bg-white shadow-lg transition-all hover:border-[#f2c15d]/50">
+          <div id="maasai-mara" className="group flex flex-col overflow-hidden rounded-3xl border border-[#e6eef7] bg-white shadow-lg transition-all hover:border-[#f2c15d]/50">
             <div 
               className="relative h-56 cursor-zoom-in overflow-hidden"
               onClick={() => setActiveImage(maa)}
@@ -445,11 +599,24 @@ const FeaturedEvents = () => {
             <div className="flex flex-grow flex-col p-6">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-2xl font-black text-[#1c3b57]">Maasai Mara Migration</h3>
+                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
+                    Maasai Mara Migration
+                  </h3>
                   <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
                 </div>
-                <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                  From KES 27.5k
+                <div className="flex flex-col items-end gap-2">
+                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
+                    From KES 27.5k
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleShareEvent("maasai-mara", "Maasai Mara Migration")}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
+                    title="Share event"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    Share
+                  </button>
                 </div>
               </div>
 

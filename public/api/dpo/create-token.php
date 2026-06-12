@@ -385,6 +385,8 @@ function calculate_village_checkout_totals(array $items): array
 {
     $rateMap = [
         'oloolua-nature-trail-group' => ['name' => 'Oloolua nature trail (Group 5+)', 'currency' => 'KES', 'price' => 1500],
+        'therapeutic-trip-resident' => ['name' => 'Therapeutic trip (Kitengela) (Resident)', 'currency' => 'KES', 'price' => 2999],
+        'paradise-lost-resident' => ['name' => 'Paradise Lost excursion (Resident)', 'currency' => 'KES', 'price' => 2000],
         'mara-budget-camps-resident' => ['name' => 'Mara Budget Camps (Resident)', 'currency' => 'KES', 'price' => 27500],
         'mara-budget-camps-non-resident' => ['name' => 'Mara Budget Camps (Non-resident)', 'currency' => 'USD', 'price' => 250],
         'kipekee-zuri-camp-resident' => ['name' => 'Kipekee Zuri Camp (Resident)', 'currency' => 'KES', 'price' => 44300],

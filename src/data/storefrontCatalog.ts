@@ -318,7 +318,7 @@ villageEventOptions.push(
     mealPlanLabel: "All year",
     availableMonths: ["july", "august", "september", "october"],
     name: "Therapeutic trip to (glassdoor Kitengela) (Resident)",
-    price: 3000,
+    price: 2999,
     currency: "KES",
     tag: "Resident",
     image: therapeuticTripImage,

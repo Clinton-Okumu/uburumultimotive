@@ -1,14 +1,17 @@
-import { useState, type FormEvent } from "react";
-import { Ticket, X, Maximize2, Share2 } from "lucide-react";
+import { useState, type FormEvent, useMemo } from "react";
+import { Ticket, X, Maximize2, Share2, User, Phone, Mail, Users, CheckCircle, CreditCard, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../shared/Button";
 import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
-import { villageEventOptions } from "../../data/storefrontCatalog";
+import { villageEventOptions, type VillageEventOption } from "../../data/storefrontCatalog";
 import olooluaNatureTrail from "../../assets/oloolua.webp";
 import maa from "../../assets/maa.webp";
 import therapeuticTripImage from "../../assets/kitengela.jpg";
 import paradiseLostImage from "../../assets/paradiselost.jpg";
+
+const PAYBILL_NO = "522522";
+const ACCOUNT_NO = "1346356009";
 
 const clampPeopleCount = (value: number, min: number) => Math.max(min, Math.min(99, value));
 
@@ -17,46 +20,26 @@ const formatAmount = (amount: number, currency: string = "KES") => {
   return `${currency} ${amount.toLocaleString(locale)}`;
 };
 
+type BookingStep = "register" | "payment" | "mpesa_instructions";
+
 const FeaturedEvents = () => {
   const navigate = useNavigate();
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [bookingEvent, setBookingEvent] = useState<VillageEventOption | null>(null);
+  const [bookingStep, setBookingStep] = useState<BookingStep>("register");
   
-  const [olooluaPeopleCount, setOlooluaPeopleCount] = useState(5);
-  const [olooluaPaymentAction, setOlooluaPaymentAction] = useState<"pay_now" | "pay_later">("pay_now");
-  const [olooluaPayLaterStatus, setOlooluaPayLaterStatus] = useState<{
-    state: "idle" | "sending" | "sent" | "error";
-    message: string;
-  }>({ state: "idle", message: "" });
+  const [bookingForm, setBookingForm] = useState({
+    fullName: "",
+    phone: "",
+    email: "",
+    peopleCount: 1,
+  });
 
-  const [therapyPeopleCount, setTherapyPeopleCount] = useState(1);
-  const [therapyPaymentAction, setTherapyPaymentAction] = useState<"pay_now" | "pay_later">("pay_now");
-  const [therapyPayLaterStatus, setTherapyPayLaterStatus] = useState<{
-    state: "idle" | "sending" | "sent" | "error";
-    message: string;
-  }>({ state: "idle", message: "" });
-
-  const [paradisePeopleCount, setParadisePeopleCount] = useState(1);
-  const [paradisePaymentAction, setParadisePaymentAction] = useState<"pay_now" | "pay_later">("pay_now");
-  const [paradisePayLaterStatus, setParadisePayLaterStatus] = useState<{
-    state: "idle" | "sending" | "sent" | "error";
-    message: string;
-  }>({ state: "idle", message: "" });
-
-  const olooluaOption = villageEventOptions.find(
-    (option) => option.id === "oloolua-nature-trail-group",
-  );
-
-  const therapyResidentOption = villageEventOptions.find(
-    (option) => option.id === "therapeutic-trip-resident",
-  );
-
-  const activeTherapyOption = therapyResidentOption;
-
-  const paradiseResidentOption = villageEventOptions.find(
-    (option) => option.id === "paradise-lost-resident",
-  );
-
-  const activeParadiseOption = paradiseResidentOption;
+  const activeTotal = useMemo(() => {
+    if (!bookingEvent) return 0;
+    const minPeople = bookingEvent.id === "oloolua-nature-trail-group" ? 5 : 1;
+    return bookingEvent.price * Math.max(minPeople, bookingForm.peopleCount);
+  }, [bookingEvent, bookingForm.peopleCount]);
 
   const { cartItemCount, updateQuantity, addToCart } = useStorefrontCheckout({
     catalog: villageEventOptions.map(({ id, name, price }) => ({ id, name, price })),
@@ -83,107 +66,129 @@ const FeaturedEvents = () => {
     });
   };
 
-  const handleOlooluaCheckout = () => {
-    if (!olooluaOption) {
-      return;
-    }
-
-    const safePeopleCount = clampPeopleCount(olooluaPeopleCount, 5);
-    updateQuantity(olooluaOption.id, safePeopleCount);
-    addToCart(olooluaOption.id);
-    goToCheckout();
+  const openBooking = (event: VillageEventOption) => {
+    setBookingEvent(event);
+    setBookingStep("register");
+    setBookingForm({
+      fullName: "",
+      phone: "",
+      email: "",
+      peopleCount: event.id === "oloolua-nature-trail-group" ? 5 : 1,
+    });
   };
 
-  const handleTherapyCheckout = () => {
-    if (!activeTherapyOption) {
-      return;
-    }
-
-    const safePeopleCount = clampPeopleCount(therapyPeopleCount, 1);
-    updateQuantity(activeTherapyOption.id, safePeopleCount);
-    addToCart(activeTherapyOption.id);
-    goToCheckout();
+  const closeBooking = () => {
+    setBookingEvent(null);
+    setBookingStep("register");
   };
 
-  const handleParadiseCheckout = () => {
-    if (!activeParadiseOption) {
+  const handleRegister = (e: FormEvent) => {
+    e.preventDefault();
+    if (!bookingForm.fullName || !bookingForm.phone) {
+      toast.error("Please fill in your name and phone number.");
       return;
     }
-
-    const safePeopleCount = clampPeopleCount(paradisePeopleCount, 1);
-    updateQuantity(activeParadiseOption.id, safePeopleCount);
-    addToCart(activeParadiseOption.id);
-    goToCheckout();
+    setBookingStep("payment");
   };
 
-  const handlePayLaterSubmit = async (
-    event: FormEvent<HTMLFormElement>,
-    eventName: string,
-    peopleCount: number,
-    unitPrice: number,
-    currency: string,
-    setStatus: (status: { state: "idle" | "sending" | "sent" | "error"; message: string }) => void,
-  ) => {
-    event.preventDefault();
-    setStatus({ state: "sending", message: "" });
+  const [isProcessing, setIsProcessing] = useState(false);
 
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    const fullName = (formData.get("fullName") || "").toString().trim();
-    const phone = (formData.get("phone") || "").toString().trim();
-    const email = (formData.get("email") || "").toString().trim();
+  const handleOnlinePayment = async () => {
+    if (!bookingEvent) return;
 
-    if (!phone && !email) {
-      setStatus({
-        state: "error",
-        message: "Add a phone number or email so we can reach you.",
-      });
-      return;
-    }
+    // For the glassdoor event (Therapeutic Trip), we bypass the checkout tray and go directly to DPO
+    if (bookingEvent.id === "therapeutic-trip-resident") {
+      setIsProcessing(true);
+      try {
+        const response = await fetch("/api/dpo/create-token.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: activeTotal,
+            currency: "KES",
+            customer: {
+              name: bookingForm.fullName.trim(),
+              email: bookingForm.email.trim(),
+              phone: bookingForm.phone.trim() || undefined,
+            },
+            context: "uburu_village",
+            meta: {
+              type: "event_purchase",
+              itemCount: bookingForm.peopleCount,
+              items: [
+                {
+                  itemId: bookingEvent.id,
+                  itemName: bookingEvent.name,
+                  quantity: bookingForm.peopleCount,
+                  unitPrice: bookingEvent.price,
+                  totalAmount: activeTotal,
+                },
+              ],
+              totalAmount: activeTotal,
+            },
+          }),
+        });
 
-    const totalAmount = peopleCount * unitPrice;
+        if (!response.ok) {
+          throw new Error("Unable to start payment session.");
+        }
 
-    const submitData = new FormData();
-    submitData.set("name", fullName);
-    submitData.set("email", email || "no-reply@uburumultimovehs.org");
-    submitData.set("phone", phone);
-    submitData.set("eventName", eventName);
-    submitData.set("peopleCount", String(peopleCount));
-    submitData.set("totalAmount", formatAmount(totalAmount, currency));
-    submitData.set(
-      "message",
-      `Pay later request for ${eventName}. Guests: ${peopleCount}. Unit price: ${formatAmount(unitPrice, currency)} per person. Total: ${formatAmount(totalAmount, currency)}. Contact: ${phone || "N/A"} / ${email || "N/A"}.`,
-    );
-    submitData.set("_subject", `Uburu Village: ${eventName} pay later request`);
-
-    try {
-      const response = await fetch(import.meta.env.VITE_FORMSPREE_VILLAGE_BOOKING_URL || "https://formspree.io/f/xpqjaolz", {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        body: submitData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Unable to send your details right now.");
+        const data = await response.json();
+        if (data?.paymentUrl) {
+          window.location.href = data.paymentUrl;
+          return;
+        }
+      } catch (error) {
+        toast.error("Failed to start payment. Please try again.");
+        setIsProcessing(false);
       }
-
-      setStatus({
-        state: "sent",
-        message: "Received. We will contact you shortly to complete your booking.",
-      });
-      form.reset();
-    } catch (error) {
-      setStatus({
-        state: "error",
-        message:
-          error instanceof Error ? error.message : "Unable to send your details right now.",
-      });
+      return;
     }
+
+    // Default behavior for other events
+    updateQuantity(bookingEvent.id, bookingForm.peopleCount);
+    addToCart(bookingEvent.id);
+    goToCheckout();
   };
 
-  const olooluaTotal = (olooluaOption?.price ?? 1500) * clampPeopleCount(olooluaPeopleCount, 5);
-  const therapyTotal = (activeTherapyOption?.price ?? 0) * clampPeopleCount(therapyPeopleCount, 1);
-  const paradiseTotal = (activeParadiseOption?.price ?? 0) * clampPeopleCount(paradisePeopleCount, 1);
+  const handleWhatsAppShare = () => {
+    if (!bookingEvent) return;
+    const message = `*UBURU VILLAGE BOOKING*%0A%0A*Event:* ${bookingEvent.name}%0A*Name:* ${bookingForm.fullName}%0A*Phone:* ${bookingForm.phone}%0A*People:* ${bookingForm.peopleCount}%0A*Total:* ${formatAmount(activeTotal, bookingEvent.currency)}%0A%0A_I have made the payment via Mpesa Paybill 522522, Acc 1346356009._`;
+    window.open(`https://wa.me/254718421205?text=${message}`, "_blank"); // Replace with actual admin number
+  };
+
+  const events = [
+    {
+      id: "oloolua-nature-trail",
+      title: "Oloolua nature trail",
+      image: olooluaNatureTrail,
+      optionId: "oloolua-nature-trail-group",
+      tag: "Uburu Village",
+      priceLabel: "KES 1,500 each",
+      description: "Group bookings: min 5 people",
+      minPeople: 5,
+    },
+    {
+      id: "therapeutic-trip",
+      title: "Therapeutic trip to (glassdoor Kitengela)",
+      image: therapeuticTripImage,
+      optionId: "therapeutic-trip-resident",
+      tag: "Uburu Village",
+      priceLabel: "KES 2,999 each",
+      description: "",
+      minPeople: 1,
+    },
+    {
+      id: "paradise-lost",
+      title: "Paradise Lost excursion",
+      image: paradiseLostImage,
+      optionId: "paradise-lost-resident",
+      tag: "Uburu Village",
+      priceLabel: "KES 2,000 each",
+      description: "",
+      minPeople: 1,
+    },
+  ];
 
   return (
     <section id="events" className="relative bg-[#f8fbff] px-6 py-20">
@@ -217,368 +222,68 @@ const FeaturedEvents = () => {
         </div>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {/* Oloolua Nature Trail */}
-          <div id="oloolua-nature-trail" className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
-            <div 
-              className="relative h-56 cursor-zoom-in overflow-hidden"
-              onClick={() => setActiveImage(olooluaNatureTrail)}
-            >
-              <img
-                src={olooluaNatureTrail}
-                alt="Oloolua nature trail"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                <div className="rounded-full bg-white/90 p-3 text-[#1c3b57] shadow-xl">
-                  <Maximize2 className="h-5 w-5" />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-grow flex-col p-6">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
-                    Oloolua nature trail
-                  </h3>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                    {formatAmount(olooluaTotal)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleShareEvent("oloolua-nature-trail", "Oloolua nature trail")}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
-                    title="Share event"
-                  >
-                    <Share2 className="h-3 w-3" />
-                    Share
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#5c6f86]">
-                Group bookings: min 5 people at KES 1,500 each
-              </div>
-
-              <div className="mt-4 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => setOlooluaPeopleCount((prev) => clampPeopleCount(prev - 1, 5))}
-                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
+          {events.map((event) => {
+            const option = villageEventOptions.find(o => o.id === event.optionId);
+            return (
+              <div key={event.id} id={event.id} className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
+                <div 
+                  className="relative h-56 cursor-zoom-in overflow-hidden"
+                  onClick={() => setActiveImage(event.image)}
                 >
-                  -
-                </button>
-                <div className="text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6a7c92]">People</p>
-                  <input
-                    type="number"
-                    min={5}
-                    value={olooluaPeopleCount}
-                    onChange={(e) => setOlooluaPeopleCount(clampPeopleCount(Number(e.target.value) || 5, 5))}
-                    className="w-16 bg-transparent text-center text-base font-black text-[#1c3b57] focus:outline-none"
+                  <img
+                    src={event.image}
+                    alt={event.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
+                    <div className="rounded-full bg-white/90 p-3 text-[#1c3b57] shadow-xl">
+                      <Maximize2 className="h-5 w-5" />
+                    </div>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setOlooluaPeopleCount((prev) => clampPeopleCount(prev + 1, 5))}
-                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                >
-                  +
-                </button>
-              </div>
+                <div className="flex flex-grow flex-col p-6">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
+                        {event.title}
+                      </h3>
+                      <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">{event.tag}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
+                        {event.priceLabel}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleShareEvent(event.id, event.title)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
+                        title="Share event"
+                      >
+                        <Share2 className="h-3 w-3" />
+                        Share
+                      </button>
+                    </div>
+                  </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
-                <button
-                  type="button"
-                  onClick={() => setOlooluaPaymentAction("pay_now")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    olooluaPaymentAction === "pay_now" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Pay now
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOlooluaPaymentAction("pay_later")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    olooluaPaymentAction === "pay_later" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Pay later
-                </button>
-              </div>
-
-              {olooluaPaymentAction === "pay_later" && (
-                <form 
-                  className="mt-4 space-y-3" 
-                  onSubmit={(e) => handlePayLaterSubmit(e, "Oloolua nature trail", olooluaPeopleCount, 1500, "KES", setOlooluaPayLaterStatus)}
-                >
-                  <input type="text" name="fullName" placeholder="Full name" required className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
-                  <input type="tel" name="phone" placeholder="Phone" className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
-                  {olooluaPayLaterStatus.state !== "idle" && (
-                    <div className={`rounded-xl border px-3 py-2 text-[10px] font-bold ${olooluaPayLaterStatus.state === "sent" ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}`}>
-                      {olooluaPayLaterStatus.message}
+                  {event.description && (
+                    <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#5c6f86]">
+                      {event.description}
                     </div>
                   )}
-                  <Button type="submit" className="w-full bg-[#f2c15d] py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#1c3b57]" disabled={olooluaPayLaterStatus.state === "sending"}>
-                    {olooluaPayLaterStatus.state === "sending" ? "Sending..." : "Request"}
-                  </Button>
-                </form>
-              )}
 
-              {olooluaPaymentAction === "pay_now" && (
-                <Button
-                  onClick={handleOlooluaCheckout}
-                  className="mt-auto w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
-                >
-                  Proceed
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Therapeutic Trip to (glassdoor Kitengela) */}
-          <div id="therapeutic-trip" className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
-            <div 
-              className="relative h-56 cursor-zoom-in overflow-hidden"
-              onClick={() => setActiveImage(therapeuticTripImage)}
-            >
-              <img
-                src={therapeuticTripImage}
-                alt="Therapeutic trip to (glassdoor Kitengela)"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                <div className="rounded-full bg-white/90 p-3 text-[#1c3b57] shadow-xl">
-                  <Maximize2 className="h-5 w-5" />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-grow flex-col p-6">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
-                    Therapeutic trip to (glassdoor Kitengela)
-                  </h3>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                    {formatAmount(therapyTotal, activeTherapyOption?.currency)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleShareEvent("therapeutic-trip", "Therapeutic trip to (glassdoor Kitengela)")}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
-                    title="Share event"
+                  <Button
+                    onClick={() => option && openBooking(option)}
+                    className="mt-8 w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
                   >
-                    <Share2 className="h-3 w-3" />
-                    Share
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => setTherapyPeopleCount((prev) => clampPeopleCount(prev - 1, 1))}
-                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                >
-                  -
-                </button>
-                <div className="text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6a7c92]">People</p>
-                  <input
-                    type="number"
-                    min={1}
-                    value={therapyPeopleCount}
-                    onChange={(e) => setTherapyPeopleCount(clampPeopleCount(Number(e.target.value) || 1, 1))}
-                    className="w-16 bg-transparent text-center text-base font-black text-[#1c3b57] focus:outline-none"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setTherapyPeopleCount((prev) => clampPeopleCount(prev + 1, 1))}
-                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                >
-                  +
-                </button>
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
-                <button
-                  type="button"
-                  onClick={() => setTherapyPaymentAction("pay_now")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    therapyPaymentAction === "pay_now" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Pay now
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTherapyPaymentAction("pay_later")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    therapyPaymentAction === "pay_later" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Pay later
-                </button>
-              </div>
-
-              {therapyPaymentAction === "pay_later" && (
-                <form 
-                  className="mt-4 space-y-3" 
-                  onSubmit={(e) => handlePayLaterSubmit(e, "Therapeutic trip to (glassdoor Kitengela)", therapyPeopleCount, activeTherapyOption?.price ?? 0, activeTherapyOption?.currency ?? "KES", setTherapyPayLaterStatus)}
-                >
-                  <input type="text" name="fullName" placeholder="Full name" required className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
-                  <input type="tel" name="phone" placeholder="Phone" className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
-                  {therapyPayLaterStatus.state !== "idle" && (
-                    <div className={`rounded-xl border px-3 py-2 text-[10px] font-bold ${therapyPayLaterStatus.state === "sent" ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}`}>
-                      {therapyPayLaterStatus.message}
-                    </div>
-                  )}
-                  <Button type="submit" className="w-full bg-[#f2c15d] py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#1c3b57]" disabled={therapyPayLaterStatus.state === "sending"}>
-                    {therapyPayLaterStatus.state === "sending" ? "Sending..." : "Request"}
+                    Book Now
                   </Button>
-                </form>
-              )}
-
-              {therapyPaymentAction === "pay_now" && (
-                <Button
-                  onClick={handleTherapyCheckout}
-                  className="mt-auto w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
-                >
-                  Proceed
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Paradise Lost Excursion */}
-          <div id="paradise-lost" className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
-            <div 
-              className="relative h-56 cursor-zoom-in overflow-hidden"
-              onClick={() => setActiveImage(paradiseLostImage)}
-            >
-              <img
-                src={paradiseLostImage}
-                alt="Paradise Lost excursion"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                <div className="rounded-full bg-white/90 p-3 text-[#1c3b57] shadow-xl">
-                  <Maximize2 className="h-5 w-5" />
                 </div>
               </div>
-            </div>
-            <div className="flex flex-grow flex-col p-6">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
-                    Paradise Lost excursion
-                  </h3>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                    {formatAmount(paradiseTotal, activeParadiseOption?.currency)}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleShareEvent("paradise-lost", "Paradise Lost excursion")}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
-                    title="Share event"
-                  >
-                    <Share2 className="h-3 w-3" />
-                    Share
-                  </button>
-                </div>
-              </div>
+            );
+          })}
 
-              <div className="mt-5 flex items-center justify-between rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => setParadisePeopleCount((prev) => clampPeopleCount(prev - 1, 1))}
-                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                >
-                  -
-                </button>
-                <div className="text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6a7c92]">People</p>
-                  <input
-                    type="number"
-                    min={1}
-                    value={paradisePeopleCount}
-                    onChange={(e) => setParadisePeopleCount(clampPeopleCount(Number(e.target.value) || 1, 1))}
-                    className="w-16 bg-transparent text-center text-base font-black text-[#1c3b57] focus:outline-none"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setParadisePeopleCount((prev) => clampPeopleCount(prev + 1, 1))}
-                  className="h-9 w-9 rounded-xl bg-white text-lg font-bold text-[#1c3b57] shadow-sm"
-                >
-                  +
-                </button>
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-2 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-2">
-                <button
-                  type="button"
-                  onClick={() => setParadisePaymentAction("pay_now")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    paradisePaymentAction === "pay_now" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Pay now
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setParadisePaymentAction("pay_later")}
-                  className={`rounded-xl px-2 py-2 text-[10px] font-black uppercase tracking-[0.18em] transition ${
-                    paradisePaymentAction === "pay_later" ? "bg-[#2f6f99] text-white" : "bg-white text-[#5c6f86]"
-                  }`}
-                >
-                  Pay later
-                </button>
-              </div>
-
-              {paradisePaymentAction === "pay_later" && (
-                <form 
-                  className="mt-4 space-y-3" 
-                  onSubmit={(e) => handlePayLaterSubmit(e, "Paradise Lost excursion", paradisePeopleCount, activeParadiseOption?.price ?? 0, activeParadiseOption?.currency ?? "KES", setParadisePayLaterStatus)}
-                >
-                  <input type="text" name="fullName" placeholder="Full name" required className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
-                  <input type="tel" name="phone" placeholder="Phone" className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-xs font-semibold text-[#1c3b57] focus:outline-none" />
-                  {paradisePayLaterStatus.state !== "idle" && (
-                    <div className={`rounded-xl border px-3 py-2 text-[10px] font-bold ${paradisePayLaterStatus.state === "sent" ? "border-green-200 bg-green-50 text-green-700" : "border-red-200 bg-red-50 text-red-700"}`}>
-                      {paradisePayLaterStatus.message}
-                    </div>
-                  )}
-                  <Button type="submit" className="w-full bg-[#f2c15d] py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#1c3b57]" disabled={paradisePayLaterStatus.state === "sending"}>
-                    Confirm booking
-                  </Button>
-                </form>
-              )}
-
-              {paradisePaymentAction === "pay_now" && (
-                <Button
-                  onClick={handleParadiseCheckout}
-                  className="mt-auto w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
-                >
-                  Proceed
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Maasai Mara Migration */}
+          {/* Maasai Mara Migration Card */}
           <div id="maasai-mara" className="group flex flex-col overflow-hidden rounded-3xl border border-[#e6eef7] bg-white shadow-lg transition-all hover:border-[#f2c15d]/50">
             <div 
               className="relative h-56 cursor-zoom-in overflow-hidden"
@@ -624,13 +329,9 @@ const FeaturedEvents = () => {
                 Multiple camps & residency options.
               </div>
 
-              <div className="mt-4 rounded-2xl border border-[#dbe7f3] bg-[#f8fbff] p-4 text-xs font-semibold text-[#32556f]">
-                Open full package details to select camp, residency type, month window, and people count.
-              </div>
-
               <Button
                 onClick={goToMaasaiPackage}
-                className="mt-auto w-full bg-[#f2c15d] py-3 text-xs font-black uppercase tracking-[0.24em] text-[#1c3b57] hover:bg-[#ffd886]"
+                className="mt-8 w-full bg-[#f2c15d] py-3 text-xs font-black uppercase tracking-[0.24em] text-[#1c3b57] hover:bg-[#ffd886]"
               >
                 View full package
               </Button>
@@ -639,9 +340,211 @@ const FeaturedEvents = () => {
         </div>
       </div>
 
+      {/* Booking Modal */}
+      {bookingEvent && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="relative w-full max-w-lg overflow-hidden rounded-[2.5rem] bg-white shadow-2xl animate-in fade-in zoom-in duration-300">
+            <button
+              onClick={closeBooking}
+              className="absolute right-6 top-6 z-10 rounded-full bg-gray-100 p-2 text-gray-500 hover:bg-gray-200 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="p-8">
+              <div className="mb-6">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5c6f86]">Booking Event</span>
+                <h3 className="text-2xl font-black text-[#1c3b57]">{bookingEvent.name}</h3>
+              </div>
+
+              {bookingStep === "register" && (
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Full Name"
+                        required
+                        value={bookingForm.fullName}
+                        onChange={(e) => setBookingForm({ ...bookingForm, fullName: e.target.value })}
+                        className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-4 pl-12 pr-6 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <input
+                        type="tel"
+                        placeholder="Phone Number"
+                        required
+                        value={bookingForm.phone}
+                        onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
+                        className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-4 pl-12 pr-6 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                      <input
+                        type="email"
+                        placeholder="Email Address"
+                        required
+                        value={bookingForm.email}
+                        onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
+                        className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-4 pl-12 pr-6 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex items-center gap-3">
+                        <Users className="h-5 w-5 text-gray-400" />
+                        <span className="text-sm font-bold text-[#5c6f86]">People attending</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setBookingForm({ ...bookingForm, peopleCount: clampPeopleCount(bookingForm.peopleCount - 1, bookingEvent.id === "oloolua-nature-trail-group" ? 5 : 1) })}
+                          className="h-8 w-8 rounded-lg bg-white font-bold text-[#1c3b57] shadow-sm"
+                        >
+                          -
+                        </button>
+                        <span className="text-base font-black text-[#1c3b57]">{bookingForm.peopleCount}</span>
+                        <button
+                          type="button"
+                          onClick={() => setBookingForm({ ...bookingForm, peopleCount: clampPeopleCount(bookingForm.peopleCount + 1, 1) })}
+                          className="h-8 w-8 rounded-lg bg-white font-bold text-[#1c3b57] shadow-sm"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 rounded-2xl bg-[#f2c15d]/10 p-4">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#7a5d00]">Reflected Amount</p>
+                    <p className="text-2xl font-black text-[#1c3b57]">{formatAmount(activeTotal, bookingEvent.currency)}</p>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#1c3b57] py-4 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#2a4d6e]"
+                  >
+                    Proceed to Register
+                  </Button>
+                </form>
+              )}
+
+              {bookingStep === "payment" && (
+                <div className="space-y-6">
+                  <div className="rounded-2xl bg-[#f8fbff] border border-[#dbe7f3] p-5 text-center">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5c6f86]">Total Payable</p>
+                    <p className="text-3xl font-black text-[#1c3b57] mt-1">{formatAmount(activeTotal, bookingEvent.currency)}</p>
+                  </div>
+
+                  <div className="grid gap-4">
+                    <button
+                      onClick={() => setBookingStep("mpesa_instructions")}
+                      className="group flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-[#f2c15d] hover:bg-[#f2c15d]/5"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                          <span className="font-black">M</span>
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-black text-[#1c3b57]">Mpesa Paybill</p>
+                          <p className="text-xs font-semibold text-[#5c6f86]">Manual payment via Paybill</p>
+                        </div>
+                      </div>
+                      <div className="h-6 w-6 rounded-full border-2 border-gray-200 group-hover:border-[#f2c15d] group-hover:bg-[#f2c15d]" />
+                    </button>
+
+                    <button
+                      onClick={handleOnlinePayment}
+                      disabled={isProcessing}
+                      className="group flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-[#2f6f99] hover:bg-[#2f6f99]/5 disabled:opacity-50"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                          {isProcessing ? (
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                          ) : (
+                            <CreditCard className="h-6 w-6" />
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <p className="text-sm font-black text-[#1c3b57]">Card / Online</p>
+                          <p className="text-xs font-semibold text-[#5c6f86]">
+                            {isProcessing ? "Redirecting to DPO..." : "Instant DPO checkout"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="h-6 w-6 rounded-full border-2 border-gray-200 group-hover:border-[#2f6f99] group-hover:bg-[#2f6f99]" />
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={() => setBookingStep("register")}
+                    className="w-full text-xs font-black uppercase tracking-[0.2em] text-[#5c6f86] hover:text-[#1c3b57]"
+                  >
+                    Back to details
+                  </button>
+                </div>
+              )}
+
+              {bookingStep === "mpesa_instructions" && (
+                <div className="space-y-6">
+                  <div className="rounded-2xl border-2 border-dashed border-green-200 bg-green-50/50 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center text-white">
+                        <CheckCircle className="h-5 w-5" />
+                      </div>
+                      <h4 className="font-black text-green-900">Mpesa Instructions</h4>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2 border-b border-green-100">
+                        <span className="text-xs font-bold text-green-700 uppercase">Paybill No</span>
+                        <span className="text-base font-black text-green-900">{PAYBILL_NO}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-green-100">
+                        <span className="text-xs font-bold text-green-700 uppercase">Account No</span>
+                        <span className="text-base font-black text-green-900">{ACCOUNT_NO}</span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-xs font-bold text-green-700 uppercase">Amount</span>
+                        <span className="text-base font-black text-green-900">{formatAmount(activeTotal, bookingEvent.currency)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs font-semibold text-[#5c6f86] text-center px-4">
+                    Once you've made the payment, click below to send your booking confirmation to our team on WhatsApp.
+                  </p>
+
+                  <Button
+                    onClick={handleWhatsAppShare}
+                    className="w-full bg-[#25D366] py-4 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#20bd5a]"
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      <Send className="h-4 w-4" />
+                      Send to WhatsApp
+                    </span>
+                  </Button>
+
+                  <button
+                    onClick={() => setBookingStep("payment")}
+                    className="w-full text-xs font-black uppercase tracking-[0.2em] text-[#5c6f86] hover:text-[#1c3b57]"
+                  >
+                    Change payment method
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Full Image Modal */}
       {activeImage && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 sm:p-10">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 p-4 sm:p-10">
           <button
             onClick={() => setActiveImage(null)}
             className="absolute right-6 top-6 z-10 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition-colors"

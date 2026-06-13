@@ -335,7 +335,7 @@ villageEventOptions.push(
     mealPlanLabel: "All year",
     availableMonths: ["july", "august", "september", "october"],
     name: "Paradise Lost excursion (Resident)",
-    price: 2000,
+    price: 3500,
     currency: "KES",
     tag: "Resident",
     image: paradiseLostImage,

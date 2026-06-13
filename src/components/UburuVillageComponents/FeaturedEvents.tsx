@@ -82,13 +82,43 @@ const FeaturedEvents = () => {
     setBookingStep("register");
   };
 
-  const handleRegister = (e: FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     if (!bookingForm.fullName || !bookingForm.phone) {
       toast.error("Please fill in your name and phone number.");
       return;
     }
-    setBookingStep("payment");
+
+    if (!bookingEvent) return;
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Saving your booking details...");
+
+    const submitData = new FormData();
+    submitData.append("eventName", bookingEvent.name);
+    submitData.append("fullName", bookingForm.fullName.trim());
+    submitData.append("phone", bookingForm.phone.trim());
+    submitData.append("email", bookingForm.email.trim());
+    submitData.append("peopleCount", String(bookingForm.peopleCount));
+    submitData.append("totalAmount", formatAmount(activeTotal, bookingEvent.currency));
+    submitData.append("_subject", `New Booking: ${bookingEvent.name}`);
+
+    try {
+      await fetch(import.meta.env.VITE_FORMSPREE_VILLAGE_BOOKING_URL || "https://formspree.io/f/xpqjaolz", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: submitData,
+      });
+      toast.success("Booking details saved!", { id: toastId });
+    } catch (error) {
+      console.error("Formspree submission error:", error);
+      toast.error("Failed to save booking details, but you can still proceed to payment.", { id: toastId });
+    } finally {
+      setIsSubmitting(false);
+      setBookingStep("payment");
+    }
   };
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -184,7 +214,7 @@ const FeaturedEvents = () => {
       image: paradiseLostImage,
       optionId: "paradise-lost-resident",
       tag: "Uburu Village",
-      priceLabel: "KES 2,000 each",
+      priceLabel: "KES 3,500 each",
       description: "",
       minPeople: 1,
     },
@@ -425,9 +455,10 @@ const FeaturedEvents = () => {
 
                   <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="w-full bg-[#1c3b57] py-4 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#2a4d6e]"
                   >
-                    Proceed to Register
+                    {isSubmitting ? "Registering..." : "Proceed to Register"}
                   </Button>
                 </form>
               )}

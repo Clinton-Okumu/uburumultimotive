@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { Ticket, User, Phone, Mail, CheckCircle, CreditCard, Send, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "../shared/Button";
+import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import {
   villageCampRates,
@@ -99,12 +100,46 @@ const MaasaiMaraPackageDetails = () => {
     }
   };
 
-  const handleRegister = (e: FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
     if (!bookingForm.fullName || !bookingForm.phone) {
+      toast.error("Please fill in your name and phone number.");
       return;
     }
-    setBookingStep("payment");
+
+    if (!selectedOption) return;
+
+    setIsSubmitting(true);
+    const toastId = toast.loading("Saving your booking details...");
+
+    const submitData = new FormData();
+    submitData.append("eventName", selectedOption.name);
+    submitData.append("campName", selectedCamp?.campName || "");
+    submitData.append("residencyType", residencyLabels[residencyType]);
+    submitData.append("travelMonth", monthLabels[travelMonth]);
+    submitData.append("fullName", bookingForm.fullName.trim());
+    submitData.append("phone", bookingForm.phone.trim());
+    submitData.append("email", bookingForm.email.trim());
+    submitData.append("peopleCount", String(peopleCount));
+    submitData.append("totalAmount", formatAmount(currency, totalAmount));
+    submitData.append("_subject", `New Maasai Mara Booking: ${selectedOption.name}`);
+
+    try {
+      await fetch(import.meta.env.VITE_FORMSPREE_VILLAGE_BOOKING_URL || "https://formspree.io/f/xpqjaolz", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: submitData,
+      });
+      toast.success("Booking details saved!", { id: toastId });
+    } catch (error) {
+      console.error("Formspree submission error:", error);
+      toast.error("Failed to save booking details, but you can still proceed to payment.", { id: toastId });
+    } finally {
+      setIsSubmitting(false);
+      setBookingStep("payment");
+    }
   };
 
   const handleOnlinePayment = () => {
@@ -270,10 +305,10 @@ const MaasaiMaraPackageDetails = () => {
 
                     <Button
                       type="submit"
-                      disabled={!selectedMonthIsAllowed}
+                      disabled={!selectedMonthIsAllowed || isSubmitting}
                       className="w-full bg-[#1c3b57] py-4 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#2a4d6e]"
                     >
-                      Proceed to Register
+                      {isSubmitting ? "Registering..." : "Proceed to Register"}
                     </Button>
                   </form>
                 </div>

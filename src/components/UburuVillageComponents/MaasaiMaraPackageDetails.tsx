@@ -399,7 +399,7 @@ const MaasaiMaraPackageDetails = () => {
                 </div>
 
                 <p className="text-xs font-semibold text-[#5c6f86] text-center px-4">
-                  Once you've made the payment, click below to send your booking confirmation to our team on WhatsApp.
+                  Once you've made the payment, click below to send your payment confirmation to our team on WhatsApp.
                 </p>
 
                 <Button

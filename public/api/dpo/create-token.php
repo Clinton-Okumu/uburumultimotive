@@ -143,6 +143,10 @@ if ($context === 'therapy_booking' && !isset($purchaseDescriptions[$context])) {
     $serviceDescription = 'Uburu Therapy Session';
 }
 
+$nameParts = explode(' ', $customerName, 2);
+$firstName = trim($nameParts[0] ?? '');
+$lastName = trim($nameParts[1] ?? '');
+
 $xml = <<<XML
 <?xml version="1.0" encoding="utf-8"?>
 <API3G>
@@ -155,6 +159,10 @@ $xml = <<<XML
     <RedirectURL>{$redirectUrl}</RedirectURL>
     <BackURL>{$backUrl}</BackURL>
     <CompanyRefUnique>1</CompanyRefUnique>
+    <customerEmail>{$customerEmail}</customerEmail>
+    <customerFirstName>{$firstName}</customerFirstName>
+    <customerLastName>{$lastName}</customerLastName>
+    <customerPhone>{$customerPhone}</customerPhone>
   </Transaction>
   <Services>
     <Service>

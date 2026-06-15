@@ -19,6 +19,7 @@ import UburuVillage from './pages/UburuVillage';
 import MaasaiMaraPackage from './pages/MaasaiMaraPackage';
 import Checkout from './pages/Checkout';
 import TherapyTerms from './pages/TherapyTerms';
+import TravelTerms from './pages/TravelTerms';
 
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
                     <Route path="/get/home" element={<UburuHome />} />
                     <Route path="/get/village" element={<UburuVillage />} />
                     <Route path="/get/village/maasai-mara" element={<MaasaiMaraPackage />} />
+                    <Route path="/get/village/terms" element={<TravelTerms />} />
                     <Route path="/checkout" element={<Checkout />} />
                 </Routes>
             </Layout>

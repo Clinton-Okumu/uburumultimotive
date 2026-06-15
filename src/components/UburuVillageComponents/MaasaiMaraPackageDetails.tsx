@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { Ticket, User, Phone, Mail, CheckCircle, CreditCard, Send, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Button from "../shared/Button";
 import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
@@ -44,11 +44,13 @@ const MaasaiMaraPackageDetails = () => {
   const [travelMonth, setTravelMonth] = useState<VillageTravelMonth>("july");
   const [peopleCount, setPeopleCount] = useState(1);
   const [bookingStep, setBookingStep] = useState<BookingStep>("register");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   
   const [bookingForm, setBookingForm] = useState({
     fullName: "",
     phone: "",
     email: "",
+    age: "",
   });
 
   const packageOptions = useMemo(
@@ -104,8 +106,13 @@ const MaasaiMaraPackageDetails = () => {
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
-    if (!bookingForm.fullName || !bookingForm.phone) {
-      toast.error("Please fill in your name and phone number.");
+    if (!bookingForm.fullName || !bookingForm.phone || !bookingForm.age) {
+      toast.error("Please fill in your name, phone number and age.");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      toast.error("Please agree to the Travel Program Terms and Conditions.");
       return;
     }
 
@@ -122,6 +129,7 @@ const MaasaiMaraPackageDetails = () => {
     submitData.append("fullName", bookingForm.fullName.trim());
     submitData.append("phone", bookingForm.phone.trim());
     submitData.append("email", bookingForm.email.trim());
+    submitData.append("age", bookingForm.age);
     submitData.append("peopleCount", String(peopleCount));
     submitData.append("totalAmount", formatAmount(currency, totalAmount));
     submitData.append("_subject", `New Maasai Mara Booking: ${selectedOption.name}`);
@@ -283,16 +291,53 @@ const MaasaiMaraPackageDetails = () => {
                         />
                       </div>
                     </div>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <input
-                        type="email"
-                        placeholder="Email Address"
-                        required
-                        value={bookingForm.email}
-                        onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
-                      />
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="email"
+                          placeholder="Email Address"
+                          required
+                          value={bookingForm.email}
+                          onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                        />
+                      </div>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                          type="number"
+                          placeholder="Age"
+                          required
+                          min={1}
+                          value={bookingForm.age}
+                          onChange={(e) => setBookingForm({ ...bookingForm, age: e.target.value })}
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-10 pr-4 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/50 p-4 transition-colors hover:border-[#f2c15d]/30">
+                      <div className="relative flex h-5 items-center">
+                        <input
+                          id="terms"
+                          type="checkbox"
+                          checked={agreedToTerms}
+                          onChange={(e) => setAgreedToTerms(e.target.checked)}
+                          className="h-4 w-4 rounded border-gray-300 text-[#1c3b57] focus:ring-[#2f6f99]"
+                        />
+                      </div>
+                      <label htmlFor="terms" className="text-xs font-semibold leading-relaxed text-[#5c6f86]">
+                        I have read and agree to the{" "}
+                        <Link
+                          to="/get/village/terms"
+                          target="_blank"
+                          className="text-[#1c3b57] underline decoration-[#f2c15d] decoration-2 underline-offset-4 hover:text-[#2f6f99]"
+                        >
+                          Travel Program Terms and Conditions
+                        </Link>
+                        . I understand that by registering, I am bound by these terms.
+                      </label>
                     </div>
 
                     <div className="mt-5 rounded-2xl bg-[#f2c15d]/10 p-4">
@@ -305,8 +350,8 @@ const MaasaiMaraPackageDetails = () => {
 
                     <Button
                       type="submit"
-                      disabled={!selectedMonthIsAllowed || isSubmitting}
-                      className="w-full bg-[#1c3b57] py-4 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#2a4d6e]"
+                      disabled={!selectedMonthIsAllowed || isSubmitting || !agreedToTerms}
+                      className="w-full bg-[#1c3b57] py-4 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#2a4d6e] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSubmitting ? "Registering..." : "Proceed to Register"}
                     </Button>

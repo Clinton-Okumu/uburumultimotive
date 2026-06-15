@@ -153,25 +153,29 @@ const Navbar = () => {
             </Link>
           )}
 
-          <div className="flex items-center gap-3">
-            <Link
-              to="/get/therapy"
-              className="rounded-full bg-yellow-500 px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-black transition-all hover:bg-yellow-400"
-            >
-              Uburu Therapy
-            </Link>
-            <Link
-              to="/get/home"
-              className="rounded-full bg-white px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-black transition-all hover:bg-gray-100"
-            >
-              Uburu Home
-            </Link>
-            <Link
-              to="/get/village"
-              className="rounded-full bg-white px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-black transition-all hover:bg-gray-100"
-            >
-              Uburu Village
-            </Link>
+          <div className="flex items-center gap-6">
+            {[
+              { title: "Uburu Therapy", link: "/get/therapy" },
+              { title: "Uburu Home", link: "/get/home" },
+              { title: "Uburu Village", link: "/get/village" },
+            ].map((link) => (
+              <Link
+                key={link.link}
+                to={link.link}
+                className={`text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300 relative py-1 ${
+                  location.pathname === link.link
+                    ? "text-yellow-400"
+                    : "text-gray-200 hover:text-yellow-400"
+                }`}
+              >
+                {link.title}
+                <span
+                  className={`absolute -bottom-1 left-0 h-0.5 bg-yellow-400 transition-all duration-300 ${
+                    location.pathname === link.link ? "w-full" : "w-0"
+                  }`}
+                />
+              </Link>
+            ))}
           </div>
         </div>
 
@@ -195,28 +199,25 @@ const Navbar = () => {
         }`}
       >
         <div className="p-8 space-y-6">
-          <div className="flex flex-col gap-3 pb-6 border-b border-neutral-800">
-            <Link
-              to="/get/therapy"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl bg-yellow-500 px-6 py-4 text-center text-sm font-black uppercase tracking-widest text-black"
-            >
-              Uburu Therapy
-            </Link>
-            <Link
-              to="/get/home"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl bg-white px-6 py-4 text-center text-sm font-black uppercase tracking-widest text-black"
-            >
-              Uburu Home
-            </Link>
-            <Link
-              to="/get/village"
-              onClick={() => setMobileMenuOpen(false)}
-              className="rounded-xl bg-white px-6 py-4 text-center text-sm font-black uppercase tracking-widest text-black"
-            >
-              Uburu Village
-            </Link>
+          <div className="flex flex-col gap-4 pb-6 border-b border-neutral-800">
+            {[
+              { title: "Uburu Therapy", link: "/get/therapy" },
+              { title: "Uburu Home", link: "/get/home" },
+              { title: "Uburu Village", link: "/get/village" },
+            ].map((link) => (
+              <Link
+                key={link.link}
+                to={link.link}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`text-xl font-bold tracking-wide transition-colors ${
+                  location.pathname === link.link
+                    ? "text-yellow-400"
+                    : "text-white hover:text-yellow-400"
+                }`}
+              >
+                {link.title}
+              </Link>
+            ))}
           </div>
 
           {trayMeta && (

@@ -127,26 +127,26 @@ const Navbar = () => {
           : "bg-transparent py-6"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+      <div className="max-w-[1440px] mx-auto px-6 flex justify-between items-center gap-4">
         {/* Logo Section */}
-        <Link to="/" className="flex items-center gap-3 group">
+        <Link to="/" className="flex items-center gap-3 group shrink-0">
           <img
             src={logo}
             alt="Uburumultimove logo"
             className="w-10 h-10 rounded-full object-cover ring-2 ring-yellow-400 group-hover:ring-yellow-300 transition-all duration-300 shadow-lg shadow-yellow-500/20"
           />
-          <span className="text-white text-xl font-bold tracking-tight">
+          <span className="text-white text-lg xl:text-xl font-bold tracking-tight">
             Uburu<span className="text-yellow-400">Multimove</span>
           </span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div className="hidden lg:flex items-center gap-10">
+        {/* Desktop Navigation - Center Links */}
+        <div className="hidden xl:flex flex-1 justify-center items-center gap-6">
           {NavbarLinks.map((link) => (
             <Link
               key={link.id}
               to={link.link}
-              className={`text-sm font-bold uppercase tracking-widest transition-all duration-300 relative py-1 ${
+              className={`text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300 relative py-1 ${
                 location.pathname === link.link
                   ? "text-yellow-400"
                   : "text-gray-200 hover:text-yellow-400"
@@ -160,26 +160,30 @@ const Navbar = () => {
               />
             </Link>
           ))}
+        </div>
+
+        {/* Desktop Navigation - Right Side (Tray & Buttons) */}
+        <div className="hidden lg:flex items-center gap-3 shrink-0">
           {trayMeta && (
             <Link
               to={trayMeta.link}
-              className="rounded-full border border-yellow-500/40 bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-yellow-300 transition-colors hover:bg-neutral-800"
+              className="rounded-full border border-yellow-500/40 bg-black/40 backdrop-blur-sm px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-yellow-300 transition-colors hover:bg-neutral-800"
             >
               {trayMeta.label}: {trayCount}
             </Link>
           )}
 
-          <div className="flex items-center gap-4 ml-2">
+          <div className="flex items-center gap-3">
             <Link to="/donate">
-              <Button className="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-5 py-2 text-xs border-none shadow-lg shadow-yellow-500/20 flex items-center gap-2">
-                <HandHeart className="w-4 h-4" />
+              <Button className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-6 py-2.5 text-[10px] uppercase tracking-widest border-none shadow-lg shadow-yellow-500/10 flex items-center gap-2">
+                <HandHeart className="w-3.5 h-3.5" />
                 Donate
               </Button>
             </Link>
 
             <div className="relative" ref={getDropdownRef}>
               <Button
-                className="bg-white hover:bg-gray-100 text-black font-extrabold px-5 py-2 text-xs border-none shadow-lg flex items-center gap-2"
+                className="bg-white hover:bg-gray-100 text-black font-black px-6 py-2.5 text-[10px] uppercase tracking-widest border-none shadow-lg flex items-center gap-2"
                 onClick={() => setIsGetOpen(!isGetOpen)}
               >
                 Get
@@ -187,20 +191,20 @@ const Navbar = () => {
               </Button>
 
               {isGetOpen && (
-                <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full mt-3 right-0 w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="p-2">
                     {getDropdownItems.map((item, index) => (
                       <Link
                         key={index}
                         to={item.href}
                         onClick={() => setIsGetOpen(false)}
-                        className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                        className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors group"
                       >
-                        <div className="shrink-0 w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <div className="shrink-0 w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
                           <item.icon className="w-4 h-4 text-yellow-600" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-gray-900">{item.label}</p>
+                          <p className="text-xs font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">{item.label}</p>
                         </div>
                       </Link>
                     ))}
@@ -210,8 +214,6 @@ const Navbar = () => {
             </div>
           </div>
         </div>
-
-
 
         {/* Mobile Toggle */}
         <button

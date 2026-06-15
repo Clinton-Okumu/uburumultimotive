@@ -1,7 +1,9 @@
-import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Menu, X, HandHeart, ChevronDown } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.webp";
+import Button from "../shared/Button";
+import { getDropdownItems } from "./DropdownMenu";
 
 type NavLink = {
   id: number;
@@ -24,7 +26,9 @@ const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [trayCount, setTrayCount] = useState(0);
+  const [isGetOpen, setIsGetOpen] = useState(false);
   const location = useLocation();
+  const getDropdownRef = useRef<HTMLDivElement>(null);
 
   const getStoredCartCount = (storageKey: string) => {
     if (typeof window === "undefined") {
@@ -99,6 +103,22 @@ const Navbar = () => {
     };
   }, [location.pathname]);
 
+  // Handle click outside for "Get" dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (getDropdownRef.current && !getDropdownRef.current.contains(event.target as Node)) {
+        setIsGetOpen(false);
+      }
+    };
+
+    if (isGetOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isGetOpen]);
+
   return (
     <nav
       className={`w-full fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -148,6 +168,47 @@ const Navbar = () => {
               {trayMeta.label}: {trayCount}
             </Link>
           )}
+
+          <div className="flex items-center gap-4 ml-2">
+            <Link to="/donate">
+              <Button className="bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold px-5 py-2 text-xs border-none shadow-lg shadow-yellow-500/20 flex items-center gap-2">
+                <HandHeart className="w-4 h-4" />
+                Donate
+              </Button>
+            </Link>
+
+            <div className="relative" ref={getDropdownRef}>
+              <Button
+                className="bg-white hover:bg-gray-100 text-black font-extrabold px-5 py-2 text-xs border-none shadow-lg flex items-center gap-2"
+                onClick={() => setIsGetOpen(!isGetOpen)}
+              >
+                Get
+                <ChevronDown className={`w-3 h-3 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
+              </Button>
+
+              {isGetOpen && (
+                <div className="absolute top-full mt-2 right-0 w-64 bg-white rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-2">
+                    {getDropdownItems.map((item, index) => (
+                      <Link
+                        key={index}
+                        to={item.href}
+                        onClick={() => setIsGetOpen(false)}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <div className="shrink-0 w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                          <item.icon className="w-4 h-4 text-yellow-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-gray-900">{item.label}</p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
 
@@ -172,6 +233,48 @@ const Navbar = () => {
         }`}
       >
         <div className="p-8 space-y-6">
+          <div className="grid grid-cols-2 gap-4 pb-4 border-b border-neutral-800">
+            <Link to="/donate" onClick={() => setMobileMenuOpen(false)}>
+              <Button className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-extrabold py-3 text-sm border-none flex items-center justify-center gap-2">
+                <HandHeart className="w-4 h-4" />
+                Donate
+              </Button>
+            </Link>
+            <div className="relative">
+              <Button
+                className="w-full bg-white hover:bg-gray-100 text-black font-extrabold py-3 text-sm border-none flex items-center justify-center gap-2"
+                onClick={() => setIsGetOpen(!isGetOpen)}
+              >
+                Get
+                <ChevronDown className={`w-4 h-4 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </div>
+          </div>
+
+          {isGetOpen && (
+            <div className="grid grid-cols-1 gap-2 bg-neutral-800/50 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2">
+              {getDropdownItems.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.href}
+                  onClick={() => {
+                    setIsGetOpen(false);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-4 p-3 hover:bg-neutral-700 rounded-xl transition-colors"
+                >
+                  <div className="shrink-0 w-10 h-10 bg-yellow-100/10 rounded-lg flex items-center justify-center">
+                    <item.icon className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">{item.label}</p>
+                    <p className="text-xs text-gray-400 line-clamp-1">{item.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+
           {trayMeta && (
             <Link
               to={trayMeta.link}
@@ -200,3 +303,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

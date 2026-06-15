@@ -1,7 +1,9 @@
-import { Menu, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.webp";
+import Button from "../shared/Button";
+import { getDropdownItems } from "./DropdownMenu";
 
 type NavLink = {
   id: number;
@@ -24,7 +26,9 @@ const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [trayCount, setTrayCount] = useState(0);
+  const [isGetOpen, setIsGetOpen] = useState(false);
   const location = useLocation();
+  const getDropdownRef = useRef<HTMLDivElement>(null);
 
   const getStoredCartCount = (storageKey: string) => {
     if (typeof window === "undefined") {
@@ -99,6 +103,22 @@ const Navbar = () => {
     };
   }, [location.pathname]);
 
+  // Handle click outside for "Get" dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (getDropdownRef.current && !getDropdownRef.current.contains(event.target as Node)) {
+        setIsGetOpen(false);
+      }
+    };
+
+    if (isGetOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isGetOpen]);
+
   return (
     <nav
       className={`w-full fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -153,29 +173,36 @@ const Navbar = () => {
             </Link>
           )}
 
-          <div className="flex items-center gap-6">
-            {[
-              { title: "Uburu Therapy", link: "/get/therapy" },
-              { title: "Uburu Home", link: "/get/home" },
-              { title: "Uburu Village", link: "/get/village" },
-            ].map((link) => (
-              <Link
-                key={link.link}
-                to={link.link}
-                className={`text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300 relative py-1 ${
-                  location.pathname === link.link
-                    ? "text-yellow-400"
-                    : "text-gray-200 hover:text-yellow-400"
-                }`}
-              >
-                {link.title}
-                <span
-                  className={`absolute -bottom-1 left-0 h-0.5 bg-yellow-400 transition-all duration-300 ${
-                    location.pathname === link.link ? "w-full" : "w-0"
-                  }`}
-                />
-              </Link>
-            ))}
+          <div className="relative" ref={getDropdownRef}>
+            <Button
+              className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-8 py-2.5 text-[10px] uppercase tracking-widest border-none shadow-lg flex items-center gap-2"
+              onClick={() => setIsGetOpen(!isGetOpen)}
+            >
+              Get
+              <ChevronDown className={`w-3 h-3 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
+            </Button>
+
+            {isGetOpen && (
+              <div className="absolute top-full mt-3 right-0 w-64 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-2">
+                  {getDropdownItems.map((item, index) => (
+                    <Link
+                      key={index}
+                      to={item.href}
+                      onClick={() => setIsGetOpen(false)}
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors group"
+                    >
+                      <div className="shrink-0 w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 transition-colors">
+                        <item.icon className="w-4 h-4 text-yellow-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold text-gray-900 group-hover:text-yellow-600 transition-colors">{item.label}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -199,25 +226,38 @@ const Navbar = () => {
         }`}
       >
         <div className="p-8 space-y-6">
-          <div className="flex flex-col gap-4 pb-6 border-b border-neutral-800">
-            {[
-              { title: "Uburu Therapy", link: "/get/therapy" },
-              { title: "Uburu Home", link: "/get/home" },
-              { title: "Uburu Village", link: "/get/village" },
-            ].map((link) => (
-              <Link
-                key={link.link}
-                to={link.link}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`text-xl font-bold tracking-wide transition-colors ${
-                  location.pathname === link.link
-                    ? "text-yellow-400"
-                    : "text-white hover:text-yellow-400"
-                }`}
-              >
-                {link.title}
-              </Link>
-            ))}
+          <div className="flex flex-col gap-3 pb-6 border-b border-neutral-800">
+            <Button
+              className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 text-sm uppercase tracking-widest border-none flex items-center justify-center gap-2"
+              onClick={() => setIsGetOpen(!isGetOpen)}
+            >
+              Get Services
+              <ChevronDown className={`w-4 h-4 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
+            </Button>
+
+            {isGetOpen && (
+              <div className="grid grid-cols-1 gap-2 mt-2 bg-neutral-800/50 rounded-2xl p-2 animate-in fade-in slide-in-from-top-2">
+                {getDropdownItems.map((item, index) => (
+                  <Link
+                    key={index}
+                    to={item.href}
+                    onClick={() => {
+                      setIsGetOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-4 p-3 hover:bg-neutral-700 rounded-xl transition-colors"
+                  >
+                    <div className="shrink-0 w-10 h-10 bg-yellow-100/10 rounded-lg flex items-center justify-center">
+                      <item.icon className="w-5 h-5 text-yellow-400" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-white">{item.label}</p>
+                      <p className="text-xs text-gray-400 line-clamp-1">{item.description}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {trayMeta && (

@@ -178,7 +178,7 @@ const Navbar = () => {
               className="bg-yellow-500 hover:bg-yellow-400 text-black font-black px-8 py-2.5 text-[10px] uppercase tracking-widest border-none shadow-lg flex items-center gap-2"
               onClick={() => setIsGetOpen(!isGetOpen)}
             >
-              Get
+              Enterprises
               <ChevronDown className={`w-3 h-3 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
             </Button>
 
@@ -231,7 +231,7 @@ const Navbar = () => {
               className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 text-sm uppercase tracking-widest border-none flex items-center justify-center gap-2"
               onClick={() => setIsGetOpen(!isGetOpen)}
             >
-              Get Services
+              Enterprises
               <ChevronDown className={`w-4 h-4 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
             </Button>
 

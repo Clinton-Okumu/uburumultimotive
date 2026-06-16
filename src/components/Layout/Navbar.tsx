@@ -22,6 +22,51 @@ const NavbarLinks: NavLink[] = [
   { id: 8, title: "Partner", link: "/partner" },
 ];
 
+const getStoredCartCount = (storageKey: string) => {
+  if (typeof window === "undefined") {
+    return 0;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) {
+      return 0;
+    }
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object") {
+      return 0;
+    }
+    return Object.values(parsed).reduce<number>((total, value) => {
+      if (typeof value !== "number" || !Number.isFinite(value)) {
+        return total;
+      }
+      return total + Math.max(0, Math.trunc(value));
+    }, 0);
+  } catch {
+    return 0;
+  }
+};
+
+const getTrayMeta = (pathname: string) => {
+  if (pathname === "/get/home") {
+    return {
+      count: getStoredCartCount("uburu_home_cart"),
+      label: "Home tray",
+      link: "/checkout?source=home",
+    };
+  }
+
+  if (pathname === "/get/village") {
+    return {
+      count: getStoredCartCount("uburu_village_cart"),
+      label: "Village tray",
+      link: "/checkout?source=village",
+    };
+  }
+
+  return null;
+};
+
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -29,53 +74,16 @@ const Navbar = () => {
   const [isGetOpen, setIsGetOpen] = useState(false);
   const location = useLocation();
   const getDropdownRef = useRef<HTMLDivElement>(null);
-
-  const getStoredCartCount = (storageKey: string) => {
-    if (typeof window === "undefined") {
-      return 0;
-    }
-
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      if (!raw) {
-        return 0;
-      }
-      const parsed = JSON.parse(raw) as Record<string, unknown>;
-      if (!parsed || typeof parsed !== "object") {
-        return 0;
-      }
-      return Object.values(parsed).reduce<number>((total, value) => {
-        if (typeof value !== "number" || !Number.isFinite(value)) {
-          return total;
-        }
-        return total + Math.max(0, Math.trunc(value));
-      }, 0);
-    } catch {
-      return 0;
-    }
-  };
-
-  const getTrayMeta = (pathname: string) => {
-    if (pathname === "/get/home") {
-      return {
-        count: getStoredCartCount("uburu_home_cart"),
-        label: "Home tray",
-        link: "/checkout?source=home",
-      };
-    }
-
-    if (pathname === "/get/village") {
-      return {
-        count: getStoredCartCount("uburu_village_cart"),
-        label: "Village tray",
-        link: "/checkout?source=village",
-      };
-    }
-
-    return null;
-  };
+  const mobileDropdownRef = useRef<HTMLDivElement>(null);
 
   const trayMeta = getTrayMeta(location.pathname);
+
+  const handleMobileLinkClick = (linkPath: string) => {
+    if (location.pathname === linkPath) {
+      setMobileMenuOpen(false);
+      setIsGetOpen(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -83,9 +91,12 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
+  if (location.pathname !== prevPathname) {
+    setPrevPathname(location.pathname);
     setMobileMenuOpen(false);
-  }, [location]);
+    setIsGetOpen(false);
+  }
 
   useEffect(() => {
     const refreshTrayCount = () => {
@@ -105,17 +116,22 @@ const Navbar = () => {
 
   // Handle click outside for "Get" dropdown
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (getDropdownRef.current && !getDropdownRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      const insideDesktop = getDropdownRef.current?.contains(target);
+      const insideMobile = mobileDropdownRef.current?.contains(target);
+      if (!insideDesktop && !insideMobile) {
         setIsGetOpen(false);
       }
     };
 
     if (isGetOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [isGetOpen]);
 
@@ -129,7 +145,7 @@ const Navbar = () => {
     >
       <div className="max-w-[1440px] mx-auto px-6 flex justify-between items-center gap-4">
         {/* Logo Section */}
-        <Link to="/" className="flex items-center gap-3 group shrink-0">
+        <Link to="/" className="flex items-center gap-3 group shrink-0" onClick={() => handleMobileLinkClick("/")}>
           <img
             src={logo}
             alt="Uburumultimove logo"
@@ -221,30 +237,39 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       <div
-        className={`lg:hidden absolute top-full left-0 right-0 bg-neutral-900 border-t border-neutral-800 transition-all duration-300 ease-in-out overflow-hidden shadow-2xl ${
-          isMobileMenuOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"
+        className={`lg:hidden absolute top-full left-0 right-0 bg-neutral-900 transition-all duration-300 ease-in-out ${
+          isMobileMenuOpen
+            ? "max-h-[calc(100vh-64px)] overflow-y-auto opacity-100 border-t border-neutral-800 shadow-2xl"
+            : "max-h-0 overflow-hidden opacity-0 pointer-events-none border-transparent shadow-none"
         }`}
       >
-        <div className="p-8 space-y-6">
+        <div
+          className="p-8 space-y-6"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setMobileMenuOpen(false);
+            }
+          }}
+        >
           <div className="flex flex-col gap-3 pb-6 border-b border-neutral-800">
             <Button
               className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 text-sm uppercase tracking-widest border-none flex items-center justify-center gap-2"
-              onClick={() => setIsGetOpen(!isGetOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsGetOpen(!isGetOpen);
+              }}
             >
               Enterprises
               <ChevronDown className={`w-4 h-4 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
             </Button>
 
             {isGetOpen && (
-              <div className="grid grid-cols-1 gap-2 mt-2 bg-neutral-800/50 rounded-2xl p-2 animate-in fade-in slide-in-from-top-2">
+              <div ref={mobileDropdownRef} className="grid grid-cols-1 gap-2 mt-2 bg-neutral-800/50 rounded-2xl p-2 animate-in fade-in slide-in-from-top-2">
                 {getDropdownItems.map((item, index) => (
                   <Link
                     key={index}
                     to={item.href}
-                    onClick={() => {
-                      setIsGetOpen(false);
-                      setMobileMenuOpen(false);
-                    }}
+                    onClick={() => handleMobileLinkClick(item.href)}
                     className="flex items-center gap-4 p-3 hover:bg-neutral-700 rounded-xl transition-colors"
                   >
                     <div className="shrink-0 w-10 h-10 bg-yellow-100/10 rounded-lg flex items-center justify-center">
@@ -263,6 +288,7 @@ const Navbar = () => {
           {trayMeta && (
             <Link
               to={trayMeta.link}
+              onClick={() => handleMobileLinkClick(trayMeta.link)}
               className="block rounded-xl border border-yellow-500/40 bg-black px-4 py-3 text-sm font-black uppercase tracking-[0.2em] text-yellow-300"
             >
               {trayMeta.label}: {trayCount}
@@ -272,6 +298,7 @@ const Navbar = () => {
             <Link
               key={link.id}
               to={link.link}
+              onClick={() => handleMobileLinkClick(link.link)}
               className={`block text-xl font-bold tracking-wide transition-colors ${
                 location.pathname === link.link
                   ? "text-yellow-400"

@@ -63,11 +63,11 @@ const HeroSection = () => {
               <div className="absolute bottom-full mb-2 left-0 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl z-50">
                 <div className="p-2">
                   {getDropdownItems.map((item, index) => (
-                    <a
+                    <Link
                       key={index}
-                      href={item.href}
+                      to={item.href}
                       onClick={() => setIsGetOpen(false)}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="flex items-center gap-3 p-3 hover:bg-gray-100 rounded-xl transition-colors"
                     >
                       <div className="shrink-0 w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
                         <item.icon className="w-5 h-5 text-yellow-600" />
@@ -78,7 +78,7 @@ const HeroSection = () => {
                           <p className="text-xs text-gray-500 line-clamp-1">{item.description}</p>
                         )}
                       </div>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>

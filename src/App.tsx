@@ -22,17 +22,21 @@ import TherapyTerms from './pages/TherapyTerms';
 import TravelTerms from './pages/TravelTerms';
 
 
+import ScrollToTop from './components/shared/ScrollToTop';
+
+
 function App() {
     return (
         <BrowserRouter>
+            <ScrollToTop />
             <Layout>
                 <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/About" element={<About />} />
+                    <Route path="/about" element={<About />} />
                     <Route path="/founder" element={<Founder />} />
-                    <Route path="/Causes" element={<Causes />} />
-                    <Route path="/Gallery" element={<Gallery />} />
-                    <Route path="/Contact" element={<Contact />} />
+                    <Route path="/causes" element={<Causes />} />
+                    <Route path="/gallery" element={<Gallery />} />
+                    <Route path="/contact" element={<Contact />} />
                     <Route path="/donate" element={<DonateLanding />} />
                     <Route path="/donate/money" element={<Donate />} />
                     <Route path="/donate/items" element={<DonateItems />} />

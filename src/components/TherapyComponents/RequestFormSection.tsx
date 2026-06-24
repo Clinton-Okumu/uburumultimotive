@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Button from "../shared/Button";
-import { Mail, Phone, User } from "lucide-react";
+import { Mail, Phone, User, CheckCircle, CreditCard, Send, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type TherapyPricingOption = {
@@ -79,6 +79,15 @@ const THERAPY_PRICING_OPTIONS: TherapyPricingOption[] = [
   },
 ];
 
+const PAYBILL_NO = "522522";
+const ACCOUNT_NO = "1346356009";
+const WHATSAPP_NUMBER = "254718421205";
+
+const formatAmount = (amount: number, currency: string = "KES") => {
+  const locale = currency === "KES" ? "en-KE" : "en-US";
+  return `${currency} ${amount.toLocaleString(locale)}`;
+};
+
 const getFriendlyPaymentErrorMessage = (message: string) => {
   const normalizedMessage = message.trim().toLowerCase();
   if (normalizedMessage.includes("invalid amount")) {
@@ -92,6 +101,8 @@ const getFriendlyPaymentErrorMessage = (message: string) => {
   }
   return message.trim() || "Unable to start payment. Please try again.";
 };
+
+type BookingStep = "register" | "payment" | "mpesa_instructions";
 
 const RequestFormSection = () => {
   type FormData = {
@@ -136,10 +147,15 @@ const RequestFormSection = () => {
     termsAccepted: false,
   });
 
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+  const [bookingStep, setBookingStep] = useState<BookingStep>("register");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "processing">(
     "idle",
   );
   const [statusMessage, setStatusMessage] = useState("");
+
+  const selectedPricingOption = THERAPY_PRICING_OPTIONS.find(
+    (option) => option.id === formData.pricingOptionId,
+  );
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -170,13 +186,9 @@ const RequestFormSection = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (status === "sending") return;
-
-    const selectedPricingOption = THERAPY_PRICING_OPTIONS.find(
-      (option) => option.id === formData.pricingOptionId,
-    );
 
     if (formData.assistanceReason.length === 0) {
       setStatus("error");
@@ -256,6 +268,28 @@ const RequestFormSection = () => {
         throw new Error(errorMessage);
       }
 
+      setStatus("sent");
+      setStatusMessage("Request received. Choose your payment method below.");
+      setBookingStep("payment");
+    } catch (error) {
+      setStatus("error");
+      setStatusMessage(
+        error instanceof Error
+          ? getFriendlyPaymentErrorMessage(error.message)
+          : "Unable to submit the request.",
+      );
+    } finally {
+      setStatus((current) => (current === "sending" ? "idle" : current));
+    }
+  };
+
+  const handleOnlinePayment = async () => {
+    if (!selectedPricingOption) return;
+
+    setStatus("processing");
+    setStatusMessage("");
+
+    try {
       const paymentResponse = await fetch("/api/dpo/create-token.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -311,40 +345,630 @@ const RequestFormSection = () => {
       }
 
       setStatus("sent");
-      setStatusMessage("Request received. Redirecting you to secure payment.");
-      setFormData({
-        fullName: "",
-        email: "",
-        phone: "",
-        gender: "",
-        country: "",
-        age: "",
-        assistanceType: "",
-        assistanceOther: "",
-        practitionerGender: "",
-        financialStatus: "",
-        alcoholFrequency: "",
-        religion: "",
-        priorTherapy: "",
-        assistanceReason: [],
-        assistanceReasonOther: "",
-        medication: "",
-        pricingOptionId: "",
-        termsAccepted: false,
-      });
-
+      setStatusMessage("Redirecting you to secure payment.");
       window.location.href = paymentData.paymentUrl;
     } catch (error) {
       setStatus("error");
       setStatusMessage(
         error instanceof Error
           ? getFriendlyPaymentErrorMessage(error.message)
-          : "Unable to submit the request.",
+          : "Unable to start payment. Please try again.",
       );
-    } finally {
-      setStatus((current) => (current === "sending" ? "idle" : current));
     }
   };
+
+  const handleWhatsAppShare = () => {
+    if (!selectedPricingOption) return;
+    const message = `*UBURU THERAPY BOOKING*%0A%0A*Package:* ${selectedPricingOption.label}%0A*Name:* ${formData.fullName}%0A*Phone:* ${formData.phone}%0A*Amount:* ${formatAmount(selectedPricingOption.amount)}%0A%0A_I have made the payment via Mpesa Paybill ${PAYBILL_NO}, Acc ${ACCOUNT_NO}._`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
+  };
+
+  const renderForm = () => (
+    <form
+      onSubmit={handleRegister}
+      className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100"
+    >
+      <input
+        type="text"
+        name="company"
+        tabIndex={-1}
+        autoComplete="off"
+        className="hidden"
+      />
+
+      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Client details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              What are your names ? *
+            </label>
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                required
+                className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+                placeholder="Full name"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Client email address? *
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+                placeholder="name@example.com"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Client phone number ? *
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+                placeholder="+254 123 456 789"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Country client is in ? *
+            </label>
+            <input
+              type="text"
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              required
+              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+              placeholder="Country"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              What is Client's age? *
+            </label>
+            <input
+              type="number"
+              name="age"
+              value={formData.age}
+              onChange={handleChange}
+              required
+              min={1}
+              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+              placeholder="Age"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Gender of Client? *
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {["Woman", "Man"].map((option) => (
+                <label
+                  key={option}
+                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    formData.gender === option
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="gender"
+                    value={option}
+                    checked={formData.gender === option}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Service preferences</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-2 md:col-span-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Select therapy package and pricing *
+            </label>
+            <select
+              name="pricingOptionId"
+              value={formData.pricingOptionId}
+              onChange={handleChange}
+              required
+              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+            >
+              <option value="">Select package</option>
+              {THERAPY_PRICING_OPTIONS.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-sm text-gray-500">
+              You will choose a payment method after submitting your details.
+            </p>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              What type of Assistance are you looking for? *
+            </label>
+            <select
+              name="assistanceType"
+              value={formData.assistanceType}
+              onChange={handleChange}
+              required
+              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+            >
+              <option value="">Select assistance type</option>
+              <option value="Individual Therapy (For Myself)">Individual Therapy (For Myself)</option>
+              <option value="Couple Therapy (for myself and my partner)">Couple Therapy (for myself and my partner)</option>
+              <option value="Teens Therapy (For child)">Teens Therapy (For child)</option>
+              <option value="Rehab (Addiction)">Rehab (Addiction)</option>
+              <option value="Life coaching">Life coaching</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {formData.assistanceType === "Other" && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Other assistance type *
+              </label>
+              <input
+                type="text"
+                name="assistanceOther"
+                value={formData.assistanceOther}
+                onChange={handleChange}
+                required={formData.assistanceType === "Other"}
+                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+                placeholder="Please specify"
+              />
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              What Gender of practitioner do you prefer? *
+            </label>
+            <div className="grid grid-cols-1 gap-3">
+              {["Male", "Female", "Any is okay"].map((option) => (
+                <label
+                  key={option}
+                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    formData.practitionerGender === option
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="practitionerGender"
+                    value={option}
+                    checked={formData.practitionerGender === option}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Client financial status ? *
+            </label>
+            <div className="grid grid-cols-1 gap-3">
+              {["Average", "Good", "Poor"].map((option) => (
+                <label
+                  key={option}
+                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    formData.financialStatus === option
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="financialStatus"
+                    value={option}
+                    checked={formData.financialStatus === option}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Background</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              How often do you drink alcohol? *
+            </label>
+            <select
+              name="alcoholFrequency"
+              value={formData.alcoholFrequency}
+              onChange={handleChange}
+              required
+              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+            >
+              <option value="">Select frequency</option>
+              <option value="Never">Never</option>
+              <option value="Occasionally">Occasionally</option>
+              <option value="Monthly">Monthly</option>
+              <option value="Daily">Daily</option>
+              <option value="Infrequently">Infrequently</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Which religion do you identify with *
+            </label>
+            <select
+              name="religion"
+              value={formData.religion}
+              onChange={handleChange}
+              required
+              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+            >
+              <option value="">Select religion</option>
+              <option value="Christianity">Christianity</option>
+              <option value="Muslim">Muslim</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Have you done Therapy or any of the above services before? *
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {["Yes", "No"].map((option) => (
+                <label
+                  key={option}
+                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    formData.priorTherapy === option
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="priorTherapy"
+                    value={option}
+                    checked={formData.priorTherapy === option}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Are you currently taking medication? *
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {["Yes", "No"].map((option) => (
+                <label
+                  key={option}
+                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    formData.medication === option
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="medication"
+                    value={option}
+                    checked={formData.medication === option}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+              What led you to consider our assistance? *
+            </label>
+            <p className="text-sm text-gray-500">Select all that apply.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {[
+                "I've been feeling depressed",
+                "I feel anxious or overwhelmed",
+                "My mood is interfering with job/school performance",
+                "I am grieving",
+                "I am addicted",
+                "I have experienced trauma",
+                "I need to talk through a specific challenge",
+                "I need professional coaching",
+                "Just exploring",
+                "Others",
+              ].map((option) => (
+                <label
+                  key={option}
+                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                    formData.assistanceReason.includes(option)
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
+                      : "border-gray-200 bg-white text-gray-700"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    name="assistanceReason"
+                    value={option}
+                    checked={formData.assistanceReason.includes(option)}
+                    onChange={() => handleReasonToggle(option)}
+                    className="sr-only"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {formData.assistanceReason.includes("Others") && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Others *
+              </label>
+              <input
+                type="text"
+                name="assistanceReasonOther"
+                value={formData.assistanceReasonOther}
+                onChange={handleChange}
+                required={formData.assistanceReason.includes("Others")}
+                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+                placeholder="Share a brief reason"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">Service consent</h3>
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed">
+          By booking a therapy appointment or any other service under Uburu, you confirm that you are doing so
+          voluntarily and with full understanding of the nature of the services provided. You consent to
+          participate in sessions that may involve emotional, psychological, or personal exploration, and you
+          acknowledge that these services are intended to support your wellbeing and personal growth, not to
+          replace medical or emergency care. You understand that all information shared will be treated with
+          confidentiality in line with ethical and professional standards, except where disclosure is required
+          by law or for safety reasons. You also agree to respect the policies, fees, and scheduling guidelines
+          of Uburu, and you confirm that you have had the opportunity to ask questions and receive clarification
+          before proceeding.
+        </div>
+        <label className="mt-4 flex items-start gap-3 text-sm font-semibold text-gray-700">
+          <input
+            type="checkbox"
+            name="termsAccepted"
+            checked={formData.termsAccepted}
+            onChange={handleChange}
+            required
+            className="mt-1 h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+          />
+          <span>
+            I have read and accept the{" "}
+            <Link
+              to="/get/therapy/terms"
+              className="text-yellow-600 underline hover:text-yellow-700 transition-colors"
+            >
+              terms and conditions
+            </Link>{" "}
+            above.
+          </span>
+        </label>
+      </div>
+
+      {status === "error" && (
+        <div className="mb-4 rounded-2xl px-5 py-4 text-sm font-bold border bg-red-50 text-red-700 border-red-200">
+          {statusMessage}
+        </div>
+      )}
+
+      <Button
+        type="submit"
+        disabled={status === "sending"}
+        className="w-full bg-yellow-500 text-black hover:bg-yellow-400 py-4 text-lg"
+      >
+        {status === "sending" ? "Submitting..." : "Submit & proceed to payment"}
+      </Button>
+    </form>
+  );
+
+  const renderPaymentOptions = () => (
+    <div className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100 space-y-6">
+      <div className="flex items-center gap-2">
+        <h3 className="text-lg font-black text-gray-900">Choose payment method</h3>
+      </div>
+
+      <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-5 text-center">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Total Payable</p>
+        <p className="text-3xl font-black text-gray-900 mt-1">
+          {selectedPricingOption ? formatAmount(selectedPricingOption.amount) : "KES 0"}
+        </p>
+      </div>
+
+      <div className="grid gap-4">
+        <button
+          onClick={() => setBookingStep("mpesa_instructions")}
+          className="group flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-yellow-400 hover:bg-yellow-50/50"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
+              <span className="font-black">M</span>
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-black text-gray-900">Mpesa Paybill</p>
+              <p className="text-xs font-semibold text-gray-500">Manual payment via Paybill</p>
+            </div>
+          </div>
+          <div className="h-6 w-6 rounded-full border-2 border-gray-200 group-hover:border-yellow-400 group-hover:bg-yellow-400" />
+        </button>
+
+        <button
+          onClick={handleOnlinePayment}
+          disabled={status === "processing"}
+          className="group flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-neutral-800 hover:bg-neutral-50 disabled:opacity-50"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-100 text-neutral-800">
+              {status === "processing" ? (
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-800 border-t-transparent" />
+              ) : (
+                <CreditCard className="h-6 w-6" />
+              )}
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-black text-gray-900">Card / Online</p>
+              <p className="text-xs font-semibold text-gray-500">
+                {status === "processing" ? "Redirecting to DPO..." : "Instant DPO checkout"}
+              </p>
+            </div>
+          </div>
+          <div className="h-6 w-6 rounded-full border-2 border-gray-200 group-hover:border-neutral-800 group-hover:bg-neutral-800" />
+        </button>
+      </div>
+
+      {status === "error" && (
+        <div className="rounded-2xl px-5 py-4 text-sm font-bold border bg-red-50 text-red-700 border-red-200">
+          {statusMessage}
+        </div>
+      )}
+
+      <button
+        onClick={() => {
+          setBookingStep("register");
+          setStatus("idle");
+          setStatusMessage("");
+        }}
+        className="w-full text-xs font-black uppercase tracking-[0.2em] text-gray-500 hover:text-gray-900"
+      >
+        Back to details
+      </button>
+    </div>
+  );
+
+  const renderMpesaInstructions = () => (
+    <div className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100 space-y-6">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => {
+            setBookingStep("payment");
+            setStatus("idle");
+            setStatusMessage("");
+          }}
+          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <ArrowLeft className="h-5 w-5 text-gray-500" />
+        </button>
+        <h3 className="text-lg font-black text-gray-900">Mpesa Payment</h3>
+      </div>
+
+      <div className="rounded-2xl border-2 border-dashed border-green-200 bg-green-50/50 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center text-white">
+            <CheckCircle className="h-5 w-5" />
+          </div>
+          <h4 className="font-black text-green-900">Instructions</h4>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex justify-between items-center py-2 border-b border-green-100">
+            <span className="text-xs font-bold text-green-700 uppercase">Paybill No</span>
+            <span className="text-base font-black text-green-900">{PAYBILL_NO}</span>
+          </div>
+          <div className="flex justify-between items-center py-2 border-b border-green-100">
+            <span className="text-xs font-bold text-green-700 uppercase">Account No</span>
+            <span className="text-base font-black text-green-900">{ACCOUNT_NO}</span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-xs font-bold text-green-700 uppercase">Amount</span>
+            <span className="text-base font-black text-green-900">
+              {selectedPricingOption ? formatAmount(selectedPricingOption.amount) : "KES 0"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p className="text-xs font-semibold text-gray-500 text-center px-4">
+        Once you have made the payment, click below to send your payment confirmation to our team on WhatsApp.
+      </p>
+
+      <Button
+        onClick={handleWhatsAppShare}
+        className="w-full bg-[#25D366] py-4 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#20bd5a]"
+      >
+        <span className="flex items-center justify-center gap-2">
+          <Send className="h-4 w-4" />
+          Send to WhatsApp
+        </span>
+      </Button>
+
+      <button
+        onClick={() => {
+          setBookingStep("payment");
+          setStatus("idle");
+          setStatusMessage("");
+        }}
+        className="w-full text-xs font-black uppercase tracking-[0.2em] text-gray-500 hover:text-gray-900"
+      >
+        Change payment method
+      </button>
+    </div>
+  );
 
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
@@ -357,7 +981,7 @@ const RequestFormSection = () => {
             Uburu Therapy Form
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Tell us a bit about yourself and what support you are looking for. We'll
+            Tell us a bit about yourself and what support you are looking for. We will
             review your request and help match you with the right practitioner.
           </p>
           <p className="text-sm text-gray-500 mt-4">* Indicates required question</p>
@@ -401,474 +1025,9 @@ const RequestFormSection = () => {
           </div>
 
           <div className="lg:col-span-3">
-            <form
-              onSubmit={handleSubmit}
-              className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100"
-            >
-              <input
-                type="text"
-                name="company"
-                tabIndex={-1}
-                autoComplete="off"
-                className="hidden"
-              />
-
-              <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Client details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      What are your names ? *
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                        placeholder="Full name"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Client email address? *
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                        placeholder="name@example.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Client phone number ? *
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                        placeholder="+254 123 456 789"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Country client is in ? *
-                    </label>
-                    <input
-                      type="text"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                      placeholder="Country"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      What is Client's age? *
-                    </label>
-                    <input
-                      type="number"
-                      name="age"
-                      value={formData.age}
-                      onChange={handleChange}
-                      required
-                      min={1}
-                      className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                      placeholder="Age"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Gender of Client? *
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["Woman", "Man"].map((option) => (
-                        <label
-                          key={option}
-                          className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                            formData.gender === option
-                              ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                              : "border-gray-200 bg-white text-gray-700"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="gender"
-                            value={option}
-                            checked={formData.gender === option}
-                            onChange={handleChange}
-                            required
-                            className="sr-only"
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Service preferences</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Select therapy package and pricing *
-                    </label>
-                    <select
-                      name="pricingOptionId"
-                      value={formData.pricingOptionId}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                    >
-                      <option value="">Select package</option>
-                      {THERAPY_PRICING_OPTIONS.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-sm text-gray-500">
-                      You will be redirected to secure payment after submitting this form.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      What type of Assistance are you looking for? *
-                    </label>
-                    <select
-                      name="assistanceType"
-                      value={formData.assistanceType}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                    >
-                      <option value="">Select assistance type</option>
-                      <option value="Individual Therapy (For Myself)">Individual Therapy (For Myself)</option>
-                      <option value="Couple Therapy (for myself and my partner)">Couple Therapy (for myself and my partner)</option>
-                      <option value="Teens Therapy (For child)">Teens Therapy (For child)</option>
-                      <option value="Rehab (Addiction)">Rehab (Addiction)</option>
-                      <option value="Life coaching">Life coaching</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  {formData.assistanceType === "Other" && (
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                        Other assistance type *
-                      </label>
-                      <input
-                        type="text"
-                        name="assistanceOther"
-                        value={formData.assistanceOther}
-                        onChange={handleChange}
-                        required={formData.assistanceType === "Other"}
-                        className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                        placeholder="Please specify"
-                      />
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      What Gender of practitioner do you prefer? *
-                    </label>
-                    <div className="grid grid-cols-1 gap-3">
-                      {["Male", "Female", "Any is okay"].map((option) => (
-                        <label
-                          key={option}
-                          className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                            formData.practitionerGender === option
-                              ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                              : "border-gray-200 bg-white text-gray-700"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="practitionerGender"
-                            value={option}
-                            checked={formData.practitionerGender === option}
-                            onChange={handleChange}
-                            required
-                            className="sr-only"
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Client financial status ? *
-                    </label>
-                    <div className="grid grid-cols-1 gap-3">
-                      {["Average", "Good", "Poor"].map((option) => (
-                        <label
-                          key={option}
-                          className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                            formData.financialStatus === option
-                              ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                              : "border-gray-200 bg-white text-gray-700"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="financialStatus"
-                            value={option}
-                            checked={formData.financialStatus === option}
-                            onChange={handleChange}
-                            required
-                            className="sr-only"
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Background</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      How often do you drink alcohol? *
-                    </label>
-                    <select
-                      name="alcoholFrequency"
-                      value={formData.alcoholFrequency}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                    >
-                      <option value="">Select frequency</option>
-                      <option value="Never">Never</option>
-                      <option value="Occasionally">Occasionally</option>
-                      <option value="Monthly">Monthly</option>
-                      <option value="Daily">Daily</option>
-                      <option value="Infrequently">Infrequently</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Which religion do you identify with *
-                    </label>
-                    <select
-                      name="religion"
-                      value={formData.religion}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                    >
-                      <option value="">Select religion</option>
-                      <option value="Christianity">Christianity</option>
-                      <option value="Muslim">Muslim</option>
-                      <option value="Others">Others</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Have you done Therapy or any of the above services before? *
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["Yes", "No"].map((option) => (
-                        <label
-                          key={option}
-                          className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                            formData.priorTherapy === option
-                              ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                              : "border-gray-200 bg-white text-gray-700"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="priorTherapy"
-                            value={option}
-                            checked={formData.priorTherapy === option}
-                            onChange={handleChange}
-                            required
-                            className="sr-only"
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                        <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      Are you currently taking medication? *
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {["Yes", "No"].map((option) => (
-                        <label
-                          key={option}
-                          className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                            formData.medication === option
-                              ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                              : "border-gray-200 bg-white text-gray-700"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="medication"
-                            value={option}
-                            checked={formData.medication === option}
-                            onChange={handleChange}
-                            required
-                            className="sr-only"
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                      What led you to consider our assistance? *
-                    </label>
-                    <p className="text-sm text-gray-500">Select all that apply.</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {[
-                        "I've been feeling depressed",
-                        "I feel anxious or overwhelmed",
-                        "My mood is interfering with job/school performance",
-                        "I am grieving",
-                        "I am addicted",
-                        "I have experienced trauma",
-                        "I need to talk through a specific challenge",
-                        "I need professional coaching",
-                        "Just exploring",
-                        "Others",
-                      ].map((option) => (
-                        <label
-                          key={option}
-                          className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                            formData.assistanceReason.includes(option)
-                              ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                              : "border-gray-200 bg-white text-gray-700"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            name="assistanceReason"
-                            value={option}
-                            checked={formData.assistanceReason.includes(option)}
-                            onChange={() => handleReasonToggle(option)}
-                            className="sr-only"
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {formData.assistanceReason.includes("Others") && (
-                    <div className="space-y-2 md:col-span-2">
-                      <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                        Others *
-                      </label>
-                      <input
-                        type="text"
-                        name="assistanceReasonOther"
-                        value={formData.assistanceReasonOther}
-                        onChange={handleChange}
-                        required={formData.assistanceReason.includes("Others")}
-                        className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                        placeholder="Share a brief reason"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Service consent</h3>
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed">
-                  By booking a therapy appointment or any other service under Uburu, you confirm that you are doing so
-                  voluntarily and with full understanding of the nature of the services provided. You consent to
-                  participate in sessions that may involve emotional, psychological, or personal exploration, and you
-                  acknowledge that these services are intended to support your wellbeing and personal growth, not to
-                  replace medical or emergency care. You understand that all information shared will be treated with
-                  confidentiality in line with ethical and professional standards, except where disclosure is required
-                  by law or for safety reasons. You also agree to respect the policies, fees, and scheduling guidelines
-                  of Uburu, and you confirm that you have had the opportunity to ask questions and receive clarification
-                  before proceeding.
-                </div>
-                <label className="mt-4 flex items-start gap-3 text-sm font-semibold text-gray-700">
-                  <input
-                    type="checkbox"
-                    name="termsAccepted"
-                    checked={formData.termsAccepted}
-                    onChange={handleChange}
-                    required
-                    className="mt-1 h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
-                  />
-                  <span>
-                    I have read and accept the{" "}
-                    <Link
-                      to="/get/therapy/terms"
-                      className="text-yellow-600 underline hover:text-yellow-700 transition-colors"
-                    >
-                      terms and conditions
-                    </Link>{" "}
-                    above.
-                  </span>
-                </label>
-              </div>
-
-              {status !== "idle" && (
-                <div
-                  className={`mb-4 rounded-2xl px-5 py-4 text-sm font-bold border ${
-                    status === "sent"
-                      ? "bg-green-50 text-green-700 border-green-200"
-                      : "bg-red-50 text-red-700 border-red-200"
-                  }`}
-                >
-                  {statusMessage}
-                </div>
-              )}
-
-              <Button
-                type="submit"
-                disabled={status === "sending"}
-                className="w-full bg-yellow-500 text-black hover:bg-yellow-400 py-4 text-lg"
-              >
-                {status === "sending" ? "Submitting..." : "Submit & proceed to payment"}
-              </Button>
-            </form>
+            {bookingStep === "register" && renderForm()}
+            {bookingStep === "payment" && renderPaymentOptions()}
+            {bookingStep === "mpesa_instructions" && renderMpesaInstructions()}
           </div>
         </div>
       </div>

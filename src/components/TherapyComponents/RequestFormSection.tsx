@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Button from "../shared/Button";
-import { Mail, Phone, User, CheckCircle, CreditCard, Send, ArrowLeft } from "lucide-react";
+import { Mail, Phone, User, CheckCircle, CreditCard, Send, ArrowLeft, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type TherapyPricingOption = {
@@ -9,75 +9,241 @@ type TherapyPricingOption = {
   mode: "Online" | "Physical";
   sessions: number;
   amount: number;
+  currency: "KES" | "USD";
   label: string;
 };
 
 const THERAPY_PRICING_OPTIONS: TherapyPricingOption[] = [
+  // Kenya packages
   {
-    id: "individual-online-1",
+    id: "ke-individual-online-1",
     category: "Individual",
     mode: "Online",
     sessions: 1,
     amount: 1600,
+    currency: "KES",
     label: "Online individual - 1 session (KES 1,600)",
   },
   {
-    id: "individual-online-4",
+    id: "ke-individual-online-4",
     category: "Individual",
     mode: "Online",
     sessions: 4,
     amount: 5000,
+    currency: "KES",
     label: "Online individual - 4 sessions (KES 5,000)",
   },
   {
-    id: "individual-online-6",
+    id: "ke-individual-online-6",
     category: "Individual",
     mode: "Online",
     sessions: 6,
     amount: 7500,
+    currency: "KES",
     label: "Online individual - 6 sessions (KES 7,500)",
   },
   {
-    id: "individual-online-8",
+    id: "ke-individual-online-8",
     category: "Individual",
     mode: "Online",
     sessions: 8,
     amount: 10000,
+    currency: "KES",
     label: "Online individual - 8 sessions (KES 10,000)",
   },
   {
-    id: "individual-physical-1",
+    id: "ke-individual-online-10",
+    category: "Individual",
+    mode: "Online",
+    sessions: 10,
+    amount: 13000,
+    currency: "KES",
+    label: "Online individual - 10 sessions (KES 13,000)",
+  },
+  {
+    id: "ke-individual-online-12",
+    category: "Individual",
+    mode: "Online",
+    sessions: 12,
+    amount: 15000,
+    currency: "KES",
+    label: "Online individual - 12 sessions (KES 15,000)",
+  },
+  {
+    id: "ke-individual-physical-1",
     category: "Individual",
     mode: "Physical",
     sessions: 1,
     amount: 1800,
+    currency: "KES",
     label: "Physical individual - 1 session (KES 1,800)",
   },
   {
-    id: "individual-physical-4",
+    id: "ke-individual-physical-4",
     category: "Individual",
     mode: "Physical",
     sessions: 4,
     amount: 6500,
+    currency: "KES",
     label: "Physical individual - 4 sessions (KES 6,500)",
   },
   {
-    id: "couples-online-1",
+    id: "ke-individual-physical-6",
+    category: "Individual",
+    mode: "Physical",
+    sessions: 6,
+    amount: 10000,
+    currency: "KES",
+    label: "Physical individual - 6 sessions (KES 10,000)",
+  },
+  {
+    id: "ke-individual-physical-8",
+    category: "Individual",
+    mode: "Physical",
+    sessions: 8,
+    amount: 12000,
+    currency: "KES",
+    label: "Physical individual - 8 sessions (KES 12,000)",
+  },
+  {
+    id: "ke-individual-physical-10",
+    category: "Individual",
+    mode: "Physical",
+    sessions: 10,
+    amount: 18000,
+    currency: "KES",
+    label: "Physical individual - 10 sessions (KES 18,000)",
+  },
+  {
+    id: "ke-couples-online-1",
     category: "Couples",
     mode: "Online",
     sessions: 1,
     amount: 3000,
+    currency: "KES",
     label: "Couples online - 1 session (KES 3,000)",
   },
   {
-    id: "couples-physical-1",
+    id: "ke-couples-online-4",
+    category: "Couples",
+    mode: "Online",
+    sessions: 4,
+    amount: 10000,
+    currency: "KES",
+    label: "Couples online - 4 sessions (KES 10,000)",
+  },
+  {
+    id: "ke-couples-physical-1",
     category: "Couples",
     mode: "Physical",
     sessions: 1,
     amount: 3500,
+    currency: "KES",
     label: "Couples physical - 1 session (KES 3,500)",
   },
+  {
+    id: "ke-couples-physical-4",
+    category: "Couples",
+    mode: "Physical",
+    sessions: 4,
+    amount: 12000,
+    currency: "KES",
+    label: "Couples physical - 4 sessions (KES 12,000)",
+  },
+  // International packages
+  {
+    id: "int-individual-online-1",
+    category: "Individual",
+    mode: "Online",
+    sessions: 1,
+    amount: 25,
+    currency: "USD",
+    label: "Online individual - 1 session (USD 25)",
+  },
+  {
+    id: "int-individual-online-3",
+    category: "Individual",
+    mode: "Online",
+    sessions: 3,
+    amount: 50,
+    currency: "USD",
+    label: "Online individual - 3 sessions (USD 50)",
+  },
+  {
+    id: "int-individual-online-4",
+    category: "Individual",
+    mode: "Online",
+    sessions: 4,
+    amount: 65,
+    currency: "USD",
+    label: "Online individual - 4 sessions (USD 65)",
+  },
+  {
+    id: "int-individual-online-6",
+    category: "Individual",
+    mode: "Online",
+    sessions: 6,
+    amount: 85,
+    currency: "USD",
+    label: "Online individual - 6 sessions (USD 85)",
+  },
+  {
+    id: "int-individual-online-8",
+    category: "Individual",
+    mode: "Online",
+    sessions: 8,
+    amount: 120,
+    currency: "USD",
+    label: "Online individual - 8 sessions (USD 120)",
+  },
+  {
+    id: "int-couples-online-1",
+    category: "Couples",
+    mode: "Online",
+    sessions: 1,
+    amount: 40,
+    currency: "USD",
+    label: "Couples online - 1 session (USD 40)",
+  },
+  {
+    id: "int-couples-online-3",
+    category: "Couples",
+    mode: "Online",
+    sessions: 3,
+    amount: 110,
+    currency: "USD",
+    label: "Couples online - 3 sessions (USD 110)",
+  },
+  {
+    id: "int-couples-online-4",
+    category: "Couples",
+    mode: "Online",
+    sessions: 4,
+    amount: 140,
+    currency: "USD",
+    label: "Couples online - 4 sessions (USD 140)",
+  },
+  {
+    id: "int-couples-online-6",
+    category: "Couples",
+    mode: "Online",
+    sessions: 6,
+    amount: 220,
+    currency: "USD",
+    label: "Couples online - 6 sessions (USD 220)",
+  },
+  {
+    id: "int-couples-online-8",
+    category: "Couples",
+    mode: "Online",
+    sessions: 8,
+    amount: 250,
+    currency: "USD",
+    label: "Couples online - 8 sessions (USD 250)",
+  },
 ];
+
+const isInKenya = (country: string) => country.trim().toLowerCase() === "kenya";
 
 const PAYBILL_NO = "522522";
 const ACCOUNT_NO = "1346356009";
@@ -102,7 +268,7 @@ const getFriendlyPaymentErrorMessage = (message: string) => {
   return message.trim() || "Unable to start payment. Please try again.";
 };
 
-type BookingStep = "register" | "payment" | "mpesa_instructions";
+type BookingStep = "location" | "register" | "payment" | "mpesa_instructions";
 
 const RequestFormSection = () => {
   type FormData = {
@@ -147,15 +313,129 @@ const RequestFormSection = () => {
     termsAccepted: false,
   });
 
-  const [bookingStep, setBookingStep] = useState<BookingStep>("register");
+  const [bookingStep, setBookingStep] = useState<BookingStep>("location");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "processing">(
     "idle",
   );
   const [statusMessage, setStatusMessage] = useState("");
+  const [locationStatus, setLocationStatus] = useState<"idle" | "detecting" | "success" | "error">(
+    "idle",
+  );
+  const [locationMessage, setLocationMessage] = useState("");
 
-  const selectedPricingOption = THERAPY_PRICING_OPTIONS.find(
+  const isKenyan = isInKenya(formData.country);
+  const userCurrency = isKenyan ? "KES" : "USD";
+  const availablePricingOptions = THERAPY_PRICING_OPTIONS.filter(
+    (option) => option.currency === userCurrency,
+  );
+  const selectedPricingOption = availablePricingOptions.find(
     (option) => option.id === formData.pricingOptionId,
   );
+
+  const applyDetectedCountry = (country: string, city?: string) => {
+    setFormData((prev) => {
+      const nextCountry = country || prev.country;
+      const next = {
+        ...prev,
+        country: nextCountry,
+      };
+      if (isInKenya(nextCountry) !== isInKenya(prev.country)) {
+        next.pricingOptionId = "";
+      }
+      return next as FormData;
+    });
+
+    setLocationStatus("success");
+    setLocationMessage(
+      country
+        ? `Location detected: ${city ? `${city}, ` : ""}${country}`
+        : "Location detected successfully.",
+    );
+
+    setTimeout(() => {
+      setBookingStep("register");
+    }, 900);
+  };
+
+  const detectByIp = async () => {
+    try {
+      const response = await fetch("https://ipapi.co/json/", {
+        headers: { Accept: "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error("IP location lookup failed.");
+      }
+      const data = await response.json();
+      const country = data?.country_name || "";
+      const city = data?.city || "";
+      if (!country) {
+        throw new Error("IP location lookup returned no country.");
+      }
+      applyDetectedCountry(country, city);
+    } catch (error) {
+      setLocationStatus("error");
+      setLocationMessage(
+        error instanceof Error
+          ? `${error.message} Please click Detect Location to try again.`
+          : "Unable to detect your location. Please click Detect Location to try again.",
+      );
+    }
+  };
+
+  const handleDetectLocation = () => {
+    setLocationStatus("detecting");
+    setLocationMessage("");
+
+    if (!navigator.geolocation) {
+      detectByIp();
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            {
+              headers: {
+                "Accept-Language": "en-US,en;q=0.9",
+              },
+            },
+          );
+
+          if (!response.ok) {
+            throw new Error("Unable to detect location details.");
+          }
+
+          const data = await response.json();
+          const country = data?.address?.country || "";
+          const city =
+            data?.address?.city ||
+            data?.address?.town ||
+            data?.address?.village ||
+            data?.address?.county ||
+            "";
+
+          if (!country) {
+            throw new Error("Unable to detect country from coordinates.");
+          }
+
+          applyDetectedCountry(country, city);
+        } catch {
+          detectByIp();
+        }
+      },
+      () => {
+        detectByIp();
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      },
+    );
+  };
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -164,12 +444,24 @@ const RequestFormSection = () => {
   ) => {
     const target = e.target;
     const { name, value, type } = target;
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? (target as HTMLInputElement).checked : value,
-      ...(name === "assistanceType" && value !== "Other"
-        ? { assistanceOther: "" }
-        : {}),
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === "checkbox" ? (target as HTMLInputElement).checked : value,
+        ...(name === "assistanceType" && value !== "Other"
+          ? { assistanceOther: "" }
+          : {}),
+      } as FormData;
+
+      if (name === "country") {
+        const nextCurrency = isInKenya(value) ? "KES" : "USD";
+        const prevCurrency = isInKenya(prev.country) ? "KES" : "USD";
+        if (nextCurrency !== prevCurrency) {
+          next.pricingOptionId = "";
+        }
+      }
+
+      return next;
     });
   };
 
@@ -247,7 +539,8 @@ const RequestFormSection = () => {
       submitData.set("sessionCategory", selectedPricingOption.category);
       submitData.set("sessionMode", selectedPricingOption.mode);
       submitData.set("sessionCount", String(selectedPricingOption.sessions));
-      submitData.set("sessionAmountKes", String(selectedPricingOption.amount));
+      submitData.set("sessionAmount", String(selectedPricingOption.amount));
+      submitData.set("sessionCurrency", selectedPricingOption.currency);
       submitData.set("termsAccepted", formData.termsAccepted ? "yes" : "no");
       submitData.set("company", "");
 
@@ -295,7 +588,7 @@ const RequestFormSection = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: selectedPricingOption.amount,
-          currency: "KES",
+          currency: selectedPricingOption.currency,
           customer: {
             name: formData.fullName.trim(),
             email: formData.email.trim(),
@@ -311,9 +604,9 @@ const RequestFormSection = () => {
             category: selectedPricingOption.category,
             mode: selectedPricingOption.mode,
             sessions: selectedPricingOption.sessions,
-            amountKes: selectedPricingOption.amount,
+            amount: selectedPricingOption.amount,
             totalAmount: selectedPricingOption.amount,
-            currency: "KES",
+            currency: selectedPricingOption.currency,
             items: [
               {
                 itemId: selectedPricingOption.id,
@@ -359,15 +652,92 @@ const RequestFormSection = () => {
 
   const handleWhatsAppShare = () => {
     if (!selectedPricingOption) return;
-    const message = `*UBURU THERAPY BOOKING*%0A%0A*Package:* ${selectedPricingOption.label}%0A*Name:* ${formData.fullName}%0A*Phone:* ${formData.phone}%0A*Amount:* ${formatAmount(selectedPricingOption.amount)}%0A%0A_I have made the payment via Mpesa Paybill ${PAYBILL_NO}, Acc ${ACCOUNT_NO}._`;
+    const message = `*UBURU THERAPY BOOKING*%0A%0A*Package:* ${selectedPricingOption.label}%0A*Name:* ${formData.fullName}%0A*Phone:* ${formData.phone}%0A*Amount:* ${formatAmount(selectedPricingOption.amount, selectedPricingOption.currency)}%0A%0A_I have made the payment via Mpesa Paybill ${PAYBILL_NO}, Acc ${ACCOUNT_NO}._`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
   };
+
+  const renderLocationStep = () => (
+    <div className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100">
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-bold text-yellow-600">Step 1 of 2</span>
+          <span className="text-sm font-medium text-gray-500">50% Complete</span>
+        </div>
+        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-yellow-500 rounded-full w-1/2" />
+        </div>
+      </div>
+
+      <div className="text-center mb-8">
+        <p className="text-xs font-black uppercase tracking-[0.25em] text-yellow-600 mb-3">
+          Step 1 of 2
+        </p>
+        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+          Help us match you to the right therapist
+        </h2>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Please provide your location to help us find the best support available in your region.
+        </p>
+      </div>
+
+      <div className="max-w-xl mx-auto">
+        <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-4 flex items-start gap-3 mb-6">
+          <MapPin className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" />
+          <p className="text-sm font-medium text-yellow-900">
+            Click below to detect your location.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDetectLocation}
+          disabled={locationStatus === "detecting"}
+          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-full transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+        >
+          {locationStatus === "detecting" ? (
+            <>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              Detecting location...
+            </>
+          ) : (
+            <>
+              <MapPin className="w-5 h-5" />
+              Detect Location
+            </>
+          )}
+        </button>
+
+        {locationStatus === "success" && locationMessage && (
+          <div className="mt-4 rounded-2xl px-5 py-4 text-sm font-bold border bg-green-50 text-green-700 border-green-200 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            {locationMessage}
+          </div>
+        )}
+
+        {locationStatus === "error" && locationMessage && (
+          <div className="mt-4 rounded-2xl px-5 py-4 text-sm font-bold border bg-red-50 text-red-700 border-red-200">
+            {locationMessage}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   const renderForm = () => (
     <form
       onSubmit={handleRegister}
       className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100"
     >
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-bold text-yellow-600">Step 2 of 2</span>
+          <span className="text-sm font-medium text-gray-500">100% Complete</span>
+        </div>
+        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-yellow-500 rounded-full w-full" />
+        </div>
+      </div>
+
       <input
         type="text"
         name="company"
@@ -443,9 +813,13 @@ const RequestFormSection = () => {
               value={formData.country}
               onChange={handleChange}
               required
-              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+              readOnly
+              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none font-bold transition-all cursor-not-allowed"
               placeholder="Country"
             />
+            <p className="text-xs text-gray-500">
+              Location is detected automatically to determine pricing.
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -510,7 +884,7 @@ const RequestFormSection = () => {
               className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
             >
               <option value="">Select package</option>
-              {THERAPY_PRICING_OPTIONS.map((option) => (
+              {availablePricingOptions.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.label}
                 </option>
@@ -837,26 +1211,30 @@ const RequestFormSection = () => {
       <div className="rounded-2xl bg-neutral-50 border border-neutral-200 p-5 text-center">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Total Payable</p>
         <p className="text-3xl font-black text-gray-900 mt-1">
-          {selectedPricingOption ? formatAmount(selectedPricingOption.amount) : "KES 0"}
+          {selectedPricingOption
+            ? formatAmount(selectedPricingOption.amount, selectedPricingOption.currency)
+            : `${userCurrency} 0`}
         </p>
       </div>
 
       <div className="grid gap-4">
-        <button
-          onClick={() => setBookingStep("mpesa_instructions")}
-          className="group flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-yellow-400 hover:bg-yellow-50/50"
-        >
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
-              <span className="font-black">M</span>
+        {isKenyan && (
+          <button
+            onClick={() => setBookingStep("mpesa_instructions")}
+            className="group flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-yellow-400 hover:bg-yellow-50/50"
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
+                <span className="font-black">M</span>
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-black text-gray-900">Mpesa Paybill</p>
+                <p className="text-xs font-semibold text-gray-500">Manual payment via Paybill</p>
+              </div>
             </div>
-            <div className="text-left">
-              <p className="text-sm font-black text-gray-900">Mpesa Paybill</p>
-              <p className="text-xs font-semibold text-gray-500">Manual payment via Paybill</p>
-            </div>
-          </div>
-          <div className="h-6 w-6 rounded-full border-2 border-gray-200 group-hover:border-yellow-400 group-hover:bg-yellow-400" />
-        </button>
+            <div className="h-6 w-6 rounded-full border-2 border-gray-200 group-hover:border-yellow-400 group-hover:bg-yellow-400" />
+          </button>
+        )}
 
         <button
           onClick={handleOnlinePayment}
@@ -937,7 +1315,9 @@ const RequestFormSection = () => {
           <div className="flex justify-between items-center py-2">
             <span className="text-xs font-bold text-green-700 uppercase">Amount</span>
             <span className="text-base font-black text-green-900">
-              {selectedPricingOption ? formatAmount(selectedPricingOption.amount) : "KES 0"}
+              {selectedPricingOption
+                ? formatAmount(selectedPricingOption.amount, selectedPricingOption.currency)
+                : `${userCurrency} 0`}
             </span>
           </div>
         </div>
@@ -992,23 +1372,29 @@ const RequestFormSection = () => {
             <div className="bg-white rounded-2xl border border-amber-100 p-6 shadow-sm">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Therapy Pricing</h3>
               <div className="space-y-4 text-sm">
-                <div>
-                  <p className="font-semibold text-gray-800">Online individual</p>
-                  <p className="text-gray-600">1 session - KES 1,600</p>
-                  <p className="text-gray-600">4 sessions - KES 5,000</p>
-                  <p className="text-gray-600">6 sessions - KES 7,500</p>
-                  <p className="text-gray-600">8 sessions - KES 10,000</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">Physical individual</p>
-                  <p className="text-gray-600">1 session - KES 1,800</p>
-                  <p className="text-gray-600">4 sessions - KES 6,500</p>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-800">Couples therapy</p>
-                  <p className="text-gray-600">Online 1 session - KES 3,000</p>
-                  <p className="text-gray-600">Physical 1 session - KES 3,500</p>
-                </div>
+                {[
+                  { key: "individual-online", label: "Online individual" },
+                  { key: "individual-physical", label: "Physical individual" },
+                  { key: "couples-online", label: "Online couples" },
+                  { key: "couples-physical", label: "Physical couples" },
+                ].map(({ key, label }) => {
+                  const options = availablePricingOptions.filter(
+                    (option) =>
+                      `${option.category.toLowerCase()}-${option.mode.toLowerCase()}` === key,
+                  );
+                  if (options.length === 0) return null;
+                  return (
+                    <div key={key}>
+                      <p className="font-semibold text-gray-800">{label}</p>
+                      {options.map((option) => (
+                        <p key={option.id} className="text-gray-600">
+                          {option.sessions} session{option.sessions > 1 ? "s" : ""} -{" "}
+                          {formatAmount(option.amount, option.currency)}
+                        </p>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1025,6 +1411,7 @@ const RequestFormSection = () => {
           </div>
 
           <div className="lg:col-span-3">
+            {bookingStep === "location" && renderLocationStep()}
             {bookingStep === "register" && renderForm()}
             {bookingStep === "payment" && renderPaymentOptions()}
             {bookingStep === "mpesa_instructions" && renderMpesaInstructions()}

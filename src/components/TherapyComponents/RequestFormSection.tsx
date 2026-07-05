@@ -3,9 +3,11 @@ import Button from "../shared/Button";
 import { Mail, Phone, User, CheckCircle, CreditCard, Send, ArrowLeft, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 
+type TherapyCategory = "Individual" | "Couples" | "Group";
+
 type TherapyPricingOption = {
   id: string;
-  category: "Individual" | "Couples";
+  category: TherapyCategory;
   mode: "Online" | "Physical";
   sessions: number;
   amount: number;
@@ -59,15 +61,6 @@ const THERAPY_PRICING_OPTIONS: TherapyPricingOption[] = [
     amount: 13000,
     currency: "KES",
     label: "Online individual - 10 sessions (KES 13,000)",
-  },
-  {
-    id: "ke-individual-online-12",
-    category: "Individual",
-    mode: "Online",
-    sessions: 12,
-    amount: 15000,
-    currency: "KES",
-    label: "Online individual - 12 sessions (KES 15,000)",
   },
   {
     id: "ke-individual-physical-1",
@@ -243,6 +236,15 @@ const THERAPY_PRICING_OPTIONS: TherapyPricingOption[] = [
   },
 ];
 
+const getPricingCategory = (assistanceType: string): TherapyCategory | null => {
+  if (assistanceType.includes("Couple")) return "Couples";
+  if (assistanceType.includes("Group")) return "Group";
+  if (assistanceType.includes("Individual") || assistanceType.includes("Teens")) {
+    return "Individual";
+  }
+  return null;
+};
+
 const isInKenya = (country: string) => country.trim().toLowerCase() === "kenya";
 
 const PAYBILL_NO = "522522";
@@ -289,6 +291,8 @@ const RequestFormSection = () => {
     assistanceReasonOther: string;
     medication: string;
     pricingOptionId: string;
+    sessionMode: "Online" | "Physical" | "";
+    groupSize: string;
     termsAccepted: boolean;
   };
 
@@ -310,6 +314,8 @@ const RequestFormSection = () => {
     assistanceReasonOther: "",
     medication: "",
     pricingOptionId: "",
+    sessionMode: "",
+    groupSize: "",
     termsAccepted: false,
   });
 
@@ -325,24 +331,51 @@ const RequestFormSection = () => {
 
   const isKenyan = isInKenya(formData.country);
   const userCurrency = isKenyan ? "KES" : "USD";
-  const availablePricingOptions = THERAPY_PRICING_OPTIONS.filter(
-    (option) => option.currency === userCurrency,
-  );
-  const selectedPricingOption = availablePricingOptions.find(
-    (option) => option.id === formData.pricingOptionId,
-  );
+  const pricingCategory = getPricingCategory(formData.assistanceType);
+  const isGroup = pricingCategory === "Group";
+  const requiresMode =
+    isKenyan && pricingCategory !== null && pricingCategory !== "Group";
+
+  const groupSizeNum = Math.max(0, parseInt(formData.groupSize, 10) || 0);
+  const groupPricingOption: TherapyPricingOption | null =
+    isKenyan && isGroup && groupSizeNum >= 3
+      ? {
+          id: "ke-group",
+          category: "Group",
+          mode: "Physical",
+          sessions: 1,
+          amount: groupSizeNum * 1500,
+          currency: "KES",
+          label: `Group therapy - ${groupSizeNum} people (KES ${(groupSizeNum * 1500).toLocaleString("en-KE")})`,
+        }
+      : null;
+
+  const availablePricingOptions = THERAPY_PRICING_OPTIONS.filter((option) => {
+    if (option.currency !== userCurrency) return false;
+    if (pricingCategory === null) return false;
+    if (isGroup) return false;
+    if (option.category !== pricingCategory) return false;
+    if (isKenyan) return option.mode === formData.sessionMode;
+    return option.mode === "Online";
+  });
+
+  const selectedPricingOption =
+    groupPricingOption ||
+    availablePricingOptions.find((option) => option.id === formData.pricingOptionId);
 
   const applyDetectedCountry = (country: string, city?: string) => {
     setFormData((prev) => {
       const nextCountry = country || prev.country;
-      const next = {
+      const next: FormData = {
         ...prev,
         country: nextCountry,
       };
       if (isInKenya(nextCountry) !== isInKenya(prev.country)) {
         next.pricingOptionId = "";
+        next.sessionMode = "";
+        next.groupSize = "";
       }
-      return next as FormData;
+      return next;
     });
 
     setLocationStatus("success");
@@ -445,20 +478,29 @@ const RequestFormSection = () => {
     const target = e.target;
     const { name, value, type } = target;
     setFormData((prev) => {
-      const next = {
+      const next: FormData = {
         ...prev,
         [name]: type === "checkbox" ? (target as HTMLInputElement).checked : value,
-        ...(name === "assistanceType" && value !== "Other"
-          ? { assistanceOther: "" }
-          : {}),
-      } as FormData;
+      };
+
+      if (name === "assistanceType") {
+        next.sessionMode = "";
+        next.pricingOptionId = "";
+        next.groupSize = "";
+      }
 
       if (name === "country") {
         const nextCurrency = isInKenya(value) ? "KES" : "USD";
         const prevCurrency = isInKenya(prev.country) ? "KES" : "USD";
         if (nextCurrency !== prevCurrency) {
           next.pricingOptionId = "";
+          next.sessionMode = "";
+          next.groupSize = "";
         }
+      }
+
+      if (name === "sessionMode") {
+        next.pricingOptionId = "";
       }
 
       return next;
@@ -489,20 +531,23 @@ const RequestFormSection = () => {
     }
 
     if (
-      formData.assistanceType === "Other" &&
-      formData.assistanceOther.trim() === ""
-    ) {
-      setStatus("error");
-      setStatusMessage("Please specify the other assistance type.");
-      return;
-    }
-
-    if (
       formData.assistanceReason.includes("Others") &&
       formData.assistanceReasonOther.trim() === ""
     ) {
       setStatus("error");
       setStatusMessage("Please specify the other reason for assistance.");
+      return;
+    }
+
+    if (requiresMode && !formData.sessionMode) {
+      setStatus("error");
+      setStatusMessage("Please select a session mode (Online or Physical).");
+      return;
+    }
+
+    if (isKenyan && isGroup && groupSizeNum < 3) {
+      setStatus("error");
+      setStatusMessage("Group therapy requires a minimum of 3 people.");
       return;
     }
 
@@ -541,6 +586,9 @@ const RequestFormSection = () => {
       submitData.set("sessionCount", String(selectedPricingOption.sessions));
       submitData.set("sessionAmount", String(selectedPricingOption.amount));
       submitData.set("sessionCurrency", selectedPricingOption.currency);
+      if (selectedPricingOption.category === "Group") {
+        submitData.set("groupSize", String(groupSizeNum));
+      }
       submitData.set("termsAccepted", formData.termsAccepted ? "yes" : "no");
       submitData.set("company", "");
 
@@ -600,19 +648,23 @@ const RequestFormSection = () => {
             packageId: selectedPricingOption.id,
             packageLabel: selectedPricingOption.label,
             itemName: selectedPricingOption.label,
-            quantity: 1,
+            quantity: selectedPricingOption.category === "Group" ? groupSizeNum : 1,
             category: selectedPricingOption.category,
             mode: selectedPricingOption.mode,
             sessions: selectedPricingOption.sessions,
             amount: selectedPricingOption.amount,
             totalAmount: selectedPricingOption.amount,
             currency: selectedPricingOption.currency,
+            ...(selectedPricingOption.category === "Group" ? { groupSize: groupSizeNum } : {}),
             items: [
               {
                 itemId: selectedPricingOption.id,
                 itemName: selectedPricingOption.label,
-                quantity: 1,
-                unitPrice: selectedPricingOption.amount,
+                quantity: selectedPricingOption.category === "Group" ? groupSizeNum : 1,
+                unitPrice:
+                  selectedPricingOption.category === "Group"
+                    ? 1500
+                    : selectedPricingOption.amount,
                 totalAmount: selectedPricingOption.amount,
               },
             ],
@@ -874,30 +926,7 @@ const RequestFormSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="space-y-2 md:col-span-2">
             <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Select therapy package and pricing *
-            </label>
-            <select
-              name="pricingOptionId"
-              value={formData.pricingOptionId}
-              onChange={handleChange}
-              required
-              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-            >
-              <option value="">Select package</option>
-              {availablePricingOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-gray-500">
-              You will choose a payment method after submitting your details.
-            </p>
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              What type of Assistance are you looking for? *
+              What type of therapy are you looking for? *
             </label>
             <select
               name="assistanceType"
@@ -906,30 +935,101 @@ const RequestFormSection = () => {
               required
               className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
             >
-              <option value="">Select assistance type</option>
+              <option value="">Select therapy type</option>
               <option value="Individual Therapy (For Myself)">Individual Therapy (For Myself)</option>
               <option value="Couple Therapy (for myself and my partner)">Couple Therapy (for myself and my partner)</option>
               <option value="Teens Therapy (For child)">Teens Therapy (For child)</option>
-              <option value="Rehab (Addiction)">Rehab (Addiction)</option>
-              <option value="Life coaching">Life coaching</option>
-              <option value="Other">Other</option>
+              {isKenyan && (
+                <option value="Group Therapy">Group Therapy</option>
+              )}
             </select>
           </div>
 
-          {formData.assistanceType === "Other" && (
+          {requiresMode && (
             <div className="space-y-2 md:col-span-2">
               <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Other assistance type *
+                Session mode *
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {["Online", "Physical"].map((option) => (
+                  <label
+                    key={option}
+                    className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                      formData.sessionMode === option
+                        ? "border-yellow-500 bg-yellow-50 text-gray-900"
+                        : "border-gray-200 bg-white text-gray-700"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="sessionMode"
+                      value={option}
+                      checked={formData.sessionMode === option}
+                      onChange={handleChange}
+                      required
+                      className="sr-only"
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isKenyan && isGroup && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Number of people *
               </label>
               <input
-                type="text"
-                name="assistanceOther"
-                value={formData.assistanceOther}
+                type="number"
+                name="groupSize"
+                value={formData.groupSize}
                 onChange={handleChange}
-                required={formData.assistanceType === "Other"}
+                required
+                min={3}
                 className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                placeholder="Please specify"
+                placeholder="Minimum 3 people"
               />
+              <p className="text-sm text-gray-500">
+                Group therapy is charged at KES 1,500 per person.
+              </p>
+            </div>
+          )}
+
+          {!isGroup && availablePricingOptions.length > 0 && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Select therapy package and pricing *
+              </label>
+              <select
+                name="pricingOptionId"
+                value={formData.pricingOptionId}
+                onChange={handleChange}
+                required
+                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+              >
+                <option value="">Select package</option>
+                {availablePricingOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-sm text-gray-500">
+                You will choose a payment method after submitting your details.
+              </p>
+            </div>
+          )}
+
+          {isKenyan && isGroup && groupPricingOption && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
+                Selected package
+              </label>
+              <div className="w-full px-6 py-5 bg-yellow-50 border border-yellow-100 rounded-[1.5rem] font-bold text-gray-900">
+                {groupPricingOption.label}
+              </div>
             </div>
           )}
 
@@ -1372,29 +1472,41 @@ const RequestFormSection = () => {
             <div className="bg-white rounded-2xl border border-amber-100 p-6 shadow-sm">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Therapy Pricing</h3>
               <div className="space-y-4 text-sm">
-                {[
-                  { key: "individual-online", label: "Online individual" },
-                  { key: "individual-physical", label: "Physical individual" },
-                  { key: "couples-online", label: "Online couples" },
-                  { key: "couples-physical", label: "Physical couples" },
-                ].map(({ key, label }) => {
-                  const options = availablePricingOptions.filter(
-                    (option) =>
-                      `${option.category.toLowerCase()}-${option.mode.toLowerCase()}` === key,
-                  );
-                  if (options.length === 0) return null;
-                  return (
-                    <div key={key}>
-                      <p className="font-semibold text-gray-800">{label}</p>
-                      {options.map((option) => (
-                        <p key={option.id} className="text-gray-600">
-                          {option.sessions} session{option.sessions > 1 ? "s" : ""} -{" "}
-                          {formatAmount(option.amount, option.currency)}
-                        </p>
-                      ))}
-                    </div>
-                  );
-                })}
+                {isGroup ? (
+                  <div>
+                    <p className="font-semibold text-gray-800">Group therapy</p>
+                    <p className="text-gray-600">KES 1,500 per person</p>
+                    <p className="text-gray-500 text-xs">Minimum 3 people</p>
+                  </div>
+                ) : availablePricingOptions.length > 0 ? (
+                  (() => {
+                    const grouped = availablePricingOptions.reduce(
+                      (acc, option) => {
+                        const key = `${option.mode} ${option.category.toLowerCase()}`;
+                        if (!acc[key]) acc[key] = [];
+                        acc[key].push(option);
+                        return acc;
+                      },
+                      {} as Record<string, TherapyPricingOption[]>,
+                    );
+                    return Object.entries(grouped).map(([key, options]) => (
+                      <div key={key}>
+                        <p className="font-semibold text-gray-800 capitalize">{key}</p>
+                        {options.map((option) => (
+                          <p key={option.id} className="text-gray-600">
+                            {option.sessions} session{option.sessions > 1 ? "s" : ""} -{" "}
+                            {formatAmount(option.amount, option.currency)}
+                          </p>
+                        ))}
+                      </div>
+                    ));
+                  })()
+                ) : (
+                  <p className="text-gray-500">
+                    Select a therapy type
+                    {isKenyan ? " and session mode" : ""} to see pricing.
+                  </p>
+                )}
               </div>
             </div>
 

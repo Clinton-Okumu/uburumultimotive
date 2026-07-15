@@ -1,8 +1,4 @@
-import {
-  Brain,
-  ChevronDown,
-  ShoppingBag,
-} from "lucide-react";
+import { Brain, ChevronDown, ShoppingBag } from "lucide-react";
 import React, {
   useEffect,
   useRef,
@@ -194,7 +190,7 @@ export const getDropdownItems = [
   {
     icon: ShoppingBag,
     label: "Uburu Home",
-    description: "Shop to support families",
+    description: "shop all needed items",
     href: "/get/home",
   },
   {

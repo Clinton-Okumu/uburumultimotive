@@ -10,6 +10,8 @@ import kidsImage from "../../assets/kids.webp";
 import maa from "../../assets/maa.webp";
 import therapeuticTripImage from "../../assets/glassdoor2.webp";
 import paradiseLostImage from "../../assets/paradiselost.jpg";
+import kitengelaGlassImage from "../../assets/kitengelaglass.webp";
+
 
 const PAYBILL_NO = "522522";
 const ACCOUNT_NO = "1346356009";
@@ -238,6 +240,16 @@ const FeaturedEvents = () => {
       tag: "Uburu Village",
       priceLabel: "KES 3,500 each",
       description: "",
+      minPeople: 1,
+    },
+    {
+      id: "kids-kitengela-glass",
+      title: "Kids Kitengela Glass Adventure",
+      image: kitengelaGlassImage,
+      optionId: "kids-kitengela-glass-resident",
+      tag: "Uburu Village",
+      priceLabel: "KES 4,500 each",
+      description: "Glass art, suspension bridge & mindfulness for kids",
       minPeople: 1,
     },
   ];

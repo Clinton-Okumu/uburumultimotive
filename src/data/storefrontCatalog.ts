@@ -13,6 +13,8 @@ import olooluaNatureTrail from "../assets/oloolua.webp";
 import kidsImage from "../assets/kids.webp";
 import therapeuticTripImage from "../assets/glassdoor2.webp";
 import paradiseLostImage from "../assets/paradiselost.jpg";
+import kitengelaGlassImage from "../assets/kitengelaglass.webp";
+
 
 export type StorefrontSource = "home" | "village";
 
@@ -357,6 +359,23 @@ villageEventOptions.push(
     currency: "KES",
     tag: "Resident",
     image: paradiseLostImage,
+  },
+);
+
+villageEventOptions.push(
+  {
+    id: "kids-kitengela-glass-resident",
+    packageId: "kids-kitengela-glass",
+    campId: "kids-kitengela-glass",
+    campName: "Kids Kitengela Glass Adventure",
+    residencyType: "resident",
+    mealPlanLabel: "All year",
+    availableMonths: ["july", "august", "september", "october"],
+    name: "Kids Kitengela Glass Adventure (Resident)",
+    price: 4500,
+    currency: "KES",
+    tag: "Resident",
+    image: kitengelaGlassImage,
   },
 );
 

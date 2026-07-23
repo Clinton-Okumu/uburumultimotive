@@ -8,9 +8,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$defaultConfigPath = dirname(__DIR__, 3) . '/dpo_config.php';
-$configPath = getenv('DPO_CONFIG_PATH') ?: $defaultConfigPath;
-if (!file_exists($configPath)) {
+$explicitPath = (string)(getenv('DPO_CONFIG_PATH') ?: '');
+$home = (string)(getenv('HOME') ?: ($_SERVER['HOME'] ?? ''));
+$homeConfigPath = $home !== '' ? rtrim($home, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'dpo_config.php' : '';
+$defaultConfigPath3 = dirname(__DIR__, 3) . '/dpo_config.php';
+$defaultConfigPath2 = dirname(__DIR__, 2) . '/dpo_config.php';
+
+$candidates = array_values(array_filter([
+    $explicitPath,
+    $homeConfigPath,
+    $defaultConfigPath3,
+    $defaultConfigPath2,
+]));
+
+$configPath = '';
+foreach ($candidates as $candidate) {
+    if (file_exists($candidate)) {
+        $configPath = $candidate;
+        break;
+    }
+}
+
+if ($configPath === '') {
     http_response_code(500);
     echo json_encode(['error' => 'Server configuration missing']);
     exit;

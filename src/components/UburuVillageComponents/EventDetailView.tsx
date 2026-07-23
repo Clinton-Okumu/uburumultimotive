@@ -29,6 +29,8 @@ import kidsImage from "../../assets/kids.webp";
 import olooluaNatureTrail from "../../assets/oloolua.webp";
 import paradiseLostImage from "../../assets/paradiselost.jpg";
 import maaImage from "../../assets/maa.webp";
+import kitengelaGlassImage from "../../assets/kitengelaglass.webp";
+
 
 const PAYBILL_NO = "522522";
 const ACCOUNT_NO = "1346356009";
@@ -83,7 +85,8 @@ export const uburuEventsDetailData: Record<string, EventDetailData> = {
     optionId: "therapeutic-trip-resident",
     title: "Therapeutic trip to (glassdoor Kitengela)",
     image: glassdoor2Image,
-    location: "Kitengela Glass Trust (Anselm Hot Glass), Kajiado",
+    location: "Kitengela Glass is located on the edge of Nairobi National Park, south of Nairobi near Ongata Rongai.",
+
     datesText: "",
     availableDates: [],
     host: "Uburu Village",
@@ -172,6 +175,32 @@ export const uburuEventsDetailData: Record<string, EventDetailData> = {
       "Full day game drives in Maasai Mara National Reserve",
       "Comfortable tented camp accommodation & meals",
       "Professional safari guide & transport",
+    ],
+    minPeople: 1,
+  },
+  "kids-kitengela-glass": {
+    id: "kids-kitengela-glass",
+    optionId: "kids-kitengela-glass-resident",
+    title: "Kids Kitengela Glass Adventure",
+    image: kitengelaGlassImage,
+    location: "Kitengela Glass is located on the edge of Nairobi National Park, south of Nairobi near Ongata Rongai.",
+
+    datesText: "",
+    availableDates: [],
+    host: "Uburu Village",
+    price: 4500,
+    currency: "KES",
+    priceLabel: "KES 4,500 each",
+    ticketName: "Kids Kitengela Ticket",
+    ticketNote: "Includes guided glass tour, suspension bridge walk, art workshop & snacks",
+    description:
+      "A fun-filled therapeutic outdoor adventure tailored for children at Kitengela Glass! Features nature exploration, glass art discovery, suspension bridge walk, creative arts, team bonding games, and guided mindfulness activities in a safe, nurturing environment. All proceeds directly support Uburu Village shelter and child support programs.",
+    highlights: [
+      "Guided tour of Anselm Hot Glass studios & mosaic art",
+      "Exciting suspension bridge walk & outdoor nature explore",
+      "Mindfulness & creative glass craft workshop for kids",
+      "Healthy snacks & refreshments included",
+      "Direct support to Uburu Village children's shelter",
     ],
     minPeople: 1,
   },

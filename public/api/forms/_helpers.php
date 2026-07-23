@@ -26,7 +26,8 @@ function require_post_json(): array
 
 function load_mail_config(): array
 {
-    $defaultConfigPath = dirname(__DIR__, 3) . '/mail_config.php';
+    $defaultConfigPath3 = dirname(__DIR__, 3) . '/mail_config.php';
+    $defaultConfigPath2 = dirname(__DIR__, 2) . '/mail_config.php';
     $explicitPath = (string)(getenv('MAIL_CONFIG_PATH') ?: '');
     $home = (string)(getenv('HOME') ?: ($_SERVER['HOME'] ?? ''));
     $homeConfigPath = $home !== ''
@@ -36,7 +37,8 @@ function load_mail_config(): array
     $candidates = array_values(array_filter([
         $explicitPath,
         $homeConfigPath,
-        $defaultConfigPath,
+        $defaultConfigPath3,
+        $defaultConfigPath2,
     ]));
 
     $configPath = '';

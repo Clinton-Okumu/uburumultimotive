@@ -1,5 +1,16 @@
-import { ArrowRight, Facebook, Instagram, Linkedin } from "lucide-react";
+import { ArrowRight, Facebook, Instagram } from "lucide-react";
 import logo from "../../assets/logo.webp";
+
+const TikTokIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
+  <svg
+    className={className}
+    fill="currentColor"
+    viewBox="0 0 24 24"
+    aria-hidden="true"
+  >
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.29 0 .56.05.82.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 3 15.68 6.34 6.34 0 0 0 9.34 22a6.34 6.34 0 0 0 6.34-6.34V9.05a8.16 8.16 0 0 0 4.91 1.64V7.24a4.85 4.85 0 0 1-1-.55z"/>
+  </svg>
+);
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -35,19 +46,58 @@ const Footer = () => {
 
   const socialLinks = [
     {
-      name: "Instagram",
+      name: "Therapy",
+      platform: "IG",
+      url: "https://www.instagram.com/uburu_therapy?igsh=YjNpd3JkajZ0Nnh2",
+      icon: <Instagram className="h-3.5 w-3.5" />,
+    },
+    {
+      name: "Therapy",
+      platform: "TikTok",
+      url: "https://vm.tiktok.com/ZS9rh1pN7BRSq-pXrcz/",
+      icon: <TikTokIcon className="h-3.5 w-3.5" />,
+    },
+    {
+      name: "Village",
+      platform: "IG",
+      url: "https://www.instagram.com/uburu_village?igsh=MWd6NzBqbzJsdTJ0eg==",
+      icon: <Instagram className="h-3.5 w-3.5" />,
+    },
+    {
+      name: "Village",
+      platform: "TikTok",
+      url: "https://vm.tiktok.com/ZS9rh1pN7BRSq-pXrcz/",
+      icon: <TikTokIcon className="h-3.5 w-3.5" />,
+    },
+    {
+      name: "Home",
+      platform: "IG",
+      url: "https://www.instagram.com/uburu_home?igsh=MWRxazlyemhidWJwaQ==",
+      icon: <Instagram className="h-3.5 w-3.5" />,
+    },
+    {
+      name: "Home",
+      platform: "TikTok",
+      url: "https://vm.tiktok.com/ZS9rhJNM6R8dG-pQ0fn/",
+      icon: <TikTokIcon className="h-3.5 w-3.5" />,
+    },
+    {
+      name: "Initiatives",
+      platform: "IG",
       url: "https://www.instagram.com/uburu_initiatives/",
-      icon: <Instagram className="h-5 w-5" />,
+      icon: <Instagram className="h-3.5 w-3.5" />,
+    },
+    {
+      name: "NGO",
+      platform: "IG",
+      url: "https://www.instagram.com/uburumultimove_ngo/",
+      icon: <Instagram className="h-3.5 w-3.5" />,
     },
     {
       name: "Facebook",
+      platform: "FB",
       url: "https://www.facebook.com/people/Uburu-Multimove-Hs/100094629176628/",
-      icon: <Facebook className="h-5 w-5" />,
-    },
-    {
-      name: "LinkedIn",
-      url: "https://www.instagram.com/uburumultimove_ngo/",
-      icon: <Linkedin className="h-5 w-5" />,
+      icon: <Facebook className="h-3.5 w-3.5" />,
     },
   ];
 
@@ -68,21 +118,30 @@ const Footer = () => {
                 UBURU<span className="text-yellow-400">MULTIMOVE</span>
               </span>
             </div>
-            <p className="text-gray-400 mb-8 max-w-sm leading-relaxed text-base">
+            <p className="text-gray-400 mb-6 max-w-sm leading-relaxed text-base">
               Providing safe shelter, warm meals, and compassionate support to
               help families rebuild their lives with dignity and hope.
             </p>
-            <div className="flex space-x-3">
-              {socialLinks.map((social, index) => (
-                <a
-                  key={index}
-                  href={social.url}
-                  className="bg-neutral-900 border border-neutral-800 text-gray-400 hover:text-black hover:bg-yellow-400 p-3 rounded-xl transition-all duration-300 shadow-lg"
-                  aria-label={social.name}
-                >
-                  {social.icon}
-                </a>
-              ))}
+            <div>
+              <p className="text-xs font-black uppercase tracking-widest text-yellow-400 mb-3">
+                Connect With Our Entities
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {socialLinks.map((social, index) => (
+                  <a
+                    key={index}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-neutral-900 border border-neutral-800 text-gray-300 hover:text-black hover:bg-yellow-400 px-3 py-1.5 rounded-xl transition-all duration-300 shadow-md flex items-center gap-1.5 text-xs font-semibold"
+                    aria-label={`Uburu ${social.name} ${social.platform}`}
+                    title={`Uburu ${social.name} - ${social.platform}`}
+                  >
+                    {social.icon}
+                    <span>{social.name} ({social.platform})</span>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
 

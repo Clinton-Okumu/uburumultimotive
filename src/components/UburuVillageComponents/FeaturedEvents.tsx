@@ -6,8 +6,9 @@ import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { villageEventOptions, type VillageEventOption } from "../../data/storefrontCatalog";
 import olooluaNatureTrail from "../../assets/oloolua.webp";
+import kidsImage from "../../assets/kids.webp";
 import maa from "../../assets/maa.webp";
-import therapeuticTripImage from "../../assets/kitengela.jpg";
+import therapeuticTripImage from "../../assets/glassdoor2.webp";
 import paradiseLostImage from "../../assets/paradiselost.jpg";
 
 const PAYBILL_NO = "522522";
@@ -205,9 +206,19 @@ const FeaturedEvents = () => {
       image: olooluaNatureTrail,
       optionId: "oloolua-nature-trail-group",
       tag: "Uburu Village",
-      priceLabel: "KES 1,500 each",
+      priceLabel: "KES 4,000 each",
       description: "Group bookings: min 5 people",
       minPeople: 5,
+    },
+    {
+      id: "kids-outdoor-adventure",
+      title: "Kids Outdoor & Wellness Adventure",
+      image: kidsImage,
+      optionId: "kids-outdoor-adventure-resident",
+      tag: "Uburu Village",
+      priceLabel: "KES 3,500 each",
+      description: "Outdoor fun, arts & mindfulness for children",
+      minPeople: 1,
     },
     {
       id: "therapeutic-trip",
@@ -215,7 +226,7 @@ const FeaturedEvents = () => {
       image: therapeuticTripImage,
       optionId: "therapeutic-trip-resident",
       tag: "Uburu Village",
-      priceLabel: "KES 2,999 each",
+      priceLabel: "KES 4,500 each",
       description: "",
       minPeople: 1,
     },
@@ -313,12 +324,21 @@ const FeaturedEvents = () => {
                     </div>
                   )}
 
-                  <Button
-                    onClick={() => option && openBooking(option)}
-                    className="mt-8 w-full bg-[#2f6f99] py-3 text-xs font-black uppercase tracking-[0.3em] text-white hover:bg-[#3b83b4]"
-                  >
-                    Book Now
-                  </Button>
+                  <div className="mt-8 flex flex-col gap-2">
+                    <Button
+                      onClick={() => navigate(`/get/village/event/${event.id}`)}
+                      className="w-full bg-[#1c3b57] py-3 text-xs font-black uppercase tracking-[0.25em] text-white hover:bg-[#2a4d6e]"
+                    >
+                      View Event Details
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => option && openBooking(option)}
+                      className="w-full py-2 text-[11px] font-black uppercase tracking-widest text-[#2f6f99] hover:text-[#1c3b57] text-center"
+                    >
+                      Quick Book
+                    </button>
+                  </div>
                 </div>
               </div>
             );

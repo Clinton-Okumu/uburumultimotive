@@ -10,7 +10,8 @@ import culturalEvent from "../assets/Screenshot-2026-02-20_10-06-49.webp";
 import communityPainting from "../assets/community-painting-wood-medium-shot.webp";
 import footballCircle from "../assets/top-view-childs-feet-around-football-ball.webp";
 import olooluaNatureTrail from "../assets/oloolua.webp";
-import therapeuticTripImage from "../assets/kitengela.jpg";
+import kidsImage from "../assets/kids.webp";
+import therapeuticTripImage from "../assets/glassdoor2.webp";
 import paradiseLostImage from "../assets/paradiselost.jpg";
 
 export type StorefrontSource = "home" | "village";
@@ -302,11 +303,28 @@ villageEventOptions.push({
   mealPlanLabel: "All year",
   availableMonths: ["july", "august", "september", "october"],
   name: "Oloolua nature trail (Group 5+)",
-  price: 1500,
+  price: 4000,
   currency: "KES",
   tag: "Group 5+",
   image: olooluaNatureTrail,
 });
+
+villageEventOptions.push(
+  {
+    id: "kids-outdoor-adventure-resident",
+    packageId: "kids-outdoor-adventure",
+    campId: "kids-outdoor-adventure",
+    campName: "Kids Outdoor & Wellness Adventure",
+    residencyType: "resident",
+    mealPlanLabel: "All year",
+    availableMonths: ["july", "august", "september", "october"],
+    name: "Kids Outdoor & Wellness Adventure (Resident)",
+    price: 3500,
+    currency: "KES",
+    tag: "Resident",
+    image: kidsImage,
+  },
+);
 
 villageEventOptions.push(
   {
@@ -318,7 +336,7 @@ villageEventOptions.push(
     mealPlanLabel: "All year",
     availableMonths: ["july", "august", "september", "october"],
     name: "Therapeutic trip to (glassdoor Kitengela) (Resident)",
-    price: 2999,
+    price: 4500,
     currency: "KES",
     tag: "Resident",
     image: therapeuticTripImage,

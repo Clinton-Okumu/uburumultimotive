@@ -20,6 +20,7 @@ import MaasaiMaraPackage from './pages/MaasaiMaraPackage';
 import Checkout from './pages/Checkout';
 import TherapyTerms from './pages/TherapyTerms';
 import TravelTerms from './pages/TravelTerms';
+import EventDetail from './pages/EventDetail';
 
 
 import ScrollToTop from './components/shared/ScrollToTop';
@@ -48,6 +49,8 @@ function App() {
                     <Route path="/get/therapy/terms" element={<TherapyTerms />} />
                     <Route path="/get/home" element={<UburuHome />} />
                     <Route path="/get/village" element={<UburuVillage />} />
+                    <Route path="/get/village/event/:eventId" element={<EventDetail />} />
+                    <Route path="/get/village/event" element={<EventDetail />} />
                     <Route path="/get/village/maasai-mara" element={<MaasaiMaraPackage />} />
                     <Route path="/get/village/terms" element={<TravelTerms />} />
                     <Route path="/checkout" element={<Checkout />} />

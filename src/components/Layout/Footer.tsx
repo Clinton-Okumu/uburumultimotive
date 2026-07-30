@@ -66,7 +66,7 @@ const Footer = () => {
     {
       name: "Village",
       platform: "TikTok",
-      url: "https://vm.tiktok.com/ZS9rh1pN7BRSq-pXrcz/",
+      url: "https://www.tiktok.com/@uburu.village",
       icon: <TikTokIcon className="h-3.5 w-3.5" />,
     },
     {
@@ -82,12 +82,6 @@ const Footer = () => {
       icon: <TikTokIcon className="h-3.5 w-3.5" />,
     },
     {
-      name: "Initiatives",
-      platform: "IG",
-      url: "https://www.instagram.com/uburu_initiatives/",
-      icon: <Instagram className="h-3.5 w-3.5" />,
-    },
-    {
       name: "NGO",
       platform: "IG",
       url: "https://www.instagram.com/uburumultimove_ngo/",
@@ -96,7 +90,7 @@ const Footer = () => {
     {
       name: "Facebook",
       platform: "FB",
-      url: "https://www.facebook.com/people/Uburu-Multimove-Hs/100094629176628/",
+      url: "https://www.facebook.com/profile.php?id=100094629176628",
       icon: <Facebook className="h-3.5 w-3.5" />,
     },
   ];

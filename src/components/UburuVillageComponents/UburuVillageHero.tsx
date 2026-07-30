@@ -89,7 +89,7 @@ const UburuVillageHero = () => {
           </a>
 
           <a
-            href="https://vm.tiktok.com/ZS9rh1pN7BRSq-pXrcz/"
+            href="https://www.tiktok.com/@uburu.village"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 bg-black text-white px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-neutral-900 hover:scale-[1.02] transition-all shadow-lg border border-white/20"

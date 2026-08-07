@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Button from "../shared/Button";
 import { Mail, Phone, User, CheckCircle, CreditCard, Send, ArrowLeft, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -239,7 +239,12 @@ const THERAPY_PRICING_OPTIONS: TherapyPricingOption[] = [
 const getPricingCategory = (assistanceType: string): TherapyCategory | null => {
   if (assistanceType.includes("Couple")) return "Couples";
   if (assistanceType.includes("Group")) return "Group";
-  if (assistanceType.includes("Individual") || assistanceType.includes("Teens")) {
+  if (
+    assistanceType.includes("Individual") ||
+    assistanceType.includes("Teens") ||
+    assistanceType.includes("Coaching") ||
+    assistanceType.includes("Consultation")
+  ) {
     return "Individual";
   }
   return null;
@@ -248,7 +253,7 @@ const getPricingCategory = (assistanceType: string): TherapyCategory | null => {
 const isInKenya = (country: string) => country.trim().toLowerCase() === "kenya";
 
 const PAYBILL_NO = "522522";
-const ACCOUNT_NO = "1346356009";
+const ACCOUNT_NO = "1346356289";
 const WHATSAPP_NUMBER = "254718421205";
 
 const formatAmount = (amount: number, currency: string = "KES") => {
@@ -272,7 +277,17 @@ const getFriendlyPaymentErrorMessage = (message: string) => {
 
 type BookingStep = "location" | "register" | "payment" | "mpesa_instructions";
 
-const RequestFormSection = () => {
+interface RequestFormSectionProps {
+  selectedService?: string;
+  onServiceChange?: (service: string) => void;
+  onBack?: () => void;
+}
+
+const RequestFormSection = ({
+  selectedService,
+  onServiceChange,
+  onBack,
+}: RequestFormSectionProps = {}) => {
   type FormData = {
     fullName: string;
     email: string;
@@ -303,7 +318,7 @@ const RequestFormSection = () => {
     gender: "",
     country: "",
     age: "",
-    assistanceType: "",
+    assistanceType: selectedService || "",
     assistanceOther: "",
     practitionerGender: "",
     financialStatus: "",
@@ -318,6 +333,18 @@ const RequestFormSection = () => {
     groupSize: "",
     termsAccepted: false,
   });
+
+  useEffect(() => {
+    if (selectedService && selectedService !== formData.assistanceType) {
+      setFormData((prev) => ({
+        ...prev,
+        assistanceType: selectedService,
+        sessionMode: "",
+        pricingOptionId: "",
+        groupSize: "",
+      }));
+    }
+  }, [selectedService]);
 
   const [bookingStep, setBookingStep] = useState<BookingStep>("location");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error" | "processing">(
@@ -363,7 +390,7 @@ const RequestFormSection = () => {
     groupPricingOption ||
     availablePricingOptions.find((option) => option.id === formData.pricingOptionId);
 
-  const applyDetectedCountry = (country: string, city?: string) => {
+  const applyDetectedCountry = (country: string) => {
     setFormData((prev) => {
       const nextCountry = country || prev.country;
       const next: FormData = {
@@ -381,8 +408,8 @@ const RequestFormSection = () => {
     setLocationStatus("success");
     setLocationMessage(
       country
-        ? `Location detected: ${city ? `${city}, ` : ""}${country}`
-        : "Location detected successfully.",
+        ? `Country detected: ${country}`
+        : "Country detected successfully.",
     );
 
     setTimeout(() => {
@@ -396,21 +423,20 @@ const RequestFormSection = () => {
         headers: { Accept: "application/json" },
       });
       if (!response.ok) {
-        throw new Error("IP location lookup failed.");
+        throw new Error("IP country lookup failed.");
       }
       const data = await response.json();
       const country = data?.country_name || "";
-      const city = data?.city || "";
       if (!country) {
-        throw new Error("IP location lookup returned no country.");
+        throw new Error("IP country lookup returned no country.");
       }
-      applyDetectedCountry(country, city);
+      applyDetectedCountry(country);
     } catch (error) {
       setLocationStatus("error");
       setLocationMessage(
         error instanceof Error
-          ? `${error.message} Please click Detect Location to try again.`
-          : "Unable to detect your location. Please click Detect Location to try again.",
+          ? `${error.message} Please click Detect Country to try again.`
+          : "Unable to detect your country. Please click Detect Country to try again.",
       );
     }
   };
@@ -438,23 +464,17 @@ const RequestFormSection = () => {
           );
 
           if (!response.ok) {
-            throw new Error("Unable to detect location details.");
+            throw new Error("Unable to detect country.");
           }
 
           const data = await response.json();
           const country = data?.address?.country || "";
-          const city =
-            data?.address?.city ||
-            data?.address?.town ||
-            data?.address?.village ||
-            data?.address?.county ||
-            "";
 
           if (!country) {
             throw new Error("Unable to detect country from coordinates.");
           }
 
-          applyDetectedCountry(country, city);
+          applyDetectedCountry(country);
         } catch {
           detectByIp();
         }
@@ -487,6 +507,7 @@ const RequestFormSection = () => {
         next.sessionMode = "";
         next.pricingOptionId = "";
         next.groupSize = "";
+        onServiceChange?.(value);
       }
 
       if (name === "country") {
@@ -708,64 +729,89 @@ const RequestFormSection = () => {
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${message}`, "_blank");
   };
 
-  const renderLocationStep = () => (
-    <div className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100">
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-bold text-yellow-600">Step 1 of 2</span>
-          <span className="text-sm font-medium text-gray-500">50% Complete</span>
-        </div>
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-yellow-500 rounded-full w-1/2" />
-        </div>
-      </div>
+  const getServiceHeader = () => {
+    const service = formData.assistanceType || selectedService || "";
+    if (service.includes("Coaching")) {
+      return {
+        badge: "Life Coaching Request",
+        title: "Help us match you to the right life coach",
+        subtitle: "Please provide your location to help us find the best life coach available in your region.",
+      };
+    }
+    if (service.includes("Consultation")) {
+      return {
+        badge: "Medical Consultation Request",
+        title: "Help us match you to the right medical consultant",
+        subtitle: "Please provide your location to help us find the best medical expert available in your region.",
+      };
+    }
+    return {
+      badge: "Therapy Request",
+      title: "Help us match you to the right therapist",
+      subtitle: "Please provide your location to help us find the best therapist available in your region.",
+    };
+  };
 
-      <div className="text-center mb-8">
-        <p className="text-xs font-black uppercase tracking-[0.25em] text-yellow-600 mb-3">
-          Step 1 of 2
-        </p>
-        <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-          Help us match you to the right therapist
-        </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-          Please provide your location to help us find the best support available in your region.
-        </p>
-      </div>
+  const renderLocationStep = () => {
+    const serviceHeader = getServiceHeader();
+    return (
+      <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-neutral-200/80 shadow-sm max-w-3xl mx-auto">
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-neutral-600 hover:text-yellow-600 mb-6 bg-white hover:bg-yellow-100 px-5 py-2.5 rounded-full transition-all border border-neutral-200/80 shadow-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Support Pathways
+          </button>
+        )}
 
-      <div className="max-w-xl mx-auto">
-        <div className="bg-yellow-50 border border-yellow-100 rounded-2xl p-4 flex items-start gap-3 mb-6">
-          <MapPin className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" />
-          <p className="text-sm font-medium text-yellow-900">
-            Click below to detect your location.
+        <div className="text-center mb-8">
+          <span className="inline-flex items-center gap-2 bg-neutral-900 text-yellow-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+            {serviceHeader.badge}
+          </span>
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4 tracking-tight">
+            {serviceHeader.title}
+          </h2>
+          <p className="text-gray-600 text-base max-w-xl mx-auto font-medium">
+            {serviceHeader.subtitle}
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleDetectLocation}
-          disabled={locationStatus === "detecting"}
-          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-full transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-        >
-          {locationStatus === "detecting" ? (
-            <>
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
-              Detecting location...
-            </>
-          ) : (
-            <>
-              <MapPin className="w-5 h-5" />
-              Detect Location
-            </>
-          )}
-        </button>
+        <div className="max-w-xl mx-auto space-y-6">
+          <div className="bg-yellow-50/80 border border-yellow-200/80 rounded-2xl p-5 flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" />
+            <p className="text-sm font-semibold text-yellow-950">
+              Click below to detect your country. This helps us display the accurate package pricing for your region.
+            </p>
+          </div>
 
-        {locationStatus === "success" && locationMessage && (
-          <div className="mt-4 rounded-2xl px-5 py-4 text-sm font-bold border bg-green-50 text-green-700 border-green-200 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDetectLocation}
+            disabled={locationStatus === "detecting"}
+            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase tracking-wider py-5 rounded-2xl transition-all duration-300 shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-2.5 text-xs disabled:opacity-70"
+          >
+            {locationStatus === "detecting" ? (
+              <>
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                <span>Detecting country...</span>
+              </>
+            ) : (
+              <>
+                <MapPin className="w-4 h-4" />
+                <span>Detect Country</span>
+              </>
+            )}
+          </button>
+
+          {locationStatus === "success" && locationMessage && (
+            <div className="mt-4 rounded-2xl px-5 py-4 text-sm font-bold border bg-green-50 text-green-700 border-green-200 flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />
             {locationMessage}
           </div>
         )}
-
         {locationStatus === "error" && locationMessage && (
           <div className="mt-4 rounded-2xl px-5 py-4 text-sm font-bold border bg-red-50 text-red-700 border-red-200">
             {locationMessage}
@@ -774,22 +820,10 @@ const RequestFormSection = () => {
       </div>
     </div>
   );
+};
 
   const renderForm = () => (
-    <form
-      onSubmit={handleRegister}
-      className="bg-white rounded-3xl p-7 shadow-lg border border-amber-100"
-    >
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-bold text-yellow-600">Step 2 of 2</span>
-          <span className="text-sm font-medium text-gray-500">100% Complete</span>
-        </div>
-        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div className="h-full bg-yellow-500 rounded-full w-full" />
-        </div>
-      </div>
-
+    <form onSubmit={handleRegister} className="space-y-8">
       <input
         type="text"
         name="company"
@@ -798,507 +832,527 @@ const RequestFormSection = () => {
         className="hidden"
       />
 
-      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Client details</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              What are your names ? *
-            </label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
-                className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                placeholder="Full name"
-              />
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-neutral-600 hover:text-yellow-600 mb-2 bg-white hover:bg-yellow-100 px-5 py-2.5 rounded-full transition-all border border-neutral-200/80 shadow-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Support Pathways
+        </button>
+      )}
+
+      {/* SECTION 1: Client Personal Details & Gender */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Card 1: Client Details */}
+        <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+          <h3 className="text-xl font-bold text-gray-900">
+            Client details <span className="text-red-500">*</span>
+          </h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block mb-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                What are your names? *
+              </label>
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-12 pr-5 py-4 bg-neutral-50/80 border border-neutral-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all text-gray-900 placeholder:text-gray-400"
+                  placeholder="Full name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Client email address? *
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-12 pr-5 py-4 bg-neutral-50/80 border border-neutral-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all text-gray-900 placeholder:text-gray-400"
+                  placeholder="name@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Client phone number? *
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  className="w-full pl-12 pr-5 py-4 bg-neutral-50/80 border border-neutral-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all text-gray-900 placeholder:text-gray-400"
+                  placeholder="+254 123 456 789"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block mb-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Client's age? *
+                </label>
+                <input
+                  type="number"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleChange}
+                  required
+                  min={1}
+                  className="w-full px-5 py-4 bg-neutral-50/80 border border-neutral-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all text-gray-900 placeholder:text-gray-400"
+                  placeholder="Age"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  Detected Country
+                </label>
+                <input
+                  type="text"
+                  name="country"
+                  value={formData.country}
+                  readOnly
+                  className="w-full px-5 py-4 bg-neutral-100 border border-neutral-200/80 rounded-2xl font-bold text-gray-700 cursor-not-allowed"
+                />
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Client email address? *
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                placeholder="name@example.com"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Client phone number ? *
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="w-full pl-12 pr-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                placeholder="+254 123 456 789"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Country client is in ? *
-            </label>
-            <input
-              type="text"
-              name="country"
-              value={formData.country}
-              onChange={handleChange}
-              required
-              readOnly
-              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none font-bold transition-all cursor-not-allowed"
-              placeholder="Country"
-            />
-            <p className="text-xs text-gray-500">
-              Location is detected automatically to determine pricing.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              What is Client's age? *
-            </label>
-            <input
-              type="number"
-              name="age"
-              value={formData.age}
-              onChange={handleChange}
-              required
-              min={1}
-              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-              placeholder="Age"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Gender of Client? *
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {["Woman", "Man"].map((option) => (
-                <label
-                  key={option}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+        {/* Card 2: Gender of Client */}
+        <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5 flex flex-col justify-between">
+          <h3 className="text-xl font-bold text-gray-900">
+            Gender of Client? <span className="text-red-500">*</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-3 mt-auto">
+            {["Woman", "Man"].map((option) => (
+              <label
+                key={option}
+                className={`cursor-pointer rounded-2xl border p-5 text-sm font-bold transition-all flex items-center justify-between ${
+                  formData.gender === option
+                    ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                    : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                }`}
+              >
+                <span>{option}</span>
+                <input
+                  type="radio"
+                  name="gender"
+                  value={option}
+                  checked={formData.gender === option}
+                  onChange={handleChange}
+                  required
+                  className="sr-only"
+                />
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     formData.gender === option
-                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                      : "border-gray-200 bg-white text-gray-700"
+                      ? "border-yellow-500 bg-yellow-500"
+                      : "border-gray-300"
                   }`}
                 >
-                  <input
-                    type="radio"
-                    name="gender"
-                    value={option}
-                    checked={formData.gender === option}
-                    onChange={handleChange}
-                    required
-                    className="sr-only"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
+                  {formData.gender === option && <div className="w-2 h-2 rounded-full bg-black" />}
+                </div>
+              </label>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Service preferences</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2 md:col-span-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              What type of therapy are you looking for? *
-            </label>
-            <select
-              name="assistanceType"
-              value={formData.assistanceType}
-              onChange={handleChange}
-              required
-              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-            >
-              <option value="">Select therapy type</option>
-              <option value="Individual Therapy (For Myself)">Individual Therapy (For Myself)</option>
-              <option value="Couple Therapy (for myself and my partner)">Couple Therapy (for myself and my partner)</option>
-              <option value="Teens Therapy (For child)">Teens Therapy (For child)</option>
-              {isKenyan && (
-                <option value="Group Therapy">Group Therapy</option>
-              )}
-            </select>
-          </div>
-
-          {requiresMode && (
-            <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Session mode *
+      {/* SECTION 2: Service Preferences */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Card 3: Type of Therapy */}
+        <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5 md:col-span-2">
+          <h3 className="text-xl font-bold text-gray-900">
+            What type of support are you looking for? <span className="text-red-500">*</span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { label: "Individual Therapy (For Myself)", val: "Individual Therapy (For Myself)" },
+              { label: "Couple Therapy (For Couples)", val: "Couple Therapy (for myself and my partner)" },
+              { label: "Teens Therapy (For Child)", val: "Teens Therapy (For child)" },
+              { label: "Life Coaching", val: "Life Coaching" },
+              { label: "Medical Consultation", val: "Medical Consultation" },
+              ...(isKenyan ? [{ label: "Group Therapy", val: "Group Therapy" }] : []),
+            ].map((item) => (
+              <label
+                key={item.val}
+                className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold transition-all flex items-center justify-between ${
+                  formData.assistanceType === item.val
+                    ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                    : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                }`}
+              >
+                <span>{item.label}</span>
+                <input
+                  type="radio"
+                  name="assistanceType"
+                  value={item.val}
+                  checked={formData.assistanceType === item.val}
+                  onChange={handleChange}
+                  required
+                  className="sr-only"
+                />
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 ${
+                    formData.assistanceType === item.val
+                      ? "border-yellow-500 bg-yellow-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {formData.assistanceType === item.val && (
+                    <div className="w-2 h-2 rounded-full bg-black" />
+                  )}
+                </div>
               </label>
-              <div className="grid grid-cols-2 gap-3">
-                {["Online", "Physical"].map((option) => (
-                  <label
-                    key={option}
-                    className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+            ))}
+          </div>
+        </div>
+
+        {/* Card 4: Session Mode */}
+        {requiresMode && (
+          <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+            <h3 className="text-xl font-bold text-gray-900">
+              Session Mode <span className="text-red-500">*</span>
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {["Online", "Physical"].map((option) => (
+                <label
+                  key={option}
+                  className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold transition-all flex items-center justify-between ${
+                    formData.sessionMode === option
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                      : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                  }`}
+                >
+                  <span>{option === "Physical" ? "In Person" : "Online"}</span>
+                  <input
+                    type="radio"
+                    name="sessionMode"
+                    value={option}
+                    checked={formData.sessionMode === option}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       formData.sessionMode === option
-                        ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                        : "border-gray-200 bg-white text-gray-700"
+                        ? "border-yellow-500 bg-yellow-500"
+                        : "border-gray-300"
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="sessionMode"
-                      value={option}
-                      checked={formData.sessionMode === option}
-                      onChange={handleChange}
-                      required
-                      className="sr-only"
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
+                    {formData.sessionMode === option && (
+                      <div className="w-2 h-2 rounded-full bg-black" />
+                    )}
+                  </div>
+                </label>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {isKenyan && isGroup && (
-            <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Number of people *
-              </label>
-              <input
-                type="number"
-                name="groupSize"
-                value={formData.groupSize}
-                onChange={handleChange}
-                required
-                min={3}
-                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                placeholder="Minimum 3 people"
-              />
-              <p className="text-sm text-gray-500">
-                Group therapy is charged at KES 1,500 per person.
-              </p>
-            </div>
-          )}
-
-          {!isGroup && availablePricingOptions.length > 0 && (
-            <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Select therapy package and pricing *
-              </label>
-              <select
-                name="pricingOptionId"
-                value={formData.pricingOptionId}
-                onChange={handleChange}
-                required
-                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
+        {/* Card 5: Practitioner Preference */}
+        <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+          <h3 className="text-xl font-bold text-gray-900">
+            Practitioner Gender Preference <span className="text-red-500">*</span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { label: "Female", val: "Female" },
+              { label: "Male", val: "Male" },
+              { label: "No Preference", val: "Any is okay" },
+            ].map((option) => (
+              <label
+                key={option.val}
+                className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold transition-all flex items-center justify-between ${
+                  formData.practitionerGender === option.val
+                    ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                    : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                }`}
               >
-                <option value="">Select package</option>
-                {availablePricingOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-sm text-gray-500">
-                You will choose a payment method after submitting your details.
-              </p>
-            </div>
-          )}
-
-          {isKenyan && isGroup && groupPricingOption && (
-            <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Selected package
+                <span>{option.label}</span>
+                <input
+                  type="radio"
+                  name="practitionerGender"
+                  value={option.val}
+                  checked={formData.practitionerGender === option.val}
+                  onChange={handleChange}
+                  required
+                  className="sr-only"
+                />
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    formData.practitionerGender === option.val
+                      ? "border-yellow-500 bg-yellow-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {formData.practitionerGender === option.val && (
+                    <div className="w-2 h-2 rounded-full bg-black" />
+                  )}
+                </div>
               </label>
-              <div className="w-full px-6 py-5 bg-yellow-50 border border-yellow-100 rounded-[1.5rem] font-bold text-gray-900">
-                {groupPricingOption.label}
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              What Gender of practitioner do you prefer? *
-            </label>
-            <div className="grid grid-cols-1 gap-3">
-              {["Male", "Female", "Any is okay"].map((option) => (
-                <label
-                  key={option}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                    formData.practitionerGender === option
-                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                      : "border-gray-200 bg-white text-gray-700"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="practitionerGender"
-                    value={option}
-                    checked={formData.practitionerGender === option}
-                    onChange={handleChange}
-                    required
-                    className="sr-only"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Client financial status ? *
-            </label>
-            <div className="grid grid-cols-1 gap-3">
-              {["Average", "Good", "Poor"].map((option) => (
-                <label
-                  key={option}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                    formData.financialStatus === option
-                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                      : "border-gray-200 bg-white text-gray-700"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="financialStatus"
-                    value={option}
-                    checked={formData.financialStatus === option}
-                    onChange={handleChange}
-                    required
-                    className="sr-only"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Background</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              How often do you drink alcohol? *
-            </label>
-            <select
-              name="alcoholFrequency"
-              value={formData.alcoholFrequency}
-              onChange={handleChange}
-              required
-              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-            >
-              <option value="">Select frequency</option>
-              <option value="Never">Never</option>
-              <option value="Occasionally">Occasionally</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Daily">Daily</option>
-              <option value="Infrequently">Infrequently</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Which religion do you identify with *
-            </label>
-            <select
-              name="religion"
-              value={formData.religion}
-              onChange={handleChange}
-              required
-              className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-            >
-              <option value="">Select religion</option>
-              <option value="Christianity">Christianity</option>
-              <option value="Muslim">Muslim</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Have you done Therapy or any of the above services before? *
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {["Yes", "No"].map((option) => (
+      {/* SECTION 3: Selectable Package Cards */}
+      {!isGroup && availablePricingOptions.length > 0 && (
+        <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+          <h3 className="text-xl font-bold text-gray-900">
+            Select Therapy Package & Pricing <span className="text-red-500">*</span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {availablePricingOptions.map((option) => {
+              const isSelected = formData.pricingOptionId === option.id;
+              return (
                 <label
-                  key={option}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
+                  key={option.id}
+                  className={`cursor-pointer rounded-2xl border p-5 transition-all flex flex-col justify-between ${
+                    isSelected
+                      ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                      : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="pricingOptionId"
+                    value={option.id}
+                    checked={isSelected}
+                    onChange={handleChange}
+                    required
+                    className="sr-only"
+                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full">
+                      {option.sessions} Session{option.sessions > 1 ? "s" : ""}
+                    </span>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        isSelected ? "border-yellow-500 bg-yellow-500" : "border-gray-300"
+                      }`}
+                    >
+                      {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
+                    </div>
+                  </div>
+                  <div className="text-2xl font-black text-gray-900 mt-2">
+                    {formatAmount(option.amount, option.currency)}
+                  </div>
+                  <span className="text-xs font-semibold text-gray-500 mt-1">
+                    {option.mode} {option.category} Therapy
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 4: Background & Context */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+          <h3 className="text-xl font-bold text-gray-900">
+            Have you done therapy before? <span className="text-red-500">*</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {["Yes", "No"].map((option) => (
+              <label
+                key={option}
+                className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold transition-all flex items-center justify-between ${
+                  formData.priorTherapy === option
+                    ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                    : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                }`}
+              >
+                <span>{option}</span>
+                <input
+                  type="radio"
+                  name="priorTherapy"
+                  value={option}
+                  checked={formData.priorTherapy === option}
+                  onChange={handleChange}
+                  required
+                  className="sr-only"
+                />
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                     formData.priorTherapy === option
-                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                      : "border-gray-200 bg-white text-gray-700"
+                      ? "border-yellow-500 bg-yellow-500"
+                      : "border-gray-300"
                   }`}
                 >
-                  <input
-                    type="radio"
-                    name="priorTherapy"
-                    value={option}
-                    checked={formData.priorTherapy === option}
-                    onChange={handleChange}
-                    required
-                    className="sr-only"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              Are you currently taking medication? *
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {["Yes", "No"].map((option) => (
-                <label
-                  key={option}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                    formData.medication === option
-                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                      : "border-gray-200 bg-white text-gray-700"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="medication"
-                    value={option}
-                    checked={formData.medication === option}
-                    onChange={handleChange}
-                    required
-                    className="sr-only"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-              What led you to consider our assistance? *
-            </label>
-            <p className="text-sm text-gray-500">Select all that apply.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {[
-                "I've been feeling depressed",
-                "I feel anxious or overwhelmed",
-                "My mood is interfering with job/school performance",
-                "I am grieving",
-                "I am addicted",
-                "I have experienced trauma",
-                "I need to talk through a specific challenge",
-                "I need professional coaching",
-                "Just exploring",
-                "Others",
-              ].map((option) => (
-                <label
-                  key={option}
-                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm font-semibold transition-all ${
-                    formData.assistanceReason.includes(option)
-                      ? "border-yellow-500 bg-yellow-50 text-gray-900"
-                      : "border-gray-200 bg-white text-gray-700"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    name="assistanceReason"
-                    value={option}
-                    checked={formData.assistanceReason.includes(option)}
-                    onChange={() => handleReasonToggle(option)}
-                    className="sr-only"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {formData.assistanceReason.includes("Others") && (
-            <div className="space-y-2 md:col-span-2">
-              <label className="block text-sm font-bold text-gray-700 uppercase tracking-wide">
-                Others *
+                  {formData.priorTherapy === option && (
+                    <div className="w-2 h-2 rounded-full bg-black" />
+                  )}
+                </div>
               </label>
-              <input
-                type="text"
-                name="assistanceReasonOther"
-                value={formData.assistanceReasonOther}
-                onChange={handleChange}
-                required={formData.assistanceReason.includes("Others")}
-                className="w-full px-6 py-5 bg-neutral-50 border border-neutral-100 rounded-[1.5rem] focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all"
-                placeholder="Share a brief reason"
-              />
-            </div>
-          )}
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+          <h3 className="text-xl font-bold text-gray-900">
+            Currently taking medication? <span className="text-red-500">*</span>
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {["Yes", "No"].map((option) => (
+              <label
+                key={option}
+                className={`cursor-pointer rounded-2xl border p-4 text-sm font-bold transition-all flex items-center justify-between ${
+                  formData.medication === option
+                    ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                    : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                }`}
+              >
+                <span>{option}</span>
+                <input
+                  type="radio"
+                  name="medication"
+                  value={option}
+                  checked={formData.medication === option}
+                  onChange={handleChange}
+                  required
+                  className="sr-only"
+                />
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    formData.medication === option
+                      ? "border-yellow-500 bg-yellow-500"
+                      : "border-gray-300"
+                  }`}
+                >
+                  {formData.medication === option && (
+                    <div className="w-2 h-2 rounded-full bg-black" />
+                  )}
+                </div>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="border-b border-dashed border-gray-200 pb-5 mb-5">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">Service consent</h3>
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 leading-relaxed">
-          By booking a therapy appointment or any other service under Uburu, you confirm that you are doing so
-          voluntarily and with full understanding of the nature of the services provided. You consent to
-          participate in sessions that may involve emotional, psychological, or personal exploration, and you
-          acknowledge that these services are intended to support your wellbeing and personal growth, not to
-          replace medical or emergency care. You understand that all information shared will be treated with
-          confidentiality in line with ethical and professional standards, except where disclosure is required
-          by law or for safety reasons. You also agree to respect the policies, fees, and scheduling guidelines
-          of Uburu, and you confirm that you have had the opportunity to ask questions and receive clarification
-          before proceeding.
+      {/* SECTION 5: Reasons for Seeking Support */}
+      <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+        <h3 className="text-xl font-bold text-gray-900">
+          What led you to consider our assistance? <span className="text-red-500">*</span>
+        </h3>
+        <p className="text-xs text-gray-500">Select all that apply.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[
+            "I've been feeling depressed",
+            "I feel anxious or overwhelmed",
+            "My mood is interfering with job/school performance",
+            "I am grieving",
+            "I am addicted",
+            "I have experienced trauma",
+            "I need to talk through a specific challenge",
+            "I need professional coaching",
+            "Just exploring",
+            "Others",
+          ].map((option) => {
+            const isSelected = formData.assistanceReason.includes(option);
+            return (
+              <button
+                type="button"
+                key={option}
+                onClick={() => handleReasonToggle(option)}
+                className={`rounded-2xl border p-4 text-sm font-bold text-left transition-all flex items-center justify-between ${
+                  isSelected
+                    ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                    : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                }`}
+              >
+                <span>{option}</span>
+                <div
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ml-2 ${
+                    isSelected ? "border-yellow-500 bg-yellow-500" : "border-gray-300"
+                  }`}
+                >
+                  {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
+                </div>
+              </button>
+            );
+          })}
         </div>
-        <label className="mt-4 flex items-start gap-3 text-sm font-semibold text-gray-700">
+
+        {formData.assistanceReason.includes("Others") && (
+          <div className="pt-3">
+            <input
+              type="text"
+              name="assistanceReasonOther"
+              value={formData.assistanceReasonOther}
+              onChange={handleChange}
+              placeholder="Specify other reason"
+              className="w-full px-5 py-4 bg-neutral-50/80 border border-neutral-200/80 rounded-2xl focus:outline-none focus:ring-2 focus:ring-yellow-400 font-bold transition-all text-gray-900 placeholder:text-gray-400"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* SECTION 6: Terms & Submit Button */}
+      <div className="pt-6 border-t border-neutral-200/80 space-y-6">
+        <label className="flex items-start gap-3.5 cursor-pointer">
           <input
             type="checkbox"
             name="termsAccepted"
             checked={formData.termsAccepted}
             onChange={handleChange}
             required
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
+            className="mt-1 w-5 h-5 rounded border-gray-300 text-yellow-500 focus:ring-yellow-400"
           />
-          <span>
-            I have read and accept the{" "}
-            <Link
-              to="/get/therapy/terms"
-              className="text-yellow-600 underline hover:text-yellow-700 transition-colors"
-            >
-              terms and conditions
-            </Link>{" "}
-            above.
+          <span className="text-sm font-medium text-gray-600 leading-relaxed">
+            By booking a therapy appointment under Uburu, you confirm that you are doing so voluntarily. Read our{" "}
+            <Link to="/get/therapy/terms" className="text-yellow-600 font-bold underline hover:text-yellow-700">
+              Terms and Conditions
+            </Link>.
           </span>
         </label>
+
+        {status === "error" && statusMessage && (
+          <div className="p-4 rounded-xl bg-red-50 text-red-700 text-sm font-bold border border-red-200">
+            {statusMessage}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={status === "sending"}
+          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-5 rounded-2xl text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-lg shadow-yellow-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {status === "sending" ? (
+            <>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+              <span>Submitting Request...</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4" />
+              <span>Submit & Proceed to Payment</span>
+            </>
+          )}
+        </button>
       </div>
-
-      {status === "error" && (
-        <div className="mb-4 rounded-2xl px-5 py-4 text-sm font-bold border bg-red-50 text-red-700 border-red-200">
-          {statusMessage}
-        </div>
-      )}
-
-      <Button
-        type="submit"
-        disabled={status === "sending"}
-        className="w-full bg-yellow-500 text-black hover:bg-yellow-400 py-4 text-lg"
-      >
-        {status === "sending" ? "Submitting..." : "Submit & proceed to payment"}
-      </Button>
     </form>
   );
 
@@ -1450,15 +1504,24 @@ const RequestFormSection = () => {
     </div>
   );
 
+  const getFormTitle = () => {
+    const service = formData.assistanceType || selectedService || "";
+    if (service.includes("Coaching")) return "Uburu Life Coaching Form";
+    if (service.includes("Consultation")) return "Uburu Medical Consultation Form";
+    return "Uburu Therapy Form";
+  };
+
+  const formTitle = getFormTitle();
+
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white">
+    <div className="w-full">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-2 bg-neutral-900 text-yellow-400 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
-            Uburu Therapy Form
+            {formTitle}
           </span>
           <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-[1.1] mb-6">
-            Uburu Therapy Form
+            {formTitle}
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             Tell us a bit about yourself and what support you are looking for. We will
@@ -1530,7 +1593,7 @@ const RequestFormSection = () => {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

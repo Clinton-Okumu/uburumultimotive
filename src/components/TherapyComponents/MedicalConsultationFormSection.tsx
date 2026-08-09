@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle2, Loader, MapPin, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -26,6 +26,51 @@ type YesNo = "Yes" | "No";
 type ContactMethod = "Phone Call" | "Video Call" | "Email" | "WhatsApp";
 
 type BestTime = "Morning" | "Afternoon" | "Evening" | "Anytime";
+
+export interface MedicalPricingPackage {
+  id: string;
+  sessions: number;
+  amount: number;
+  currency: "KES" | "USD";
+  mode: "Online" | "Physical";
+  label: string;
+}
+
+export const MEDICAL_CONSULTATION_PRICING: MedicalPricingPackage[] = [
+  // Kenya - Online (Virtual)
+  {
+    id: "med-ke-online-1",
+    sessions: 1,
+    amount: 2500,
+    currency: "KES",
+    mode: "Online",
+    label: "Online Medical Consultation (1 Session) - KES 2,500",
+  },
+  // Kenya - Physical (In-Person)
+  {
+    id: "med-ke-physical-1",
+    sessions: 1,
+    amount: 3000,
+    currency: "KES",
+    mode: "Physical",
+    label: "Physical Medical Consultation (1 Session) - KES 3,000",
+  },
+  // International - Online (Virtual)
+  {
+    id: "med-int-online-1",
+    sessions: 1,
+    amount: 40,
+    currency: "USD",
+    mode: "Online",
+    label: "Online Medical Consultation (1 Session) - USD $40",
+  },
+];
+
+const formatAmount = (amount: number, currency: "KES" | "USD") => {
+  return currency === "KES"
+    ? `KES ${amount.toLocaleString("en-KE")}`
+    : `USD $${amount.toLocaleString("en-US")}`;
+};
 
 const MedicalConsultationFormSection = ({
   onBack,
@@ -61,7 +106,8 @@ const MedicalConsultationFormSection = ({
     familyMedicalHistory: "",
     hasHealthInsurance: "" as YesNo | "",
 
-    // Preferences & Concerns
+    // Preferences & Package
+    packageId: "",
     language: "",
     medicalConcerns: "",
     contactMethod: "" as ContactMethod | "",
@@ -71,6 +117,28 @@ const MedicalConsultationFormSection = ({
 
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const isKenyan = formData.country.toLowerCase().includes("kenya");
+  const userCurrency = isKenyan ? "KES" : "USD";
+  const selectedMode = formData.consultationType === "In-person" ? "Physical" : "Online";
+
+  const availablePricingOptions = MEDICAL_CONSULTATION_PRICING.filter((option) => {
+    if (option.currency !== userCurrency) return false;
+    if (!isKenyan) return option.mode === "Online";
+    return option.mode === selectedMode;
+  });
+
+  const selectedPricingOption = availablePricingOptions.find(
+    (option) => option.id === formData.packageId
+  ) || availablePricingOptions[0];
+
+  useEffect(() => {
+    if (availablePricingOptions.length > 0) {
+      if (!formData.packageId || !availablePricingOptions.some(p => p.id === formData.packageId)) {
+        setFormData((prev) => ({ ...prev, packageId: availablePricingOptions[0].id }));
+      }
+    }
+  }, [formData.consultationType, formData.country]);
 
   const applyDetectedCountry = (countryName: string) => {
     setFormData((prev) => ({ ...prev, country: countryName }));
@@ -177,11 +245,19 @@ const MedicalConsultationFormSection = ({
       submitData.set("nextOfKinContact", formData.nextOfKinContact);
       submitData.set("nextOfKinRelationship", formData.nextOfKinRelationship);
 
-      // Consultation Specs
+      // Consultation Specs & Pricing
       submitData.set("consultationReason", formData.consultationReason);
       submitData.set("consultationType", formData.consultationType);
       submitData.set("specialist", formData.specialist);
       submitData.set("gender", formData.gender);
+
+      if (selectedPricingOption) {
+        submitData.set("sessionPackage", selectedPricingOption.label);
+        submitData.set("sessionCount", String(selectedPricingOption.sessions));
+        submitData.set("sessionAmount", String(selectedPricingOption.amount));
+        submitData.set("sessionCurrency", selectedPricingOption.currency);
+        submitData.set("sessionMode", selectedPricingOption.mode);
+      }
 
       // History
       submitData.set("preExistingConditions", formData.preExistingConditions);
@@ -265,7 +341,7 @@ const MedicalConsultationFormSection = ({
             Expert medical guidance
           </h2>
           <p className="text-gray-600 text-base max-w-xl mx-auto font-medium">
-            Please detect your country first so we can connect you with medical experts in your region.
+            Please detect your country first so we can connect you with medical experts and pricing in your region.
           </p>
         </div>
 
@@ -606,7 +682,61 @@ const MedicalConsultationFormSection = ({
           </div>
         </div>
 
-        {/* SECTION 3: Medical History & Conditions */}
+        {/* SECTION 3: Medical Consultation Package & Fee */}
+        {availablePricingOptions.length > 0 && (
+          <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+            <h3 className="text-xl font-bold text-gray-900">
+              Medical Consultation Fee <span className="text-red-500">*</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availablePricingOptions.map((option) => {
+                const isSelected = formData.packageId === option.id;
+                return (
+                  <label
+                    key={option.id}
+                    className={`cursor-pointer rounded-2xl border p-5 transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                        : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="packageId"
+                      value={option.id}
+                      checked={isSelected}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, packageId: e.target.value }))
+                      }
+                      required
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black uppercase tracking-wider text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full">
+                        {option.sessions} Session
+                      </span>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected ? "border-yellow-500 bg-yellow-500" : "border-gray-300"
+                        }`}
+                      >
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
+                      </div>
+                    </div>
+                    <div className="text-2xl font-black text-gray-900 mt-2">
+                      {formatAmount(option.amount, option.currency)}
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500 mt-1">
+                      {option.mode === "Online" ? "Online / Virtual" : "Physical / In-Person"} Consultation
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 4: Medical History & Conditions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Card 7: Pre-existing conditions */}
           <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
@@ -789,7 +919,7 @@ const MedicalConsultationFormSection = ({
           </div>
         </div>
 
-        {/* SECTION 4: Preferences, Contact Method & Schedule */}
+        {/* SECTION 5: Preferences, Contact Method & Schedule */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Card 13: Preferred Language */}
           <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
@@ -913,7 +1043,7 @@ const MedicalConsultationFormSection = ({
           </div>
         </div>
 
-        {/* SECTION 5: Terms Checkbox & Submit */}
+        {/* SECTION 6: Terms Checkbox & Submit */}
         <div className="pt-6 border-t border-neutral-200/80 space-y-6">
           <label className="flex items-start gap-3.5 cursor-pointer">
             <input
@@ -951,7 +1081,7 @@ const MedicalConsultationFormSection = ({
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                <span>Submit & Proceed to Payment</span>
+                <span>Submit Medical Consultation Request</span>
               </>
             )}
           </button>

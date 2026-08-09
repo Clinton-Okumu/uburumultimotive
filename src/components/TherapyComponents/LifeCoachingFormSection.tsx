@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle2, Loader, MapPin, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -35,6 +35,44 @@ type ContactMethod = "Phone Call" | "Video Call" | "Email" | "WhatsApp";
 
 type BestTime = "Morning" | "Afternoon" | "Evening" | "Anytime";
 
+export interface CoachingPricingPackage {
+  id: string;
+  sessions: number;
+  amount: number;
+  currency: "KES" | "USD";
+  mode: "Online" | "Physical";
+  label: string;
+}
+
+export const LIFE_COACHING_PRICING: CoachingPricingPackage[] = [
+  // Kenya - Online
+  { id: "lc-ke-online-1", sessions: 1, amount: 1600, currency: "KES", mode: "Online", label: "1 Session - KES 1,600" },
+  { id: "lc-ke-online-4", sessions: 4, amount: 5000, currency: "KES", mode: "Online", label: "4 Sessions - KES 5,000" },
+  { id: "lc-ke-online-6", sessions: 6, amount: 7500, currency: "KES", mode: "Online", label: "6 Sessions - KES 7,500" },
+  { id: "lc-ke-online-8", sessions: 8, amount: 10000, currency: "KES", mode: "Online", label: "8 Sessions - KES 10,000" },
+  { id: "lc-ke-online-10", sessions: 10, amount: 13000, currency: "KES", mode: "Online", label: "10 Sessions - KES 13,000" },
+
+  // Kenya - Physical
+  { id: "lc-ke-physical-1", sessions: 1, amount: 1800, currency: "KES", mode: "Physical", label: "1 Session - KES 1,800" },
+  { id: "lc-ke-physical-4", sessions: 4, amount: 6500, currency: "KES", mode: "Physical", label: "4 Sessions - KES 6,500" },
+  { id: "lc-ke-physical-6", sessions: 6, amount: 10000, currency: "KES", mode: "Physical", label: "6 Sessions - KES 10,000" },
+  { id: "lc-ke-physical-8", sessions: 8, amount: 12000, currency: "KES", mode: "Physical", label: "8 Sessions - KES 12,000" },
+  { id: "lc-ke-physical-10", sessions: 10, amount: 18000, currency: "KES", mode: "Physical", label: "10 Sessions - KES 18,000" },
+
+  // International - Online
+  { id: "lc-int-online-1", sessions: 1, amount: 25, currency: "USD", mode: "Online", label: "1 Session - USD $25" },
+  { id: "lc-int-online-3", sessions: 3, amount: 50, currency: "USD", mode: "Online", label: "3 Sessions - USD $50" },
+  { id: "lc-int-online-4", sessions: 4, amount: 65, currency: "USD", mode: "Online", label: "4 Sessions - USD $65" },
+  { id: "lc-int-online-6", sessions: 6, amount: 85, currency: "USD", mode: "Online", label: "6 Sessions - USD $85" },
+  { id: "lc-int-online-8", sessions: 8, amount: 120, currency: "USD", mode: "Online", label: "8 Sessions - USD $120" },
+];
+
+const formatAmount = (amount: number, currency: "KES" | "USD") => {
+  return currency === "KES"
+    ? `KES ${amount.toLocaleString("en-KE")}`
+    : `USD $${amount.toLocaleString("en-US")}`;
+};
+
 const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
   const [step, setStep] = useState<"location" | "form">("location");
   const [locationStatus, setLocationStatus] = useState<"idle" | "detecting" | "success" | "error">("idle");
@@ -55,11 +93,37 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
     language: "",
     contactMethod: "" as ContactMethod | "",
     bestTime: "" as BestTime | "",
+    packageId: "",
     termsAccepted: false,
   });
 
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  const isKenyan = formData.country.toLowerCase().includes("kenya");
+  const userCurrency = isKenyan ? "KES" : "USD";
+  const selectedMode = formData.coachingType === "In person coaching" ? "Physical" : "Online";
+
+  const availablePricingOptions = LIFE_COACHING_PRICING.filter((option) => {
+    if (option.currency !== userCurrency) return false;
+    if (!isKenyan) return option.mode === "Online";
+    return option.mode === selectedMode;
+  });
+
+  const selectedPricingOption = availablePricingOptions.find(
+    (option) => option.id === formData.packageId
+  );
+
+  // Auto select default package if available packages change and current selection is invalid
+  useEffect(() => {
+    if (availablePricingOptions.length > 0) {
+      if (!selectedPricingOption) {
+        setFormData((prev) => ({ ...prev, packageId: availablePricingOptions[0].id }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, packageId: "" }));
+    }
+  }, [formData.coachingType, formData.country]);
 
   const applyDetectedCountry = (countryName: string) => {
     setFormData((prev) => ({ ...prev, country: countryName }));
@@ -155,6 +219,11 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
       return;
     }
 
+    if (!selectedPricingOption) {
+      toast.error("Please select a coaching package.");
+      return;
+    }
+
     if (!formData.termsAccepted) {
       toast.error("Please accept the terms and conditions to proceed.");
       return;
@@ -177,6 +246,14 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
       submitData.set("biggestChallenge", formData.biggestChallenge);
       submitData.set("coachingGoal", formData.coachingGoal);
       submitData.set("coachingType", formData.coachingType);
+
+      // Pricing package details
+      submitData.set("sessionPackage", selectedPricingOption.label);
+      submitData.set("sessionCount", String(selectedPricingOption.sessions));
+      submitData.set("sessionAmount", String(selectedPricingOption.amount));
+      submitData.set("sessionCurrency", selectedPricingOption.currency);
+      submitData.set("sessionMode", selectedPricingOption.mode);
+
       submitData.set("frequency", formData.frequency);
       submitData.set("language", formData.language);
       submitData.set("contactMethod", formData.contactMethod);
@@ -250,7 +327,7 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
             Start your transformation journey
           </h2>
           <p className="text-gray-600 text-base max-w-xl mx-auto font-medium">
-            Please detect your country first so we can tailor your coaching pathway for your region.
+            Please detect your country first so we can tailor your coaching pricing and pathway for your region.
           </p>
         </div>
 
@@ -562,7 +639,61 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
           </div>
         </div>
 
-        {/* SECTION 3: Preferences & Schedule */}
+        {/* SECTION 3: Select Life Coaching Package */}
+        {availablePricingOptions.length > 0 && (
+          <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+            <h3 className="text-xl font-bold text-gray-900">
+              Select Life Coaching Package & Pricing <span className="text-red-500">*</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availablePricingOptions.map((option) => {
+                const isSelected = formData.packageId === option.id;
+                return (
+                  <label
+                    key={option.id}
+                    className={`cursor-pointer rounded-2xl border p-5 transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                        : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="packageId"
+                      value={option.id}
+                      checked={isSelected}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, packageId: e.target.value }))
+                      }
+                      required
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black uppercase tracking-wider text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full">
+                        {option.sessions} Session{option.sessions > 1 ? "s" : ""}
+                      </span>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected ? "border-yellow-500 bg-yellow-500" : "border-gray-300"
+                        }`}
+                      >
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
+                      </div>
+                    </div>
+                    <div className="text-2xl font-black text-gray-900 mt-2">
+                      {formatAmount(option.amount, option.currency)}
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500 mt-1">
+                      {option.mode} Life Coaching
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 4: Preferences & Schedule */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Card 7: Frequency */}
           <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
@@ -718,7 +849,7 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
           </div>
         </div>
 
-        {/* SECTION 4: Terms Checkbox & Submit */}
+        {/* SECTION 5: Terms Checkbox & Submit */}
         <div className="pt-6 border-t border-neutral-200/80 space-y-6">
           <label className="flex items-start gap-3.5 cursor-pointer">
             <input

@@ -583,7 +583,10 @@ const RequestFormSection = ({
 
     try {
       const submitData = new FormData();
-      submitData.set("_subject", "Website: Therapy request");
+      const subjectHeader = formData.assistanceType
+        ? `Website: ${formData.assistanceType} Request`
+        : "Website: Therapy Request";
+      submitData.set("_subject", subjectHeader);
       submitData.set("email", formData.email);
       submitData.set("_replyto", formData.email);
       submitData.set("fullName", formData.fullName);

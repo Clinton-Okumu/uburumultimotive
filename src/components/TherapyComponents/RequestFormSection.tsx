@@ -365,7 +365,7 @@ const RequestFormSection = ({
 
   const groupSizeNum = Math.max(0, parseInt(formData.groupSize, 10) || 0);
   const groupPricingOption: TherapyPricingOption | null =
-    isKenyan && isGroup && groupSizeNum >= 3
+    isKenyan && isGroup && groupSizeNum > 1
       ? {
           id: "ke-group",
           category: "Group",
@@ -566,9 +566,9 @@ const RequestFormSection = ({
       return;
     }
 
-    if (isKenyan && isGroup && groupSizeNum < 3) {
+    if (isKenyan && isGroup && groupSizeNum <= 1) {
       setStatus("error");
-      setStatusMessage("Group therapy requires a minimum of 3 people.");
+      setStatusMessage("Group therapy requires the number of persons to be greater than 1.");
       return;
     }
 
@@ -783,13 +783,6 @@ const RequestFormSection = ({
         </div>
 
         <div className="max-w-xl mx-auto space-y-6">
-          <div className="bg-yellow-50/80 border border-yellow-200/80 rounded-2xl p-5 flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" />
-            <p className="text-sm font-semibold text-yellow-950">
-              Click below to detect your country. This helps us display the accurate package pricing for your region.
-            </p>
-          </div>
-
           <button
             type="button"
             onClick={handleDetectLocation}
@@ -993,8 +986,6 @@ const RequestFormSection = ({
               { label: "Individual Therapy (For Myself)", val: "Individual Therapy (For Myself)" },
               { label: "Couple Therapy (For Couples)", val: "Couple Therapy (for myself and my partner)" },
               { label: "Teens Therapy (For Child)", val: "Teens Therapy (For child)" },
-              { label: "Life Coaching", val: "Life Coaching" },
-              { label: "Medical Consultation", val: "Medical Consultation" },
               ...(isKenyan ? [{ label: "Group Therapy", val: "Group Therapy" }] : []),
             ].map((item) => (
               <label
@@ -1030,6 +1021,45 @@ const RequestFormSection = ({
             ))}
           </div>
         </div>
+
+        {/* Card: Group Size */}
+        {isGroup && (
+          <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+            <h3 className="text-xl font-bold text-gray-900">
+              Number of Persons <span className="text-red-500">*</span>
+            </h3>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                Group therapy rate is <span className="font-bold text-gray-900">KES 1,500</span> per person (must be greater than 1 person).
+              </p>
+              <div>
+                <input
+                  type="number"
+                  name="groupSize"
+                  min="2"
+                  step="1"
+                  value={formData.groupSize}
+                  onChange={handleChange}
+                  placeholder="e.g. 2"
+                  required
+                  className="w-full rounded-2xl border border-neutral-200/80 px-4 py-3.5 text-base font-semibold text-gray-900 focus:border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/20"
+                />
+              </div>
+              {groupSizeNum > 1 ? (
+                <div className="rounded-xl bg-yellow-50 border border-yellow-200/80 p-4 text-sm font-medium text-yellow-950 flex items-center justify-between">
+                  <span>Total ({groupSizeNum} persons × KES 1,500):</span>
+                  <span className="text-lg font-black text-gray-900">
+                    KES {(groupSizeNum * 1500).toLocaleString("en-KE")}
+                  </span>
+                </div>
+              ) : formData.groupSize !== "" ? (
+                <p className="text-xs font-semibold text-red-500">
+                  Number of persons must be greater than 1.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        )}
 
         {/* Card 4: Session Mode */}
         {requiresMode && (
@@ -1121,55 +1151,86 @@ const RequestFormSection = ({
       </div>
 
       {/* SECTION 3: Selectable Package Cards */}
-      {!isGroup && availablePricingOptions.length > 0 && (
+      {isGroup ? (
         <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
           <h3 className="text-xl font-bold text-gray-900">
-            Select Therapy Package & Pricing <span className="text-red-500">*</span>
+            Group Therapy Package & Pricing <span className="text-red-500">*</span>
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availablePricingOptions.map((option) => {
-              const isSelected = formData.pricingOptionId === option.id;
-              return (
-                <label
-                  key={option.id}
-                  className={`cursor-pointer rounded-2xl border p-5 transition-all flex flex-col justify-between ${
-                    isSelected
-                      ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
-                      : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="pricingOptionId"
-                    value={option.id}
-                    checked={isSelected}
-                    onChange={handleChange}
-                    required
-                    className="sr-only"
-                  />
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full">
-                      {option.sessions} Session{option.sessions > 1 ? "s" : ""}
-                    </span>
-                    <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                        isSelected ? "border-yellow-500 bg-yellow-500" : "border-gray-300"
-                      }`}
-                    >
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
-                    </div>
-                  </div>
-                  <div className="text-2xl font-black text-gray-900 mt-2">
-                    {formatAmount(option.amount, option.currency)}
-                  </div>
-                  <span className="text-xs font-semibold text-gray-500 mt-1">
-                    {option.mode} {option.category} Therapy
-                  </span>
-                </label>
-              );
-            })}
-          </div>
+          {groupSizeNum > 1 ? (
+            <div className="rounded-2xl border-2 border-yellow-500 bg-yellow-50/70 p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <span className="text-xs font-black uppercase tracking-wider text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full">
+                  1 Session • {groupSizeNum} Persons
+                </span>
+                <h4 className="text-xl font-bold text-gray-900 mt-2">Group Therapy Package</h4>
+                <p className="text-sm font-medium text-gray-600 mt-1">
+                  KES 1,500 per person × {groupSizeNum} persons
+                </p>
+              </div>
+              <div className="sm:text-right">
+                <div className="text-2xl sm:text-3xl font-black text-gray-900">
+                  KES {(groupSizeNum * 1500).toLocaleString("en-KE")}
+                </div>
+                <span className="text-xs font-semibold text-gray-500">Total payable</span>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-gray-500 text-sm">
+              Please enter the number of persons (greater than 1) above to calculate total package pricing.
+            </div>
+          )}
         </div>
+      ) : (
+        availablePricingOptions.length > 0 && (
+          <div className="bg-white rounded-[2rem] p-7 md:p-8 border border-neutral-200/80 shadow-sm space-y-5">
+            <h3 className="text-xl font-bold text-gray-900">
+              Select Therapy Package & Pricing <span className="text-red-500">*</span>
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availablePricingOptions.map((option) => {
+                const isSelected = formData.pricingOptionId === option.id;
+                return (
+                  <label
+                    key={option.id}
+                    className={`cursor-pointer rounded-2xl border p-5 transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? "border-yellow-500 bg-yellow-50 text-gray-900 shadow-sm ring-2 ring-yellow-400/20"
+                        : "border-neutral-200/80 bg-neutral-50/50 text-gray-700 hover:bg-neutral-100/70"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="pricingOptionId"
+                      value={option.id}
+                      checked={isSelected}
+                      onChange={handleChange}
+                      required
+                      className="sr-only"
+                    />
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-black uppercase tracking-wider text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full">
+                        {option.sessions} Session{option.sessions > 1 ? "s" : ""}
+                      </span>
+                      <div
+                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected ? "border-yellow-500 bg-yellow-500" : "border-gray-300"
+                        }`}
+                      >
+                        {isSelected && <div className="w-2 h-2 rounded-full bg-black" />}
+                      </div>
+                    </div>
+                    <div className="text-2xl font-black text-gray-900 mt-2">
+                      {formatAmount(option.amount, option.currency)}
+                    </div>
+                    <span className="text-xs font-semibold text-gray-500 mt-1">
+                      {option.mode} {option.category} Therapy
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )
       )}
 
       {/* SECTION 4: Background & Context */}
@@ -1542,7 +1603,12 @@ const RequestFormSection = ({
                   <div>
                     <p className="font-semibold text-gray-800">Group therapy</p>
                     <p className="text-gray-600">KES 1,500 per person</p>
-                    <p className="text-gray-500 text-xs">Minimum 3 people</p>
+                    <p className="text-gray-500 text-xs">Must be greater than 1 person</p>
+                    {groupSizeNum > 1 && (
+                      <p className="text-yellow-700 font-bold mt-2 text-xs">
+                        Total for {groupSizeNum} persons: KES {(groupSizeNum * 1500).toLocaleString("en-KE")}
+                      </p>
+                    )}
                   </div>
                 ) : availablePricingOptions.length > 0 ? (
                   (() => {

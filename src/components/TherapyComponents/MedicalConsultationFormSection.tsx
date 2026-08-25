@@ -346,13 +346,6 @@ const MedicalConsultationFormSection = ({
         </div>
 
         <div className="max-w-xl mx-auto space-y-6">
-          <div className="bg-yellow-50/80 border border-yellow-200/80 rounded-2xl p-5 flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" />
-            <p className="text-sm font-semibold text-yellow-950">
-              Click below to detect your country.
-            </p>
-          </div>
-
           <button
             type="button"
             onClick={handleDetectLocation}

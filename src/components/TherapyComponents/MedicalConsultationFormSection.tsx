@@ -1315,12 +1315,29 @@ const MedicalConsultationFormSection = ({
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-2xl border border-amber-100 p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Medical Consultation Pricing</h3>
-              <div className="space-y-4 text-sm">
-                {availablePricingOptions.length > 0 ? (
-                  (() => {
-                    const grouped = availablePricingOptions.reduce(
+            {bookingStep !== "location" && (
+              <div className="bg-white rounded-2xl border border-amber-100 p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Medical Consultation Pricing</h3>
+                <div className="space-y-4 text-sm">
+                  {(() => {
+                    const displayOptions = MEDICAL_CONSULTATION_PRICING.filter((option) => {
+                      if (option.currency !== userCurrency) return false;
+                      if (isKenyan && formData.consultationType) {
+                        return option.mode === selectedMode;
+                      }
+                      if (!isKenyan) return option.mode === "Online";
+                      return true;
+                    });
+
+                    if (displayOptions.length === 0) {
+                      return (
+                        <p className="text-gray-500">
+                          Select consultation type to view pricing options.
+                        </p>
+                      );
+                    }
+
+                    const grouped = displayOptions.reduce(
                       (acc, option) => {
                         const key = `${option.mode === "Online" ? "Virtual" : "In-Person"} consultation`;
                         if (!acc[key]) acc[key] = [];
@@ -1329,25 +1346,24 @@ const MedicalConsultationFormSection = ({
                       },
                       {} as Record<string, MedicalPricingPackage[]>
                     );
+
                     return Object.entries(grouped).map(([key, options]) => (
-                      <div key={key}>
-                        <p className="font-semibold text-gray-800 capitalize">{key}</p>
+                      <div key={key} className="space-y-1">
+                        <p className="font-bold text-gray-900 capitalize">{key}</p>
                         {options.map((option) => (
-                          <p key={option.id} className="text-gray-600">
+                          <p key={option.id} className="text-gray-600 text-xs">
                             {option.sessions} session -{" "}
-                            {formatAmount(option.amount, option.currency)}
+                            <span className="font-semibold text-gray-800">
+                              {formatAmount(option.amount, option.currency)}
+                            </span>
                           </p>
                         ))}
                       </div>
                     ));
-                  })()
-                ) : (
-                  <p className="text-gray-500">
-                    Detect country to view pricing options.
-                  </p>
-                )}
+                  })()}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white shadow-lg">
               <h3 className="text-xl font-bold mb-2">Privacy Notice</h3>

@@ -390,6 +390,11 @@ const RequestFormSection = ({
     groupPricingOption ||
     availablePricingOptions.find((option) => option.id === formData.pricingOptionId);
 
+  // Scroll to top whenever the booking step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [bookingStep]);
+
   const applyDetectedCountry = (country: string) => {
     setFormData((prev) => {
       const nextCountry = country || prev.country;

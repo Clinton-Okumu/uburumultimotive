@@ -145,6 +145,11 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
     }
   }, [formData.coachingType, formData.country]);
 
+  // Scroll to top whenever the booking step changes (e.g. going to register, payment, or mpesa instructions)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [bookingStep]);
+
   const applyDetectedCountry = (countryName: string) => {
     setFormData((prev) => ({ ...prev, country: countryName }));
     setLocationStatus("success");
@@ -1131,9 +1136,6 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
                   {(() => {
                     const displayOptions = LIFE_COACHING_PRICING.filter((option) => {
                       if (option.currency !== userCurrency) return false;
-                      if (isKenyan && formData.coachingType) {
-                        return option.mode === selectedMode;
-                      }
                       if (!isKenyan) return option.mode === "Online";
                       return true;
                     });
@@ -1148,7 +1150,7 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
 
                     const grouped = displayOptions.reduce(
                       (acc, option) => {
-                        const key = `${option.mode} coaching`;
+                        const key = `${option.mode} Coaching`;
                         if (!acc[key]) acc[key] = [];
                         acc[key].push(option);
                         return acc;
@@ -1158,7 +1160,7 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
 
                     return Object.entries(grouped).map(([key, options]) => (
                       <div key={key} className="space-y-1">
-                        <p className="font-bold text-gray-900 capitalize">{key}</p>
+                        <p className="font-bold text-gray-900">{key}</p>
                         {options.map((option) => (
                           <p key={option.id} className="text-gray-600 text-xs">
                             {option.sessions} session{option.sessions > 1 ? "s" : ""} -{" "}

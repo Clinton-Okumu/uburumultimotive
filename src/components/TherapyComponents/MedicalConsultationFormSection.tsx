@@ -160,6 +160,11 @@ const MedicalConsultationFormSection = ({
     }
   }, [formData.consultationType, formData.country]);
 
+  // Scroll to top whenever the booking step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [bookingStep]);
+
   const applyDetectedCountry = (countryName: string) => {
     setFormData((prev) => ({ ...prev, country: countryName }));
     setLocationStatus("success");

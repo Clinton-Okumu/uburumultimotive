@@ -4,8 +4,8 @@ import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import Button from "../shared/Button";
 
-const PAYBILL_NO = "400200";
-const ACCOUNT_NO = "40059516";
+const PAYBILL_NO = "522522";
+const ACCOUNT_NO = "1346356289";
 
 interface LifeCoachingFormSectionProps {
   onBack?: () => void;

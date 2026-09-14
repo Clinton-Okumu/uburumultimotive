@@ -1,4 +1,4 @@
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, ShoppingBag } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logo from "../../assets/logo.webp";
@@ -22,50 +22,7 @@ const NavbarLinks: NavLink[] = [
   { id: 8, title: "Partner", link: "/partner" },
 ];
 
-const getStoredCartCount = (storageKey: string) => {
-  if (typeof window === "undefined") {
-    return 0;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(storageKey);
-    if (!raw) {
-      return 0;
-    }
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (!parsed || typeof parsed !== "object") {
-      return 0;
-    }
-    return Object.values(parsed).reduce<number>((total, value) => {
-      if (typeof value !== "number" || !Number.isFinite(value)) {
-        return total;
-      }
-      return total + Math.max(0, Math.trunc(value));
-    }, 0);
-  } catch {
-    return 0;
-  }
-};
-
-const getTrayMeta = (pathname: string) => {
-  if (pathname === "/get/home") {
-    return {
-      count: getStoredCartCount("uburu_home_cart"),
-      label: "Home tray",
-      link: "/checkout?source=home",
-    };
-  }
-
-  if (pathname === "/get/village") {
-    return {
-      count: getStoredCartCount("uburu_village_cart"),
-      label: "Village tray",
-      link: "/checkout?source=village",
-    };
-  }
-
-  return null;
-};
+import { getTotalTrayCount } from "../../utils/cartStorage";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -75,8 +32,6 @@ const Navbar = () => {
   const location = useLocation();
   const getDropdownRef = useRef<HTMLDivElement>(null);
   const mobileDropdownRef = useRef<HTMLDivElement>(null);
-
-  const trayMeta = getTrayMeta(location.pathname);
 
   const handleMobileLinkClick = (linkPath: string) => {
     if (location.pathname === linkPath) {
@@ -100,8 +55,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const refreshTrayCount = () => {
-      const meta = getTrayMeta(location.pathname);
-      setTrayCount(meta?.count ?? 0);
+      setTrayCount(getTotalTrayCount());
     };
 
     refreshTrayCount();
@@ -180,13 +134,17 @@ const Navbar = () => {
 
         {/* Desktop Navigation - Right Side (Tray & Buttons) */}
         <div className="hidden lg:flex items-center gap-3 shrink-0">
-          {trayMeta && (
-            <Link
-              to={trayMeta.link}
-              className="rounded-full border border-yellow-500/40 bg-black/40 backdrop-blur-sm px-4 py-2 text-[10px] font-black uppercase tracking-[0.15em] text-yellow-300 transition-colors hover:bg-neutral-800"
+          {trayCount > 0 && (
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("uburu:open-cart"))}
+              className="relative flex items-center justify-center h-10 w-10 rounded-full border border-yellow-400/40 bg-black/60 text-yellow-400 hover:bg-yellow-400 hover:text-black transition-all shadow-md"
+              aria-label="Open Cart Tray"
             >
-              {trayMeta.label}: {trayCount}
-            </Link>
+              <ShoppingBag className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-black text-white shadow">
+                {trayCount}
+              </span>
+            </button>
           )}
 
           <div className="relative" ref={getDropdownRef}>
@@ -285,15 +243,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {trayMeta && (
-            <Link
-              to={trayMeta.link}
-              onClick={() => handleMobileLinkClick(trayMeta.link)}
-              className="block rounded-xl border border-yellow-500/40 bg-black px-4 py-3 text-sm font-black uppercase tracking-[0.2em] text-yellow-300"
-            >
-              {trayMeta.label}: {trayCount}
-            </Link>
-          )}
           {NavbarLinks.map((link) => (
             <Link
               key={link.id}

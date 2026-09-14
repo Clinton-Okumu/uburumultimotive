@@ -1,6 +1,3 @@
-import ebook1 from "../assets/ebook1.jpg";
-import ebook2 from "../assets/ebook2.jpg";
-import ebook3 from "../assets/ebook3.jpg";
 import ebookCover from "../assets/ebook.webp";
 import shirt from "../assets/shirt.webp";
 import cap from "../assets/cap.webp";
@@ -14,6 +11,8 @@ import kidsImage from "../assets/kids.webp";
 import therapeuticTripImage from "../assets/glassdoor2.webp";
 import paradiseLostImage from "../assets/paradiselost.jpg";
 import kitengelaGlassImage from "../assets/kitengelaglass.webp";
+import { ebookProducts, allCategoryProducts } from "./homeCategories";
+export { ebookProducts };
 
 
 export type StorefrontSource = "home" | "village";
@@ -71,34 +70,7 @@ export type VillageEventOption = StorefrontItem & {
   availableMonths: VillageTravelMonth[];
 };
 
-export const ebookProducts: StorefrontItem[] = [
-  {
-    id: "ebook-destined-to-reign",
-    name: "Destined to Reign",
-    price: 1200,
-    currency: "KES",
-    tag: "Digital",
-    image: ebook1,
-  },
-  {
-    id: "ebook-live-the-let-go-life",
-    name: "Live the Let Go Life",
-    price: 1200,
-    currency: "KES",
-    tag: "Digital",
-    image: ebook2,
-  },
-  {
-    id: "ebook-unmerited-favor",
-    name: "Unmerited Favor",
-    price: 1200,
-    currency: "KES",
-    tag: "Digital",
-    image: ebook3,
-  },
-];
-
-export const homeProducts: StorefrontItem[] = [
+const baseHomeProducts: StorefrontItem[] = [
   ...ebookProducts,
   {
     id: "tshirts",
@@ -133,6 +105,17 @@ export const homeProducts: StorefrontItem[] = [
     image: waterBottle,
   },
 ];
+
+// Merge and deduplicate by ID
+const seenIds = new Set<string>();
+export const homeProducts: StorefrontItem[] = [
+  ...baseHomeProducts,
+  ...allCategoryProducts,
+].filter((item) => {
+  if (seenIds.has(item.id)) return false;
+  seenIds.add(item.id);
+  return true;
+});
 
 export const homeFeaturedProducts: StorefrontItem[] = [
   {

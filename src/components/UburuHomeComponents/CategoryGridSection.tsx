@@ -48,13 +48,13 @@ export const CategoryGridSection: React.FC = () => {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-yellow-300 mb-3">
-            <span>12 Complete Departments</span>
+            <span>12 Complete Categories</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
             Explore All <span className="text-yellow-400">Marketplace</span> Categories
           </h2>
           <p className="mt-3 text-sm sm:text-base font-semibold text-white/70 leading-relaxed">
-            Click on any department to view full product selections, prices in KES, value bundles, and request specialized services.
+            Click on any category to view full product selections, prices in KES, value bundles, and request specialized services.
           </p>
         </div>
 

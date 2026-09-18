@@ -136,10 +136,10 @@ export const CategoryRail: React.FC<CategoryRailProps> = ({
             <span>Marketplace Directory</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-            Explore All <span className="bg-gradient-to-r from-yellow-300 to-amber-400 bg-clip-text text-transparent">12 Departments</span>
+            Explore All <span className="bg-gradient-to-r from-yellow-300 to-amber-400 bg-clip-text text-transparent">12 Categories</span>
           </h2>
           <p className="mt-3 text-sm sm:text-base font-medium text-neutral-400 leading-relaxed max-w-xl mx-auto">
-            Choose a department below to browse curated goods, value hampers, local harvest produce, and skilled on-demand services.
+            Choose a category below to browse curated goods, value hampers, local harvest produce, and skilled on-demand services.
           </p>
         </div>
 

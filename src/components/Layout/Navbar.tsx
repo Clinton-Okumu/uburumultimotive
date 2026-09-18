@@ -22,7 +22,7 @@ const NavbarLinks: NavLink[] = [
   { id: 8, title: "Partner", link: "/partner" },
 ];
 
-import { getTotalTrayCount } from "../../utils/cartStorage";
+import { getHomeCartCount } from "../../utils/cartStorage";
 
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -32,6 +32,8 @@ const Navbar = () => {
   const location = useLocation();
   const getDropdownRef = useRef<HTMLDivElement>(null);
   const mobileDropdownRef = useRef<HTMLDivElement>(null);
+
+  const isHomeRoute = location.pathname.startsWith("/get/home");
 
   const handleMobileLinkClick = (linkPath: string) => {
     if (location.pathname === linkPath) {
@@ -55,7 +57,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const refreshTrayCount = () => {
-      setTrayCount(getTotalTrayCount());
+      setTrayCount(getHomeCartCount());
     };
 
     refreshTrayCount();
@@ -134,7 +136,7 @@ const Navbar = () => {
 
         {/* Desktop Navigation - Right Side (Tray & Buttons) */}
         <div className="hidden lg:flex items-center gap-3 shrink-0">
-          {trayCount > 0 && (
+          {isHomeRoute && trayCount > 0 && (
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("uburu:open-cart"))}
               className="relative flex items-center justify-center h-10 w-10 rounded-full border border-yellow-400/40 bg-black/60 text-yellow-400 hover:bg-yellow-400 hover:text-black transition-all shadow-md"

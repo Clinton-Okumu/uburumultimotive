@@ -142,10 +142,10 @@ export const getVillageCartCount = (): number => {
 };
 
 /**
- * Returns the combined valid tray count.
+ * Returns the valid tray count (Uburu Home).
  */
 export const getTotalTrayCount = (): number => {
-  return getHomeCartCount() + getVillageCartCount();
+  return getHomeCartCount();
 };
 
 /**

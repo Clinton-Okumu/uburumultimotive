@@ -293,7 +293,7 @@ const CategoryDetail: React.FC = () => {
               </div>
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-3.5 py-1 text-[10px] font-black uppercase tracking-wider text-yellow-300 mb-2">
-                  <span>Department Catalog</span>
+                  <span>Category Catalog</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
                   {category.name}
@@ -327,7 +327,7 @@ const CategoryDetail: React.FC = () => {
           {/* Quick Department Switcher Pills */}
           <div className="mt-8 pt-6 border-t border-white/[0.08] flex items-center gap-2 overflow-x-auto no-scrollbar" style={{ scrollbarWidth: "none" }}>
             <span className="text-[11px] font-black uppercase tracking-wider text-neutral-400 shrink-0 mr-2">
-              Departments:
+              Categories:
             </span>
             {homeCategories.map((cat) => (
               <Link
@@ -604,12 +604,12 @@ const CategoryDetail: React.FC = () => {
               {category.name} Catalog
             </h3>
             <p className="text-neutral-300 text-sm leading-relaxed mb-8">
-              We are currently curating and onboarding fresh items for this department. If you need specific items or services right away, our team is ready to assist you directly.
+              We are currently curating and onboarding fresh items for this category. If you need specific items or services right away, our team is ready to assist you directly.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <a
                 href={`https://wa.me/254714138139?text=${encodeURIComponent(
-                  `Hello Uburu Home, I would like to inquire about items in the ${category.name} department.`
+                  `Hello Uburu Home, I would like to inquire about items in the ${category.name} category.`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"

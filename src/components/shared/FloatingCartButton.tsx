@@ -1,23 +1,22 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { ShoppingBag, ArrowRight } from "lucide-react";
 import {
   getSanitizedHomeCart,
-  getSanitizedVillageCart,
   getAllValidHomeProductsMap,
 } from "../../utils/cartStorage";
 
 export const FloatingCartButton: React.FC = () => {
+  const location = useLocation();
+  const isHomeRoute = location.pathname.startsWith("/get/home");
+
   const [homeCart, setHomeCart] = useState<Record<string, number>>(() =>
     getSanitizedHomeCart()
-  );
-  const [villageCart, setVillageCart] = useState<Record<string, number>>(() =>
-    getSanitizedVillageCart()
   );
   const [isBouncing, setIsBouncing] = useState(false);
 
   const refreshCart = () => {
     setHomeCart(getSanitizedHomeCart());
-    setVillageCart(getSanitizedVillageCart());
     setIsBouncing(true);
     setTimeout(() => setIsBouncing(false), 600);
   };
@@ -31,7 +30,7 @@ export const FloatingCartButton: React.FC = () => {
       window.removeEventListener("uburu:cart-updated", refreshCart);
       window.removeEventListener("storage", refreshCart);
     };
-  }, []);
+  }, [location.pathname]);
 
   const { totalCount, totalAmount } = useMemo(() => {
     let count = 0;
@@ -48,17 +47,10 @@ export const FloatingCartButton: React.FC = () => {
       }
     });
 
-    // Sum village products count
-    Object.values(villageCart).forEach((qty) => {
-      if (qty > 0) {
-        count += qty;
-      }
-    });
-
     return { totalCount: count, totalAmount: amount };
-  }, [homeCart, villageCart]);
+  }, [homeCart]);
 
-  if (totalCount === 0) return null;
+  if (!isHomeRoute || totalCount === 0) return null;
 
   return (
     <div className="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:right-6 sm:bottom-6 z-40 flex justify-center pointer-events-none">

@@ -300,7 +300,7 @@ export const CartDrawer: React.FC = () => {
 
               <div className="flex items-center justify-center gap-2 text-[10px] text-neutral-400 pt-1">
                 <ShieldCheck className="h-3.5 w-3.5 text-yellow-400" />
-                <span>Secure Payment • Funds Shelter & Community Impact</span>
+                <span>Secure Payment • Direct Checkout & Fast Delivery</span>
               </div>
             </div>
           )}

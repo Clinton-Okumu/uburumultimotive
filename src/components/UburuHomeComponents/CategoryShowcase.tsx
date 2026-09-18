@@ -86,7 +86,7 @@ export const CategoryShowcase: React.FC<CategoryShowcaseProps> = ({
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-3.5 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-yellow-300 mb-2">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Shop By Department</span>
+              <span>Shop By Category</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               {activeCategory.name}
@@ -325,7 +325,7 @@ export const CategoryShowcase: React.FC<CategoryShowcaseProps> = ({
             to={`/get/home/category/${activeCategory.slug}`}
             className="shrink-0 rounded-2xl bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-3.5 text-xs font-black uppercase tracking-widest transition-all shadow-lg inline-flex items-center gap-2"
           >
-            <span>Open Department Store</span>
+            <span>Open Category</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

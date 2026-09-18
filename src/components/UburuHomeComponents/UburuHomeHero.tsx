@@ -1,4 +1,4 @@
-import { ChevronRight, Instagram, ArrowDown, LayoutGrid, Sparkles } from "lucide-react";
+import { ChevronRight, Instagram, ArrowDown, LayoutGrid } from "lucide-react";
 import { Link } from "react-router-dom";
 import hero from "../../assets/hero.webp";
 import uburuLogo from "../../assets/homelogo.webp";
@@ -86,11 +86,6 @@ const UburuHomeHero = () => {
               <p className="text-sm font-bold text-yellow-300">Feel at Home</p>
             </div>
           </div>
-
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-yellow-400/30 bg-yellow-400/10 backdrop-blur-md px-4 py-2 text-[10px] font-black uppercase tracking-[0.25em] text-yellow-300 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Many Solutions. One Destination.</span>
-          </div>
         </div>
 
         {/* Heading */}
@@ -100,7 +95,7 @@ const UburuHomeHero = () => {
         
         {/* Subtitle */}
         <p className="text-base sm:text-lg text-neutral-300 max-w-2xl leading-relaxed mb-8 font-normal">
-          Explore our complete marketplace of everyday essentials, farm-fresh produce, wholesome foods, apparel, home care, and vetted skilled services—empowering families and supporting community impact.
+          Explore our complete marketplace of everyday essentials, farm-fresh produce, wholesome foods, apparel, home care, and vetted skilled services—bringing quality goods and convenient solutions directly to you.
         </p>
 
         {/* Marketplace Action CTAs */}
@@ -110,7 +105,7 @@ const UburuHomeHero = () => {
             className="bg-yellow-400 hover:bg-yellow-300 text-black px-8 py-3.5 text-xs font-black uppercase tracking-[0.25em] rounded-2xl shadow-[0_10px_30px_rgba(250,204,21,0.35)] hover:scale-[1.02] hover:shadow-[0_15px_35px_rgba(250,204,21,0.45)] transition-all flex items-center gap-2.5"
           >
             <LayoutGrid className="w-4 h-4" />
-            Browse 12 Departments
+            Browse 12 Categories
             <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
           </Button>
         </div>

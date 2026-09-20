@@ -125,6 +125,58 @@ export const originalSmartShopperItems: HomeCategoryItem[] = [
   },
 ];
 
+export const uburuServiceItems: HomeCategoryItem[] = [
+  {
+    id: "service-deep-cleaning",
+    name: "Home & Office Deep Cleaning",
+    price: 3500,
+    currency: "KES",
+    tag: "Cleaning",
+    image: pic7,
+    categorySlug: "uburu-services",
+    description: "Thorough sanitization and top-to-bottom deep scrubbing for apartments, residences, and workspace suites.",
+    unit: "From 1-2 Bedroom",
+    badge: "Most Requested",
+    features: ["Kitchen & appliance degreasing", "Bathroom deep descaling", "Window & floor polish"],
+  },
+  {
+    id: "service-plumbing-electrical",
+    name: "Plumbing & Electrical Repairs",
+    price: 2000,
+    currency: "KES",
+    tag: "Repairs",
+    image: pic4,
+    categorySlug: "uburu-services",
+    description: "Certified technicians for leak fixes, circuit troubleshooting, socket & switch installations, and water heater repairs.",
+    unit: "Base Callout & Assessment",
+    features: ["Certified technicians", "Same-day emergency response", "Guaranteed workmanship"],
+  },
+  {
+    id: "service-carpentry-furniture",
+    name: "Carpentry & Furniture Assembly",
+    price: 2500,
+    currency: "KES",
+    tag: "Carpentry",
+    image: pic5,
+    categorySlug: "uburu-services",
+    description: "Custom shelving, door realignment, hinge replacements, wardrobe repairs, and flat-pack furniture assembly.",
+    unit: "Per Job Assessment",
+    features: ["Custom fittings", "Precision wood repair", "Hardware replacement"],
+  },
+  {
+    id: "service-painting-wallcare",
+    name: "Interior Painting & Wall Care",
+    price: 4500,
+    currency: "KES",
+    tag: "Painting",
+    image: pic1,
+    categorySlug: "uburu-services",
+    description: "Flawless wall preparation, crack filling, moisture treatment, and premium color coating for fresh living spaces.",
+    unit: "Starting per Room",
+    features: ["Crack & moisture treatment", "Clean tape masking", "Fast-drying premium finish"],
+  },
+];
+
 export const homeCategories: HomeCategory[] = [
   {
     id: "uburu-smart-shopper",
@@ -228,7 +280,7 @@ export const homeCategories: HomeCategory[] = [
     iconName: "Wrench",
     accentColor: "from-amber-500 to-red-500",
     highlightImage: pic7,
-    items: [],
+    items: uburuServiceItems,
   },
   {
     id: "uburu-souvenirs",

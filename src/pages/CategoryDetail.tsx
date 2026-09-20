@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ChevronRight,
+  ChevronLeft,
   ArrowLeft,
   Search,
   SlidersHorizontal,
@@ -20,6 +21,8 @@ import {
   X,
   Sparkles,
   MessageSquare,
+  CheckCircle2,
+  Tag,
 } from "lucide-react";
 import {
   homeCategories,
@@ -37,6 +40,7 @@ import {
 } from "../data/storefrontCatalog";
 import { useStorefrontCheckout } from "../hooks/useStorefrontCheckout";
 import Button from "../components/shared/Button";
+import { ServiceInquiryModal } from "../components/UburuHomeComponents/ServiceInquiryModal";
 
 const HOME_ITEM_OPTIONS_STORAGE_KEY = "uburu_home_item_options";
 
@@ -119,6 +123,16 @@ const CategoryDetail: React.FC = () => {
   const [isFolderOpen, setIsFolderOpen] = useState(false);
   const [activeFolderItem, setActiveFolderItem] = useState<HomeCategoryItem | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [selectedService, setSelectedService] = useState<HomeCategoryItem | null>(null);
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (category) {
+      document.title = `${category.name} | Uburu Home`;
+    } else {
+      document.title = "Category | Uburu Home";
+    }
+  }, [category]);
 
   const colorConfigurableProductIds = useMemo(
     () => new Set<string>(homeColorConfigurableProductIds),
@@ -201,6 +215,15 @@ const CategoryDetail: React.FC = () => {
     handleAddToCart(productId);
   };
 
+  const categoryTabsRef = useRef<HTMLDivElement>(null);
+
+  const scrollCategoryTabs = (direction: "left" | "right") => {
+    if (categoryTabsRef.current) {
+      const scrollAmount = direction === "left" ? -280 : 280;
+      categoryTabsRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
+
   // Extract all unique tags in this category
   const availableTags = useMemo(() => {
     if (!category) return ["All"];
@@ -209,6 +232,18 @@ const CategoryDetail: React.FC = () => {
       if (item.tag) tags.add(item.tag);
     });
     return ["All", ...Array.from(tags)];
+  }, [category]);
+
+  // Compute item count per tag
+  const tagCounts = useMemo(() => {
+    if (!category) return {};
+    const counts: Record<string, number> = { All: category.items.length };
+    category.items.forEach((item) => {
+      if (item.tag) {
+        counts[item.tag] = (counts[item.tag] || 0) + 1;
+      }
+    });
+    return counts;
   }, [category]);
 
   // Filter and sort items
@@ -324,24 +359,73 @@ const CategoryDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Department Switcher Pills */}
-          <div className="mt-8 pt-6 border-t border-white/[0.08] flex items-center gap-2 overflow-x-auto no-scrollbar" style={{ scrollbarWidth: "none" }}>
-            <span className="text-[11px] font-black uppercase tracking-wider text-neutral-400 shrink-0 mr-2">
-              Categories:
-            </span>
-            {homeCategories.map((cat) => (
-              <Link
-                key={cat.id}
-                to={`/get/home/category/${cat.slug}`}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
-                  cat.id === category.id
-                    ? "bg-yellow-400 text-black font-black shadow-md shadow-yellow-400/20 ring-2 ring-yellow-400/40"
-                    : "bg-white/[0.05] text-neutral-300 hover:bg-white/10 hover:text-white border border-white/[0.06]"
-                }`}
-              >
-                {cat.shortName}
-              </Link>
-            ))}
+          {/* Quick Department Switcher Ribbon with Mini-Icons & Scroll Controls */}
+          <div className="mt-8 pt-6 border-t border-white/[0.08]">
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-yellow-400">
+                  Marketplace Categories
+                </span>
+                <span className="rounded-full bg-white/[0.06] border border-white/[0.08] px-2.5 py-0.5 text-[10px] font-bold text-neutral-400">
+                  {homeCategories.length} Departments
+                </span>
+              </div>
+
+              {/* Scroll Arrow Buttons for smooth horizontal navigation */}
+              <div className="hidden sm:flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => scrollCategoryTabs("left")}
+                  aria-label="Scroll categories left"
+                  className="h-7 w-7 rounded-full bg-white/[0.05] hover:bg-white/[0.12] border border-white/[0.08] text-neutral-300 hover:text-white flex items-center justify-center transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollCategoryTabs("right")}
+                  aria-label="Scroll categories right"
+                  className="h-7 w-7 rounded-full bg-white/[0.05] hover:bg-white/[0.12] border border-white/[0.08] text-neutral-300 hover:text-white flex items-center justify-center transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Category Track with Icons */}
+            <div
+              ref={categoryTabsRef}
+              className="flex items-center gap-2.5 overflow-x-auto no-scrollbar scroll-smooth py-1"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {homeCategories.map((cat) => {
+                const TabIcon = iconMap[cat.iconName] || ShoppingCart;
+                const isActive = cat.id === category.id;
+
+                return (
+                  <Link
+                    key={cat.id}
+                    to={`/get/home/category/${cat.slug}`}
+                    className={`group shrink-0 inline-flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-bold transition-all duration-200 ${
+                      isActive
+                        ? "bg-yellow-400 text-black font-black shadow-[0_8px_20px_rgba(250,204,21,0.25)] ring-2 ring-yellow-400/50 scale-[1.02]"
+                        : "bg-neutral-900/90 text-neutral-300 hover:text-white hover:bg-neutral-800 border border-white/[0.08]"
+                    }`}
+                  >
+                    <div
+                      className={`flex h-6 w-6 items-center justify-center rounded-xl transition-colors ${
+                        isActive
+                          ? "bg-black/15 text-black"
+                          : "bg-white/[0.06] text-yellow-400/80 group-hover:text-yellow-300"
+                      }`}
+                    >
+                      <TabIcon className="h-3.5 w-3.5" />
+                    </div>
+                    <span>{cat.shortName}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -350,60 +434,87 @@ const CategoryDetail: React.FC = () => {
       <section className="relative mx-auto max-w-7xl px-4 sm:px-6 py-12">
         {category.items.length > 0 ? (
           <>
-            {/* Filter & Search Bar */}
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-10 bg-neutral-900/60 backdrop-blur-md p-4 rounded-3xl border border-white/[0.08]">
-              {/* Search Bar */}
-              <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-neutral-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={`Search in ${category.name}...`}
-                  className="w-full rounded-2xl border border-white/10 bg-black/40 pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-neutral-500 focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-400"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery("")}
-                    className="absolute right-3.5 top-3 text-xs text-neutral-400 hover:text-white"
-                  >
-                    Clear
-                  </button>
-                )}
+            {/* Elevated Two-Tier Search, Filter & Sort Toolbar */}
+            <div className="mb-10 rounded-3xl border border-white/[0.08] bg-neutral-900/70 backdrop-blur-xl p-5 shadow-2xl space-y-4">
+              {/* Tier 1: Search and Sort Controls */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                {/* Full-width responsive Search bar */}
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-3.5 h-4 w-4 text-neutral-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={`Search in ${category.name}...`}
+                    className="w-full rounded-2xl border border-white/10 bg-black/50 pl-11 pr-10 py-3 text-sm text-white placeholder:text-neutral-500 focus:border-yellow-400 focus:outline-none focus:ring-1 focus:ring-yellow-400 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      aria-label="Clear search"
+                      className="absolute right-3.5 top-3.5 rounded-full bg-white/10 p-1 text-neutral-400 hover:text-white hover:bg-white/20 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Sort Dropdown */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="relative">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="appearance-none rounded-2xl border border-white/15 bg-neutral-950 pl-10 pr-9 py-3 text-xs font-bold text-white focus:border-yellow-400 focus:outline-none cursor-pointer transition-all hover:border-white/30"
+                    >
+                      <option value="default">Sort: Recommended</option>
+                      <option value="price-asc">Price: Low to High</option>
+                      <option value="price-desc">Price: High to Low</option>
+                    </select>
+                    <SlidersHorizontal className="absolute left-3.5 top-3.5 w-4 h-4 text-yellow-400 pointer-events-none" />
+                    <div className="absolute right-3.5 top-4 pointer-events-none border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-neutral-400" />
+                  </div>
+                </div>
               </div>
 
-              {/* Sub-tag filter pills */}
-              {availableTags.length > 2 && (
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-                  {availableTags.map((tag) => (
-                    <button
-                      key={tag}
-                      onClick={() => setSelectedTag(tag)}
-                      className={`shrink-0 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
-                        selectedTag === tag
-                          ? "bg-yellow-400 text-black font-black shadow-sm"
-                          : "bg-white/[0.04] text-neutral-300 hover:bg-white/[0.08] border border-white/[0.06]"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  ))}
+              {/* Tier 2: Sub-tag Filter Chips with Item Counts */}
+              {availableTags.length > 1 && (
+                <div className="pt-3 border-t border-white/[0.06] flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 mr-1 flex items-center gap-1.5">
+                    <Tag className="w-3 h-3 text-yellow-400" />
+                    Filter:
+                  </span>
+                  {availableTags.map((tag) => {
+                    const isSelected = selectedTag === tag;
+                    const count = tagCounts[tag];
+
+                    return (
+                      <button
+                        key={tag}
+                        onClick={() => setSelectedTag(tag)}
+                        className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                          isSelected
+                            ? "bg-yellow-400 text-black font-black shadow-sm"
+                            : "bg-white/[0.04] text-neutral-300 hover:bg-white/[0.08] hover:text-white border border-white/[0.08]"
+                        }`}
+                      >
+                        <span>{tag}</span>
+                        {count !== undefined && (
+                          <span
+                            className={`rounded-md px-1.5 py-0.5 text-[10px] font-black ${
+                              isSelected
+                                ? "bg-black/20 text-black"
+                                : "bg-white/[0.08] text-neutral-400"
+                            }`}
+                          >
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-
-              {/* Sorting Dropdown */}
-              <div className="flex items-center gap-2 shrink-0">
-                <SlidersHorizontal className="w-4 h-4 text-yellow-400" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="rounded-2xl border border-white/15 bg-neutral-900 px-4 py-2.5 text-xs font-bold text-white focus:border-yellow-400 focus:outline-none"
-                >
-                  <option value="default">Sort: Default</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                </select>
-              </div>
             </div>
 
             {/* Results Counter */}
@@ -414,185 +525,286 @@ const CategoryDetail: React.FC = () => {
               </span>
             </div>
 
-            {/* Product Cards Grid (Matching the exact design from the original Featured picks) */}
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {filteredItems.map((product) => {
-                const qty = quantities[product.id] ?? 1;
-                const isSelected = selectedProductId === product.id;
-
-                return (
+            {category.type === "service" ? (
+              /* Service Cards Grid (Tailored for Uburu Services) */
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredItems.map((service) => (
                   <div
-                    key={product.id}
-                    onMouseEnter={() => setSelectedProductId(product.id)}
-                    onFocusCapture={() => setSelectedProductId(product.id)}
-                    className={`group flex flex-col justify-between overflow-hidden rounded-3xl border bg-neutral-900/90 shadow-xl transition-all duration-300 hover:-translate-y-1.5 ${
-                      isSelected
-                        ? "border-yellow-400 ring-2 ring-yellow-400/40 shadow-[0_15px_35px_rgba(250,204,21,0.15)]"
-                        : "border-neutral-800 hover:border-neutral-700"
-                    }`}
+                    key={service.id}
+                    className="group flex flex-col justify-between overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900/90 shadow-xl transition-all duration-300 hover:border-yellow-400/60 hover:-translate-y-1.5 hover:shadow-2xl"
                   >
                     <div>
-                      {/* Product Image */}
-                      <div className="relative h-56 overflow-hidden bg-neutral-950">
+                      {/* Service Image / Banner */}
+                      <div className="relative h-48 overflow-hidden bg-neutral-950">
                         <img
-                          src={product.image}
-                          alt={product.name}
+                          src={service.image}
+                          alt={service.name}
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         
-                        <span className="absolute left-4 top-4 rounded-full bg-black/80 backdrop-blur-md px-3 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-300 border border-yellow-400/30">
-                          {product.tag}
-                        </span>
-                        <span className="absolute bottom-4 left-4 rounded-full bg-black/80 backdrop-blur-md px-3 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-300">
-                          {product.isFolder ? "Collection" : "In stock"}
-                        </span>
+                        {service.tag && (
+                          <span className="absolute left-4 top-4 rounded-full bg-black/80 backdrop-blur-md px-3 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-300 border border-yellow-400/30">
+                            {service.tag}
+                          </span>
+                        )}
+                        {service.badge && (
+                          <span className="absolute right-4 top-4 rounded-full bg-red-600/90 px-3 py-1 text-[9px] font-black uppercase tracking-wider text-white shadow-md">
+                            {service.badge}
+                          </span>
+                        )}
                       </div>
 
-                      {/* Info */}
+                      {/* Service Details */}
                       <div className="p-6">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <h3 className="text-lg font-black text-white">{product.name}</h3>
-                            <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-yellow-200/70">
-                              Uburu Home
-                            </p>
-                          </div>
-                          {!product.isFolder && (
-                            <div className="rounded-2xl bg-yellow-400/15 border border-yellow-400/30 px-3 py-2 text-xs font-black uppercase tracking-widest text-yellow-300">
-                              KES {product.price.toLocaleString("en-KE")}
-                            </div>
-                          )}
-                        </div>
+                        <h3 className="text-lg font-black text-white group-hover:text-yellow-300 transition-colors leading-snug">
+                          {service.name}
+                        </h3>
+                        <p className="mt-2 text-xs text-neutral-300 line-clamp-2 leading-relaxed">
+                          {service.description}
+                        </p>
 
-                        {!product.isFolder ? (
-                          <>
-                            {/* Quantity Selector */}
-                            <div className="mt-5 flex items-center justify-between rounded-2xl border border-neutral-800 bg-black/50 px-3 py-2">
-                              <button
-                                type="button"
-                                onClick={() => updateQuantity(product.id, qty - 1)}
-                                className="h-9 w-9 rounded-xl bg-neutral-900 text-lg font-bold text-yellow-300 hover:bg-neutral-800 transition-colors shadow-sm"
-                                aria-label={`Decrease ${product.name} quantity`}
-                              >
-                                -
-                              </button>
-                              <span className="text-xs font-black uppercase tracking-widest text-yellow-200/70">
-                                Qty:
-                              </span>
-                              <input
-                                type="number"
-                                min={1}
-                                max={99}
-                                value={qty}
-                                onChange={(event) =>
-                                  updateQuantity(product.id, Number(event.target.value) || 1)
-                                }
-                                className="w-16 bg-transparent text-center text-sm font-black text-white focus:outline-none"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => updateQuantity(product.id, qty + 1)}
-                                className="h-9 w-9 rounded-xl bg-neutral-900 text-lg font-bold text-yellow-300 hover:bg-neutral-800 transition-colors shadow-sm"
-                                aria-label={`Increase ${product.name} quantity`}
-                              >
-                                +
-                              </button>
-                            </div>
-
-                            {/* Color / Branding Configurable Selects */}
-                            {(colorConfigurableProductIds.has(product.id) ||
-                              brandingConfigurableProductIds.has(product.id)) && (
-                              <div className="mt-4 space-y-3 rounded-2xl border border-neutral-800 bg-black/30 p-3">
-                                {colorConfigurableProductIds.has(product.id) && (
-                                  <div>
-                                    <label
-                                      htmlFor={`color-${product.id}`}
-                                      className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80 block mb-1.5"
-                                    >
-                                      Color
-                                    </label>
-                                    <select
-                                      id={`color-${product.id}`}
-                                      value={itemOptions[product.id]?.color ?? defaultHomeItemOption.color}
-                                      onChange={(event) =>
-                                        updateItemOption(
-                                          product.id,
-                                          "color",
-                                          event.target.value as HomeApparelColor,
-                                        )
-                                      }
-                                      className="w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
-                                    >
-                                      {homeApparelColorOptions.map((color) => (
-                                        <option key={`${product.id}-${color}`} value={color}>
-                                          {color}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                )}
-                                {brandingConfigurableProductIds.has(product.id) && (
-                                  <div>
-                                    <label
-                                      htmlFor={`logo-${product.id}`}
-                                      className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80 block mb-1.5"
-                                    >
-                                      Branding
-                                    </label>
-                                    <select
-                                      id={`logo-${product.id}`}
-                                      value={itemOptions[product.id]?.logo ?? defaultHomeItemOption.logo}
-                                      onChange={(event) =>
-                                        updateItemOption(
-                                          product.id,
-                                          "logo",
-                                          event.target.value as HomeLogoOption,
-                                        )
-                                      }
-                                      className="w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
-                                    >
-                                      {homeLogoOptions.map((logoOption) => (
-                                        <option key={`${product.id}-${logoOption}`} value={logoOption}>
-                                          {logoOption}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                )}
+                        {/* Bulleted Features */}
+                        {service.features && service.features.length > 0 && (
+                          <div className="mt-4 space-y-1.5 rounded-2xl bg-black/40 border border-neutral-800/80 p-3">
+                            {service.features.map((feat, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-[11px] text-neutral-300 font-medium">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-yellow-400 shrink-0" />
+                                <span className="line-clamp-1">{feat}</span>
                               </div>
-                            )}
-
-                            <Button
-                              onClick={() => handleBuyClick(product.id)}
-                              className="mt-5 w-full bg-yellow-400 hover:bg-yellow-300 text-black py-3.5 text-xs font-black uppercase tracking-[0.25em] rounded-2xl shadow-lg transition-all"
-                            >
-                              Add to tray
-                            </Button>
-                          </>
-                        ) : (
-                          /* Folder / Digital Library Card */
-                          <div className="mt-5">
-                            <p className="mb-4 text-xs font-medium text-neutral-300">
-                              Explore our digital library. Select individual titles to support our cause.
-                            </p>
-                            <Button
-                              onClick={() => {
-                                setActiveFolderItem(product);
-                                setIsFolderOpen(true);
-                              }}
-                              className="w-full border-2 border-yellow-400 bg-yellow-400 py-3.5 text-xs font-black uppercase tracking-[0.25em] text-black hover:bg-yellow-300 rounded-2xl shadow-lg transition-all"
-                            >
-                              Browse Collection
-                            </Button>
+                            ))}
                           </div>
                         )}
                       </div>
                     </div>
+
+                    {/* Bottom Base Quote & Inquiry Action */}
+                    <div className="p-6 pt-0">
+                      <div className="pt-4 border-t border-white/[0.08] mb-4">
+                        <div className="flex items-baseline justify-between">
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-neutral-400 block">
+                              Estimated Base
+                            </span>
+                            {service.unit && (
+                              <span className="text-[11px] text-neutral-400 font-medium">
+                                {service.unit}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-base sm:text-lg font-black text-yellow-400">
+                            KES {service.price.toLocaleString("en-KE")}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          onClick={() => {
+                            setSelectedService(service);
+                            setIsServiceModalOpen(true);
+                          }}
+                          className="bg-yellow-400 hover:bg-yellow-300 text-black py-3 text-[11px] font-black uppercase tracking-wider rounded-xl shadow-md transition-all"
+                        >
+                          Request
+                        </Button>
+                        <a
+                          href={`https://wa.me/254714138139?text=${encodeURIComponent(
+                            `Hello Uburu Home, I would like to request/inquire about "${service.name}".`
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white py-3 text-[11px] font-black uppercase tracking-wider rounded-xl shadow-md transition-all"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              /* Product Cards Grid (Matching the exact design from the original Featured picks) */
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {filteredItems.map((product) => {
+                  const qty = quantities[product.id] ?? 1;
+                  const isSelected = selectedProductId === product.id;
+
+                  return (
+                    <div
+                      key={product.id}
+                      onMouseEnter={() => setSelectedProductId(product.id)}
+                      onFocusCapture={() => setSelectedProductId(product.id)}
+                      className={`group flex flex-col justify-between overflow-hidden rounded-3xl border bg-neutral-900/90 shadow-xl transition-all duration-300 hover:-translate-y-1.5 ${
+                        isSelected
+                          ? "border-yellow-400 ring-2 ring-yellow-400/40 shadow-[0_15px_35px_rgba(250,204,21,0.15)]"
+                          : "border-neutral-800 hover:border-neutral-700"
+                      }`}
+                    >
+                      <div>
+                        {/* Product Image */}
+                        <div className="relative h-56 overflow-hidden bg-neutral-950">
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                          
+                          <span className="absolute left-4 top-4 rounded-full bg-black/80 backdrop-blur-md px-3 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-300 border border-yellow-400/30">
+                            {product.tag}
+                          </span>
+                          <span className="absolute bottom-4 left-4 rounded-full bg-black/80 backdrop-blur-md px-3 py-1 text-[10px] font-black uppercase tracking-widest text-yellow-300">
+                            {product.isFolder ? "Collection" : "In stock"}
+                          </span>
+                        </div>
+
+                        {/* Info */}
+                        <div className="p-6">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h3 className="text-lg font-black text-white">{product.name}</h3>
+                              <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-yellow-200/70">
+                                Uburu Home
+                              </p>
+                            </div>
+                            {!product.isFolder && (
+                              <div className="rounded-2xl bg-yellow-400/15 border border-yellow-400/30 px-3 py-2 text-xs font-black uppercase tracking-widest text-yellow-300">
+                                KES {product.price.toLocaleString("en-KE")}
+                              </div>
+                            )}
+                          </div>
+
+                          {!product.isFolder ? (
+                            <>
+                              {/* Quantity Selector */}
+                              <div className="mt-5 flex items-center justify-between rounded-2xl border border-neutral-800 bg-black/50 px-3 py-2">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(product.id, qty - 1)}
+                                  className="h-9 w-9 rounded-xl bg-neutral-900 text-lg font-bold text-yellow-300 hover:bg-neutral-800 transition-colors shadow-sm"
+                                  aria-label={`Decrease ${product.name} quantity`}
+                                >
+                                  -
+                                </button>
+                                <span className="text-xs font-black uppercase tracking-widest text-yellow-200/70">
+                                  Qty:
+                                </span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={99}
+                                  value={qty}
+                                  onChange={(event) =>
+                                    updateQuantity(product.id, Number(event.target.value) || 1)
+                                  }
+                                  className="w-16 bg-transparent text-center text-sm font-black text-white focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(product.id, qty + 1)}
+                                  className="h-9 w-9 rounded-xl bg-neutral-900 text-lg font-bold text-yellow-300 hover:bg-neutral-800 transition-colors shadow-sm"
+                                  aria-label={`Increase ${product.name} quantity`}
+                                >
+                                  +
+                                </button>
+                              </div>
+
+                              {/* Color / Branding Configurable Selects */}
+                              {(colorConfigurableProductIds.has(product.id) ||
+                                brandingConfigurableProductIds.has(product.id)) && (
+                                <div className="mt-4 space-y-3 rounded-2xl border border-neutral-800 bg-black/30 p-3">
+                                  {colorConfigurableProductIds.has(product.id) && (
+                                    <div>
+                                      <label
+                                        htmlFor={`color-${product.id}`}
+                                        className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80 block mb-1.5"
+                                      >
+                                        Color
+                                      </label>
+                                      <select
+                                        id={`color-${product.id}`}
+                                        value={itemOptions[product.id]?.color ?? defaultHomeItemOption.color}
+                                        onChange={(event) =>
+                                          updateItemOption(
+                                            product.id,
+                                            "color",
+                                            event.target.value as HomeApparelColor,
+                                          )
+                                        }
+                                        className="w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
+                                      >
+                                        {homeApparelColorOptions.map((color) => (
+                                          <option key={`${product.id}-${color}`} value={color}>
+                                            {color}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
+                                  {brandingConfigurableProductIds.has(product.id) && (
+                                    <div>
+                                      <label
+                                        htmlFor={`logo-${product.id}`}
+                                        className="text-[10px] font-black uppercase tracking-[0.22em] text-yellow-200/80 block mb-1.5"
+                                      >
+                                        Branding
+                                      </label>
+                                      <select
+                                        id={`logo-${product.id}`}
+                                        value={itemOptions[product.id]?.logo ?? defaultHomeItemOption.logo}
+                                        onChange={(event) =>
+                                          updateItemOption(
+                                            product.id,
+                                            "logo",
+                                            event.target.value as HomeLogoOption,
+                                          )
+                                        }
+                                        className="w-full rounded-xl border border-neutral-700 bg-black px-3 py-2 text-xs font-semibold text-white focus:border-yellow-300 focus:outline-none"
+                                      >
+                                        {homeLogoOptions.map((logoOption) => (
+                                          <option key={`${product.id}-${logoOption}`} value={logoOption}>
+                                            {logoOption}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <Button
+                                onClick={() => handleBuyClick(product.id)}
+                                className="mt-5 w-full bg-yellow-400 hover:bg-yellow-300 text-black py-3.5 text-xs font-black uppercase tracking-[0.25em] rounded-2xl shadow-lg transition-all"
+                              >
+                                Add to tray
+                              </Button>
+                            </>
+                          ) : (
+                            /* Folder / Digital Library Card */
+                            <div className="mt-5">
+                              <p className="mb-4 text-xs font-medium text-neutral-300">
+                                Explore our digital library. Select individual titles to support our cause.
+                              </p>
+                              <Button
+                                onClick={() => {
+                                  setActiveFolderItem(product);
+                                  setIsFolderOpen(true);
+                                }}
+                                className="w-full border-2 border-yellow-400 bg-yellow-400 py-3.5 text-xs font-black uppercase tracking-[0.25em] text-black hover:bg-yellow-300 rounded-2xl shadow-lg transition-all"
+                              >
+                                Browse Collection
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </>
         ) : (
           /* Empty / Coming Soon Department State */
@@ -690,6 +902,13 @@ const CategoryDetail: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Service Inquiry Modal */}
+      <ServiceInquiryModal
+        isOpen={isServiceModalOpen}
+        onClose={() => setIsServiceModalOpen(false)}
+        service={selectedService}
+      />
     </div>
   );
 };

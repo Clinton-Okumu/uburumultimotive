@@ -55,7 +55,7 @@ const HeroSection = () => {
               className="bg-white hover:bg-gray-100 text-black font-extrabold px-8 border-none shadow-lg flex items-center gap-2"
               onClick={() => setIsGetOpen(!isGetOpen)}
             >
-              Get
+              Enterprises
               <ChevronDown className={`w-4 h-4 transition-transform ${isGetOpen ? 'rotate-180' : ''}`} />
             </Button>
 

@@ -3,7 +3,7 @@ import { CategoryRail } from "../components/UburuHomeComponents/CategoryRail";
 
 const UburuHome = () => {
   return (
-    <div className="bg-black min-h-screen text-white">
+    <div className="bg-white min-h-screen text-neutral-900">
       {/* 1. Hero Section with Brand Tagline and CTA */}
       <UburuHomeHero />
 

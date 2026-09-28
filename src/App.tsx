@@ -56,6 +56,8 @@ function App() {
                     <Route path="/get/village/maasai-mara" element={<MaasaiMaraPackage />} />
                     <Route path="/get/village/terms" element={<TravelTerms />} />
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/checkout/home" element={<Checkout forcedSource="home" />} />
+                    <Route path="/checkout/village" element={<Checkout forcedSource="village" />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

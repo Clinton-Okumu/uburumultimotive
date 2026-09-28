@@ -91,10 +91,29 @@ const Navbar = () => {
     };
   }, [isGetOpen]);
 
+  // Routes that have a dark hero header image where transparent nav is visible:
+  const heroRoutes = [
+    "/",
+    "/about",
+    "/founder",
+    "/causes",
+    "/gallery",
+    "/contact",
+    "/donate",
+    "/donate/money",
+    "/donate/items",
+    "/volunteer",
+    "/partner",
+    "/get/therapy",
+    "/get/village",
+  ];
+  const hasDarkHero = heroRoutes.includes(location.pathname);
+  const isSolidNav = scrolled || !hasDarkHero;
+
   return (
     <nav
-      className={`w-full fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
+      className={`w-full fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isSolidNav
           ? "bg-neutral-900/95 backdrop-blur-md py-3 shadow-2xl border-b border-yellow-500/20"
           : "bg-transparent py-6"
       }`}
@@ -113,7 +132,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation - Center Links */}
-        <div className="hidden xl:flex flex-1 justify-center items-center gap-6">
+        <div className="hidden lg:flex flex-1 justify-center items-center gap-4 xl:gap-6">
           {NavbarLinks.map((link) => (
             <Link
               key={link.id}

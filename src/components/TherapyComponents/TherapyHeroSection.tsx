@@ -65,10 +65,10 @@ const TherapyHeroSection = () => {
 
         <div className="flex flex-wrap gap-3">
           <Link
-            to="/pricing?tab=therapy"
+            to="/pricing"
             className="inline-flex items-center gap-2 bg-yellow-400 text-black px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider hover:bg-yellow-300 hover:scale-[1.02] transition-all shadow-lg"
           >
-            <span>View Pricing & Rates</span>
+            <span>Therapy Pricing</span>
           </Link>
 
           <a

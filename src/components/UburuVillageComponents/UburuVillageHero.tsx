@@ -78,13 +78,6 @@ const UburuVillageHero = () => {
         </p>
 
         <div className="flex flex-wrap gap-3">
-          <Link
-            to="/pricing?tab=village"
-            className="inline-flex items-center gap-2 bg-[#f2c15d] text-black px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider hover:bg-yellow-300 hover:scale-[1.02] transition-all shadow-lg"
-          >
-            <span>View Packages & Rates</span>
-          </Link>
-
           <a
             href="https://www.instagram.com/uburu_village?igsh=MWd6NzBqbzJsdTJ0eg=="
             target="_blank"

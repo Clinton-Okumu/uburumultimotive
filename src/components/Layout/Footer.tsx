@@ -24,7 +24,6 @@ const Footer = () => {
         { name: "Our Causes", url: "/causes" },
         { name: "Impact Gallery", url: "/gallery" },
         { name: "Contact", url: "/contact" },
-        { name: "Pricing & Packages", url: "/pricing" },
       ],
     },
     {

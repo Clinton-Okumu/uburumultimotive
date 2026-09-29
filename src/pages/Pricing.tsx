@@ -79,11 +79,11 @@ const Pricing = () => {
         <div className="relative max-w-4xl mx-auto z-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-100 border border-yellow-300/60 text-yellow-800 text-xs font-black uppercase tracking-widest mb-5">
             <Brain className="w-3.5 h-3.5 text-yellow-700" />
-            Uburu Therapy Rates
+            Therapy Pricing
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-neutral-950 mb-5">
-            Therapy & Counseling <span className="text-yellow-600">Pricing</span>
+            Therapy <span className="text-yellow-600">Pricing</span>
           </h1>
 
           <p className="text-base sm:text-lg text-neutral-600 max-w-2xl mx-auto mb-8 leading-relaxed">

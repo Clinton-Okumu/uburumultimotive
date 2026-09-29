@@ -24,6 +24,7 @@ import TravelTerms from './pages/TravelTerms';
 import EventDetail from './pages/EventDetail';
 
 
+import Pricing from './pages/Pricing';
 import ScrollToTop from './components/shared/ScrollToTop';
 
 
@@ -58,6 +59,7 @@ function App() {
                     <Route path="/checkout" element={<Checkout />} />
                     <Route path="/checkout/home" element={<Checkout forcedSource="home" />} />
                     <Route path="/checkout/village" element={<Checkout forcedSource="village" />} />
+                    <Route path="/pricing" element={<Pricing />} />
                 </Routes>
             </Layout>
         </BrowserRouter>

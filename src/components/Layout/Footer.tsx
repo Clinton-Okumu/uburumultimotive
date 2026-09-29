@@ -1,4 +1,5 @@
 import { ArrowRight, Facebook, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "../../assets/logo.webp";
 
 const TikTokIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -19,10 +20,11 @@ const Footer = () => {
     {
       title: "Organization",
       links: [
-        { name: "About Us", url: "#" },
-        { name: "Our Causes", url: "#" },
-        { name: "Impact Gallery", url: "#" },
-        { name: "Contact", url: "#" },
+        { name: "About Us", url: "/about" },
+        { name: "Our Causes", url: "/causes" },
+        { name: "Impact Gallery", url: "/gallery" },
+        { name: "Contact", url: "/contact" },
+        { name: "Pricing & Packages", url: "/pricing" },
       ],
     },
     {
@@ -31,15 +33,16 @@ const Footer = () => {
         { name: "Volunteer", url: "/volunteer" },
         { name: "Donate Now", url: "/donate" },
         { name: "Partner With Us", url: "/partner" },
-        { name: "FAQ", url: "#" },
+        { name: "Therapy Services", url: "/get/therapy" },
+        { name: "Village Adventures", url: "/get/village" },
       ],
     },
     {
       title: "Legal",
       links: [
-        { name: "Privacy Policy", url: "#" },
-        { name: "Terms of Service", url: "#" },
-        { name: "Cookie Policy", url: "#" },
+        { name: "Privacy Policy", url: "/privacy" },
+        { name: "Therapy Terms", url: "/get/therapy/terms" },
+        { name: "Travel Terms", url: "/get/village/terms" },
       ],
     },
   ];
@@ -148,13 +151,23 @@ const Footer = () => {
               <ul className="space-y-4">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
-                    <a
-                      href={link.url}
-                      className="text-gray-400 hover:text-white transition-colors duration-300 text-sm font-medium flex items-center group"
-                    >
-                      <span className="w-0 group-hover:w-4 h-[1px] bg-yellow-400 mr-0 group-hover:mr-2 transition-all duration-300"></span>
-                      {link.name}
-                    </a>
+                    {link.url.startsWith("/") ? (
+                      <Link
+                        to={link.url}
+                        className="text-gray-400 hover:text-white transition-colors duration-300 text-sm font-medium flex items-center group"
+                      >
+                        <span className="w-0 group-hover:w-4 h-[1px] bg-yellow-400 mr-0 group-hover:mr-2 transition-all duration-300"></span>
+                        {link.name}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.url}
+                        className="text-gray-400 hover:text-white transition-colors duration-300 text-sm font-medium flex items-center group"
+                      >
+                        <span className="w-0 group-hover:w-4 h-[1px] bg-yellow-400 mr-0 group-hover:mr-2 transition-all duration-300"></span>
+                        {link.name}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

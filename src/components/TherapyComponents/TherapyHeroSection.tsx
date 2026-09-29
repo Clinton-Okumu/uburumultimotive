@@ -64,6 +64,13 @@ const TherapyHeroSection = () => {
         </p>
 
         <div className="flex flex-wrap gap-3">
+          <Link
+            to="/pricing?tab=therapy"
+            className="inline-flex items-center gap-2 bg-yellow-400 text-black px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider hover:bg-yellow-300 hover:scale-[1.02] transition-all shadow-lg"
+          >
+            <span>View Pricing & Rates</span>
+          </Link>
+
           <a
             href="https://www.instagram.com/uburu_therapy?igsh=YjNpd3JkajZ0Nnh2"
             target="_blank"

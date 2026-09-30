@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Search,
   ChevronDown,
@@ -138,6 +138,11 @@ export const TakealotMarketplace: React.FC = () => {
   // Navigation and Filter States
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [selectedCategorySlug]);
+
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
@@ -154,8 +159,6 @@ export const TakealotMarketplace: React.FC = () => {
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [isSellerExpanded, setIsSellerExpanded] = useState(true);
   const [isPriceExpanded, setIsPriceExpanded] = useState(true);
-  const [isBrandExpanded, setIsBrandExpanded] = useState(true);
-  const [brandSearch, setBrandSearch] = useState("");
 
   // Wishlist state
   const [wishlist, setWishlist] = useState<string[]>(() => {
@@ -282,22 +285,6 @@ export const TakealotMarketplace: React.FC = () => {
       return next;
     });
   };
-
-  // Extract all available brands
-  const allAvailableBrands = useMemo(() => {
-    const brands = new Set<string>();
-    allProductsList.forEach((p) => {
-      if (p.brand) brands.add(p.brand);
-    });
-    return Array.from(brands);
-  }, [allProductsList]);
-
-  const filteredBrands = useMemo(() => {
-    if (!brandSearch.trim()) return allAvailableBrands;
-    return allAvailableBrands.filter((b) =>
-      b.toLowerCase().includes(brandSearch.toLowerCase())
-    );
-  }, [allAvailableBrands, brandSearch]);
 
   const clearAllFilters = () => {
     setSearchQuery("");
@@ -827,91 +814,6 @@ export const TakealotMarketplace: React.FC = () => {
                     </div>
                   </div>
                 )}
-              </div>
-
-              {/* Brand Filter */}
-              <div className="border-t border-neutral-100 pt-4">
-                <div
-                  className="flex items-center justify-between cursor-pointer py-1"
-                  onClick={() => setIsBrandExpanded(!isBrandExpanded)}
-                >
-                  <span className="text-xs font-bold text-neutral-900">Brand</span>
-                  {isBrandExpanded ? <Minus className="w-3.5 h-3.5 text-neutral-500" /> : <Plus className="w-3.5 h-3.5 text-neutral-500" />}
-                </div>
-
-                {isBrandExpanded && (
-                  <div className="mt-2 space-y-2 text-xs">
-                    {/* Brand Search */}
-                    <div className="relative mb-2">
-                      <input
-                        type="text"
-                        value={brandSearch}
-                        onChange={(e) => setBrandSearch(e.target.value)}
-                        placeholder="Search by Brand"
-                        className="w-full rounded-lg border border-neutral-300 pl-2 pr-7 py-1.5 text-xs text-neutral-800 focus:border-yellow-400 focus:outline-none"
-                      />
-                      <Search className="w-3.5 h-3.5 text-neutral-400 absolute right-2 top-2.5 pointer-events-none" />
-                    </div>
-
-                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
-                      {filteredBrands.map((brand) => {
-                        const isChecked = selectedBrands.includes(brand);
-                        return (
-                          <label key={brand} className="flex items-center gap-2 cursor-pointer text-neutral-700 hover:text-black">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => {
-                                setSelectedBrands((prev) =>
-                                  isChecked ? prev.filter((b) => b !== brand) : [...prev, brand]
-                                );
-                              }}
-                              className="rounded border-neutral-300 text-yellow-500 focus:ring-yellow-400"
-                            />
-                            <span className="line-clamp-1">{brand}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Availability Filter */}
-              <div className="border-t border-neutral-100 pt-4">
-                <span className="text-xs font-bold text-neutral-900 block mb-2">Availability</span>
-                <label className="flex items-center gap-2 cursor-pointer text-xs text-neutral-700">
-                  <input
-                    type="checkbox"
-                    checked={inStockOnly}
-                    onChange={(e) => setInStockOnly(e.target.checked)}
-                    className="rounded border-neutral-300 text-yellow-500 focus:ring-yellow-400"
-                  />
-                  <span>In Stock Only</span>
-                </label>
-              </div>
-
-              {/* Rating Filter */}
-              <div className="border-t border-neutral-100 pt-4">
-                <span className="text-xs font-bold text-neutral-900 block mb-2">Customer Rating</span>
-                <div className="space-y-1.5 text-xs">
-                  {[4, 3].map((stars) => (
-                    <button
-                      key={stars}
-                      onClick={() => setMinRating(minRating === stars ? 0 : stars)}
-                      className={`flex items-center gap-1.5 w-full py-1.5 px-2 rounded-lg transition-colors ${
-                        minRating === stars ? "bg-yellow-100 text-amber-900 font-bold" : "text-neutral-700 hover:bg-neutral-100"
-                      }`}
-                    >
-                      <div className="flex items-center text-amber-500">
-                        {Array.from({ length: stars }).map((_, i) => (
-                          <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                      <span>& above</span>
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
           </aside>

@@ -9,7 +9,6 @@ import cap from "../assets/cap.webp";
 import hoodie from "../assets/hoodie.webp";
 import waterBottle from "../assets/waterbottle.webp";
 import pic1 from "../assets/pic1.webp";
-import pic3 from "../assets/pic3.webp";
 import pic4 from "../assets/pic4.webp";
 import pic5 from "../assets/pic5.webp";
 import pic7 from "../assets/pic7.webp";
@@ -394,7 +393,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "ShoppingCart",
     accentColor: "from-amber-500 to-yellow-400",
-    highlightImage: pic1,
+    highlightImage: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=800&q=80",
     items: originalSmartShopperItems,
   },
   {
@@ -407,7 +406,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Carrot",
     accentColor: "from-emerald-600 to-green-400",
-    highlightImage: pic8,
+    highlightImage: "https://images.unsplash.com/photo-1610348725531-843dff563e2c?auto=format&fit=crop&w=800&q=80",
     items: uburuProduceItems,
   },
   {
@@ -420,7 +419,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "UtensilsCrossed",
     accentColor: "from-amber-600 to-orange-400",
-    highlightImage: pic9,
+    highlightImage: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=800&q=80",
     items: uburuPantryItems,
   },
   {
@@ -433,7 +432,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Briefcase",
     accentColor: "from-blue-600 to-cyan-400",
-    highlightImage: pic5,
+    highlightImage: "https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?auto=format&fit=crop&w=800&q=80",
     items: uburuOfficeItems,
   },
   {
@@ -446,7 +445,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Sparkles",
     accentColor: "from-rose-500 to-pink-400",
-    highlightImage: pic11,
+    highlightImage: "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=800&q=80",
     items: uburuBeautyItems,
   },
   {
@@ -459,7 +458,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Baby",
     accentColor: "from-amber-400 to-yellow-300",
-    highlightImage: kidsImage,
+    highlightImage: "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80",
     items: uburuKidsItems,
   },
   {
@@ -472,7 +471,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Home",
     accentColor: "from-teal-600 to-emerald-400",
-    highlightImage: pic8,
+    highlightImage: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
     items: originalSmartShopperItems.filter(item => item.id === "reusable-bottles"),
   },
   {
@@ -485,7 +484,7 @@ export const homeCategories: HomeCategory[] = [
     type: "service",
     iconName: "Wrench",
     accentColor: "from-amber-500 to-red-500",
-    highlightImage: pic7,
+    highlightImage: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
     items: uburuServiceItems,
   },
   {
@@ -498,7 +497,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Gift",
     accentColor: "from-purple-600 to-pink-500",
-    highlightImage: pic11,
+    highlightImage: "https://images.unsplash.com/photo-1606744837616-56c9a5c6a6eb?auto=format&fit=crop&w=800&q=80",
     items: [],
   },
   {
@@ -511,7 +510,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Stethoscope",
     accentColor: "from-red-600 to-rose-400",
-    highlightImage: pic3,
+    highlightImage: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
     items: [],
   },
   {
@@ -524,7 +523,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "Shirt",
     accentColor: "from-yellow-500 to-amber-300",
-    highlightImage: shirt,
+    highlightImage: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80",
     items: originalSmartShopperItems.filter(item => item.id !== "ebook-collection" && item.id !== "reusable-bottles"),
   },
   {
@@ -537,7 +536,7 @@ export const homeCategories: HomeCategory[] = [
     type: "product",
     iconName: "HardHat",
     accentColor: "from-amber-600 to-stone-500",
-    highlightImage: pic4,
+    highlightImage: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
     items: [],
   },
 ];

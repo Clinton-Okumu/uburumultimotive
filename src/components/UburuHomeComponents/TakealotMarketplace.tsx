@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Search,
   ChevronDown,
@@ -137,7 +138,16 @@ export const TakealotMarketplace: React.FC = () => {
 
   // Navigation and Filter States
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedCategorySlug = searchParams.get("category");
+
+  const setSelectedCategorySlug = (slug: string | null) => {
+    if (slug) {
+      setSearchParams({ category: slug });
+    } else {
+      setSearchParams({});
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -491,28 +501,54 @@ export const TakealotMarketplace: React.FC = () => {
           /* VIEW 1: CATEGORIES FIRST DIRECTORY PAGE                 */
           /* ======================================================== */
           <section className="space-y-8 animate-in fade-in duration-300">
-            {/* Directory Header Banner */}
-            <div className="rounded-3xl bg-white border border-neutral-200/90 p-8 sm:p-12 shadow-xs text-center relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-              <div className="relative z-10 max-w-2xl mx-auto">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 border border-yellow-300/60 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-amber-900 mb-4 shadow-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-yellow-700" />
-                  <span>Marketplace Departments</span>
-                </div>
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-neutral-900 tracking-tight">
-                  Shop by <span className="text-amber-700">Category</span>
-                </h1>
-                <p className="mt-3 text-sm sm:text-base text-neutral-600 leading-relaxed">
-                  Select a department below to explore fresh farm harvests, daily groceries, authentic merchandise, digital publications, and certified on-demand services.
-                </p>
+            {/* Directory Header Banner (Compact & Engaging) */}
+            <div className="relative overflow-hidden rounded-3xl border border-amber-200/80 bg-gradient-to-r from-amber-50/90 via-white to-yellow-50/80 p-5 sm:p-6 shadow-xs">
+              {/* Glow accents */}
+              <div className="absolute top-0 right-0 w-72 h-72 bg-yellow-300/15 rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
+              <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-amber-200/20 rounded-full blur-2xl pointer-events-none -mb-10" />
 
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+                {/* Left Side: Logo & Content */}
+                <div className="flex items-start sm:items-center gap-4 max-w-2xl">
+                  {/* Uburu Home Logo Badge */}
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl bg-white p-2 shadow-md border border-amber-200/90 ring-4 ring-yellow-400/20 flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105">
+                    <img
+                      src={uburuLogo}
+                      alt="Uburu Home"
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-yellow-400/20 border border-yellow-400/40 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-amber-900 shadow-2xs">
+                        <Sparkles className="w-3 h-3 text-amber-700 animate-pulse" />
+                        <span>12 Marketplace Departments</span>
+                      </span>
+                      <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-neutral-500">
+                        • Groceries, Fashion, Tech, Living & Services
+                      </span>
+                    </div>
+
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-neutral-900 tracking-tight">
+                      Shop by <span className="text-amber-700 underline decoration-yellow-400 decoration-wavy decoration-1 underline-offset-4">Category</span>
+                    </h1>
+
+                    <p className="text-xs sm:text-sm text-neutral-600 leading-snug">
+                      Explore top deals, farm-fresh produce, everyday fashion, homeware, digital books, and professional on-demand services.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Side: Action Button */}
+                <div className="flex items-center gap-3 shrink-0">
                   <button
                     onClick={() => setSelectedCategorySlug("all")}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3 text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+                    className="group inline-flex items-center gap-2 rounded-2xl bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-3 text-xs font-black uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
                   >
-                    <LayoutGrid className="w-4 h-4 text-yellow-400" />
-                    <span>Browse All Products ({allProductsList.length})</span>
+                    <LayoutGrid className="w-4 h-4 text-yellow-400 transition-transform group-hover:rotate-6" />
+                    <span>Browse All ({allProductsList.length})</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-yellow-400 transition-transform group-hover:translate-x-0.5" />
                   </button>
                 </div>
               </div>
@@ -1294,7 +1330,7 @@ export const TakealotMarketplace: React.FC = () => {
 
             <div className="text-center mb-6">
               <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
-                Digital Empowerment Library
+                Digital Bookstore & Publications
               </span>
               <h3 className="text-xl font-black text-neutral-900 mt-1">
                 {activeEbookItem.name}

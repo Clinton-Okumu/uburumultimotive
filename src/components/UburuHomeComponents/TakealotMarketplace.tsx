@@ -14,6 +14,18 @@ import {
   Info,
   Filter,
   Wrench,
+  ShoppingCart,
+  Carrot,
+  UtensilsCrossed,
+  Briefcase,
+  Sparkles,
+  Baby,
+  Home as HomeIcon,
+  Gift,
+  Stethoscope,
+  Shirt,
+  HardHat,
+  ArrowRight,
 } from "lucide-react";
 import {
   homeCategories,
@@ -29,6 +41,84 @@ import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import Button from "../shared/Button";
 import { ServiceInquiryModal } from "./ServiceInquiryModal";
 import uburuLogo from "../../assets/homelogo.webp";
+
+const categoryIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  ShoppingCart,
+  Carrot,
+  UtensilsCrossed,
+  Briefcase,
+  Sparkles,
+  Baby,
+  Home: HomeIcon,
+  Wrench,
+  Gift,
+  Stethoscope,
+  Shirt,
+  HardHat,
+};
+
+const categoryThemeMap: Record<string, { gradient: string; text: string; border: string }> = {
+  "uburu-smart-shopper": {
+    gradient: "from-amber-100 to-yellow-50",
+    text: "text-amber-700",
+    border: "border-amber-200",
+  },
+  "uburu-veggies": {
+    gradient: "from-emerald-100 to-green-50",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+  },
+  "uburu-food": {
+    gradient: "from-orange-100 to-amber-50",
+    text: "text-orange-700",
+    border: "border-orange-200",
+  },
+  "uburu-office": {
+    gradient: "from-blue-100 to-cyan-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+  },
+  "uburu-beauty": {
+    gradient: "from-rose-100 to-pink-50",
+    text: "text-rose-700",
+    border: "border-rose-200",
+  },
+  "uburu-kids": {
+    gradient: "from-amber-100 to-yellow-50",
+    text: "text-amber-800",
+    border: "border-amber-200",
+  },
+  "uburu-household": {
+    gradient: "from-teal-100 to-emerald-50",
+    text: "text-teal-700",
+    border: "border-teal-200",
+  },
+  "uburu-services": {
+    gradient: "from-red-100 to-amber-50",
+    text: "text-red-700",
+    border: "border-red-200",
+  },
+  "uburu-souvenirs": {
+    gradient: "from-purple-100 to-pink-50",
+    text: "text-purple-700",
+    border: "border-purple-200",
+  },
+  "uburu-medical": {
+    gradient: "from-red-100 to-rose-50",
+    text: "text-red-700",
+    border: "border-red-200",
+  },
+  "uburu-clothing": {
+    gradient: "from-yellow-100 to-amber-50",
+    text: "text-amber-800",
+    border: "border-yellow-300",
+  },
+  "uburu-construction": {
+    gradient: "from-stone-200 to-amber-100",
+    text: "text-stone-800",
+    border: "border-stone-300",
+  },
+};
 
 const HOME_ITEM_OPTIONS_STORAGE_KEY = "uburu_home_item_options";
 const WISHLIST_STORAGE_KEY = "uburu_wishlist_items";
@@ -47,7 +137,7 @@ export const TakealotMarketplace: React.FC = () => {
 
   // Navigation and Filter States
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>("all");
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
@@ -211,7 +301,7 @@ export const TakealotMarketplace: React.FC = () => {
 
   const clearAllFilters = () => {
     setSearchQuery("");
-    setSelectedCategorySlug("all");
+    setSelectedCategorySlug(null);
     setSelectedBrands([]);
     setMinPrice("");
     setMaxPrice("");
@@ -225,7 +315,7 @@ export const TakealotMarketplace: React.FC = () => {
     let result = [...allProductsList];
 
     // Category filter
-    if (selectedCategorySlug !== "all") {
+    if (selectedCategorySlug && selectedCategorySlug !== "all") {
       result = result.filter((p) => p.categorySlug === selectedCategorySlug);
     }
 
@@ -407,9 +497,183 @@ export const TakealotMarketplace: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. Main 2-Column Marketplace Body */}
+      {/* 2. Main Body: Categories Directory First vs Selected Category Products */}
       <main className="mx-auto max-w-7xl w-full px-4 sm:px-6 py-8 flex-1">
-        <div className="flex gap-6 items-start">
+        {!selectedCategorySlug && !searchQuery.trim() ? (
+          /* ======================================================== */
+          /* VIEW 1: CATEGORIES FIRST DIRECTORY PAGE                 */
+          /* ======================================================== */
+          <section className="space-y-8 animate-in fade-in duration-300">
+            {/* Directory Header Banner */}
+            <div className="rounded-3xl bg-white border border-neutral-200/90 p-8 sm:p-12 shadow-xs text-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+              <div className="relative z-10 max-w-2xl mx-auto">
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-yellow-100 border border-yellow-300/60 px-4 py-1.5 text-xs font-black uppercase tracking-widest text-amber-900 mb-4 shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-700" />
+                  <span>Marketplace Departments</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-neutral-900 tracking-tight">
+                  Shop by <span className="text-amber-700">Category</span>
+                </h1>
+                <p className="mt-3 text-sm sm:text-base text-neutral-600 leading-relaxed">
+                  Select a department below to explore fresh farm harvests, daily groceries, authentic merchandise, digital publications, and certified on-demand services.
+                </p>
+
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    onClick={() => setSelectedCategorySlug("all")}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3 text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95"
+                  >
+                    <LayoutGrid className="w-4 h-4 text-yellow-400" />
+                    <span>Browse All Products ({allProductsList.length})</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 12 Categories Grid Cards */}
+            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+              {homeCategories.map((category) => {
+                const IconComponent = categoryIconMap[category.iconName] || ShoppingCart;
+                const theme = categoryThemeMap[category.id] || {
+                  gradient: "from-amber-100 to-yellow-50",
+                  text: "text-amber-700",
+                  border: "border-amber-200",
+                };
+
+                return (
+                  <div
+                    key={category.id}
+                    onClick={() => setSelectedCategorySlug(category.slug)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedCategorySlug(category.slug);
+                      }
+                    }}
+                    className="group relative flex flex-col justify-between rounded-3xl border border-neutral-200/90 bg-white p-6 text-left transition-all duration-300 hover:border-yellow-400 hover:shadow-xl hover:-translate-y-1.5 cursor-pointer shadow-xs"
+                  >
+                    <div>
+                      {/* Top Category Visual Header */}
+                      <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-neutral-100 mb-5">
+                        <img
+                          src={category.highlightImage}
+                          alt={category.name}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        
+                        {/* Top Icon Badge */}
+                        <div
+                          className={`absolute top-3 left-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white/95 backdrop-blur-md border ${theme.border} ${theme.text} shadow-md`}
+                        >
+                          <IconComponent className="h-5 w-5" />
+                        </div>
+
+                        {/* Item Count / Type Badge */}
+                        <span className="absolute bottom-3 left-3 rounded-full bg-black/80 backdrop-blur-md px-3 py-1 text-[10px] font-black uppercase tracking-wider text-yellow-300 border border-yellow-400/30">
+                          {category.type === "service" ? "Professional Services" : `${category.items.length} Products`}
+                        </span>
+                      </div>
+
+                      {/* Title & Description */}
+                      <h3 className="text-base sm:text-lg font-black text-neutral-900 group-hover:text-amber-700 transition-colors tracking-tight line-clamp-1">
+                        {category.name}
+                      </h3>
+                      <p className="mt-1.5 text-xs text-neutral-500 line-clamp-2 leading-relaxed">
+                        {category.tagline}
+                      </p>
+                    </div>
+
+                    {/* Bottom Action */}
+                    <div className="mt-6 pt-4 border-t border-neutral-100 flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-amber-800 group-hover:text-black inline-flex items-center gap-1.5">
+                        <span>View {category.shortName}</span>
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1 text-yellow-500" />
+                      </span>
+                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                        Explore
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ) : (
+          /* ======================================================== */
+          /* VIEW 2: SELECTED CATEGORY / SEARCH PRODUCTS VIEW         */
+          /* ======================================================== */
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Back to Categories Navigation Header */}
+            <div className="rounded-2xl bg-white border border-neutral-200/90 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    setSelectedCategorySlug(null);
+                    setSearchQuery("");
+                  }}
+                  className="flex items-center gap-2 rounded-xl bg-neutral-100 hover:bg-yellow-400 hover:text-black text-neutral-800 px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all shadow-xs shrink-0 group"
+                >
+                  <ArrowRight className="w-3.5 h-3.5 rotate-180 transition-transform group-hover:-translate-x-0.5" />
+                  <span>All Categories</span>
+                </button>
+
+                <div className="h-6 w-px bg-neutral-200 hidden sm:block" />
+
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-neutral-900 tracking-tight flex items-center gap-2">
+                    <span>
+                      {activeCategoryObject
+                        ? activeCategoryObject.name
+                        : searchQuery
+                        ? `Search results for "${searchQuery}"`
+                        : "All Products"}
+                    </span>
+                    <span className="text-xs text-neutral-500 font-normal">
+                      ({filteredProducts.length} items)
+                    </span>
+                  </h2>
+                  {activeCategoryObject && (
+                    <p className="text-xs text-neutral-500 mt-0.5 line-clamp-1">
+                      {activeCategoryObject.tagline}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Category Switcher Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <button
+                  onClick={() => setSelectedCategorySlug("all")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors ${
+                    selectedCategorySlug === "all"
+                      ? "bg-yellow-400 text-black font-black"
+                      : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                  }`}
+                >
+                  All ({allProductsList.length})
+                </button>
+                {homeCategories.slice(0, 5).map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategorySlug(cat.slug)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition-colors ${
+                      selectedCategorySlug === cat.slug
+                        ? "bg-yellow-400 text-black font-black"
+                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                    }`}
+                  >
+                    {cat.shortName}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2-Column Marketplace: Filters (Left) & Products (Right) */}
+            <div className="flex gap-6 items-start">
           {/* Left Column: Refine & Filters Sidebar */}
           <aside
             className={`fixed inset-y-0 left-0 z-50 w-72 bg-white p-5 shadow-2xl overflow-y-auto transform transition-transform duration-300 ease-in-out lg:static lg:z-auto lg:w-64 lg:p-0 lg:bg-transparent lg:shadow-none lg:overflow-visible lg:transform-none ${
@@ -960,7 +1224,9 @@ export const TakealotMarketplace: React.FC = () => {
             )}
           </section>
         </div>
-      </main>
+      </div>
+    )}
+  </main>
 
       {/* 3. Configurable Options Modal */}
       {selectedOptionsProduct && (

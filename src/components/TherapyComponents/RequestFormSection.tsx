@@ -1393,7 +1393,7 @@ const RequestFormSection = ({
           <span className="text-sm font-medium text-gray-600 leading-relaxed">
             By booking a therapy appointment under Uburu, you confirm that you are doing so voluntarily. Read our{" "}
             <Link to="/get/therapy/terms" className="text-yellow-600 font-bold underline hover:text-yellow-700">
-              Terms and Conditions
+              Therapy Consent
             </Link>.
           </span>
         </label>

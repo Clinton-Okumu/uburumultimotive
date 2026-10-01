@@ -1067,7 +1067,7 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
           <span className="text-sm font-medium text-gray-600 leading-relaxed">
             I agree to the processing of my personal data for the purpose of scheduling my first coaching session. Read our{" "}
             <Link to="/get/therapy/terms" className="text-yellow-600 font-bold underline hover:text-yellow-700">
-              Terms and Conditions
+              Life Coaching Consent
             </Link>.
           </span>
         </label>

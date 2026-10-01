@@ -40,7 +40,7 @@ const Footer = () => {
       title: "Legal",
       links: [
         { name: "Privacy Policy", url: "/privacy" },
-        { name: "Therapy Terms", url: "/get/therapy/terms" },
+        { name: "Therapy Consent", url: "/get/therapy/terms" },
         { name: "Travel Terms", url: "/get/village/terms" },
       ],
     },

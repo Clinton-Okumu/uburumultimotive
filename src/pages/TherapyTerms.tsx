@@ -23,7 +23,7 @@ const TherapyTerms = () => {
 
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
           <div className="bg-neutral-900 px-8 py-10 text-white">
-            <h1 className="text-3xl md:text-4xl font-extrabold mb-2">Consent Form for Therapy</h1>
+            <h1 className="text-3xl md:text-4xl font-extrabold mb-2">Therapy Consent</h1>
             <p className="text-yellow-400 font-medium">Uburu Therapy - Professional services and business policies.</p>
           </div>
 
@@ -172,7 +172,7 @@ const TherapyTerms = () => {
             <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex items-center gap-3 text-gray-900 font-bold bg-yellow-50 px-6 py-4 rounded-2xl border border-yellow-200">
                 <CheckCircle2 className="text-yellow-600 h-6 w-6" />
-                <span>I have read and accept the terms and conditions above.</span>
+                <span>I have read and accept the therapy consent above.</span>
               </div>
               <p className="text-sm text-gray-500 font-medium">Last updated: May 23, 2026</p>
             </div>

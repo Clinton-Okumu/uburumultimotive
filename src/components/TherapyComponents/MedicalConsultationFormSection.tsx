@@ -1258,7 +1258,7 @@ const MedicalConsultationFormSection = ({
           <span className="text-sm font-medium text-gray-600 leading-relaxed">
             I agree to the processing of my health data for the purpose of this medical consultation. Read our{" "}
             <Link to="/get/therapy/terms" className="text-yellow-600 font-bold underline hover:text-yellow-700">
-              Terms and Conditions
+              Medical Consent
             </Link>.
           </span>
         </label>

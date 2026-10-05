@@ -54,10 +54,10 @@ export const MEDICAL_CONSULTATION_PRICING: MedicalPricingPackage[] = [
   {
     id: "med-ke-physical-1",
     sessions: 1,
-    amount: 3000,
+    amount: 3500,
     currency: "KES",
     mode: "Physical",
-    label: "Physical Medical Consultation (1 Session) - KES 3,000",
+    label: "Physical Medical Consultation (1 Session) - KES 3,500",
   },
   // International - Online (Virtual)
   {

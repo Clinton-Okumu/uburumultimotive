@@ -422,7 +422,32 @@ const Pricing = () => {
 
                     <div className="p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200/80">
                       <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 block mb-1">
-                        Life Coaching & Medical
+                        Medical Consultation
+                      </span>
+                      <ul className="space-y-1.5 text-xs text-neutral-700 font-medium">
+                        {isKenya ? (
+                          <>
+                            <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
+                              <span>Physical (In-Person)</span>
+                              <span className="font-bold text-neutral-950">KES 3,500</span>
+                            </li>
+                            <li className="flex justify-between items-center pt-1">
+                              <span>Online (Virtual)</span>
+                              <span className="font-bold text-neutral-950">KES 2,500</span>
+                            </li>
+                          </>
+                        ) : (
+                          <li className="flex justify-between items-center py-1">
+                            <span>Online / Virtual (1 Session)</span>
+                            <span className="font-bold text-neutral-950">$40 USD</span>
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+
+                    <div className="p-3.5 bg-neutral-50 rounded-2xl border border-neutral-200/80">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-neutral-500 block mb-1">
+                        Life Coaching & Psychiatric Assessment
                       </span>
                       <ul className="space-y-1.5 text-xs text-neutral-700">
                         <li className="flex items-center gap-1.5">

@@ -42,6 +42,7 @@ const Footer = () => {
         { name: "Privacy Policy", url: "/privacy" },
         { name: "Therapy Consent", url: "/get/therapy/terms" },
         { name: "Travel Terms", url: "/get/village/terms" },
+        { name: "Admin Portal", url: "/admin" },
       ],
     },
   ];

@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes, Outlet } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import About from './pages/About';
 import Founder from './pages/Founder';
@@ -22,18 +22,43 @@ import Checkout from './pages/Checkout';
 import TherapyTerms from './pages/TherapyTerms';
 import TravelTerms from './pages/TravelTerms';
 import EventDetail from './pages/EventDetail';
-
-
 import Pricing from './pages/Pricing';
 import ScrollToTop from './components/shared/ScrollToTop';
 
+// Standalone Admin Panel imports (Uburu Home Admin)
+import AdminLayout from './admin/AdminLayout';
+import AdminDashboard from './admin/pages/AdminDashboard';
+import AdminCategories from './admin/pages/AdminCategories';
+import AdminItems from './admin/pages/AdminItems';
+import AdminAddItem from './admin/pages/AdminAddItem';
+import AdminAddCategory from './admin/pages/AdminAddCategory';
+
+// Public layout wrapper (includes website Navbar, Footer, and Cart)
+function PublicSiteLayout() {
+    return (
+        <Layout>
+            <Outlet />
+        </Layout>
+    );
+}
 
 function App() {
     return (
         <BrowserRouter>
             <ScrollToTop />
-            <Layout>
-                <Routes>
+            <Routes>
+                {/* Dedicated Uburu Home Admin Panel routes - Standalone Layout */}
+                <Route path="/admin" element={<AdminLayout />}>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="categories" element={<AdminCategories />} />
+                    <Route path="items" element={<AdminItems />} />
+                    <Route path="add-item" element={<AdminAddItem />} />
+                    <Route path="add-category" element={<AdminAddCategory />} />
+                </Route>
+
+
+                {/* Public Website Routes */}
+                <Route element={<PublicSiteLayout />}>
                     <Route path="/" element={<Home />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/founder" element={<Founder />} />
@@ -60,8 +85,8 @@ function App() {
                     <Route path="/checkout/home" element={<Checkout forcedSource="home" />} />
                     <Route path="/checkout/village" element={<Checkout forcedSource="village" />} />
                     <Route path="/pricing" element={<Pricing />} />
-                </Routes>
-            </Layout>
+                </Route>
+            </Routes>
         </BrowserRouter>
     );
 }

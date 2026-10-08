@@ -25,3 +25,4 @@ dist-ssr
 .env
 dpo_config.php
 mail_config.php
+db_config.php

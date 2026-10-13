@@ -63,20 +63,20 @@ export const AdminCategories: React.FC = () => {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
                     <Link
                         to="/admin/add-category"
-                        className="flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 px-3.5 py-2 rounded-xl text-xs font-bold shadow-2xs transition-colors"
+                        className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 px-3 py-2 sm:px-3.5 sm:py-2 rounded-xl text-xs font-bold shadow-2xs transition-colors shrink-0"
                     >
-                        <FolderPlus className="w-4 h-4 text-amber-500" />
-                        Create Department
+                        <FolderPlus className="w-4 h-4 text-amber-500 shrink-0" />
+                        <span>Create Department</span>
                     </Link>
                     <Link
                         to="/admin/add-item"
-                        className="flex items-center gap-1.5 bg-amber-400 hover:bg-amber-500 text-slate-900 px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-colors"
+                        className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 bg-amber-400 hover:bg-amber-500 text-slate-900 px-3.5 py-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold shadow-xs transition-colors shrink-0"
                     >
-                        <Plus className="w-4 h-4" />
-                        Add New Item
+                        <Plus className="w-4 h-4 shrink-0" />
+                        <span>Add New Item</span>
                     </Link>
                 </div>
             </div>

@@ -18,7 +18,7 @@ import {
   Truck,
   HeartHandshake,
 } from "lucide-react";
-import { homeCategories } from "../../data/homeCategories";
+import { useHomeCategories } from "../../hooks/useHomeCategories";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ShoppingCart,
@@ -36,6 +36,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 export const CategoryGridSection: React.FC = () => {
+  const categories = useHomeCategories();
+
   return (
     <section id="category-grid" className="relative bg-neutral-900/60 py-20 px-4 sm:px-6 text-white">
       {/* Ambient background glows */}
@@ -48,7 +50,7 @@ export const CategoryGridSection: React.FC = () => {
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-yellow-400/40 bg-yellow-400/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.25em] text-yellow-300 mb-3">
-            <span>12 Complete Categories</span>
+            <span>{categories.length} Complete Categories</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
             Explore All <span className="text-yellow-400">Marketplace</span> Categories
@@ -58,9 +60,9 @@ export const CategoryGridSection: React.FC = () => {
           </p>
         </div>
 
-        {/* 12 Category Cards Grid */}
+        {/* Category Cards Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {homeCategories.map((category) => {
+          {categories.map((category) => {
             const IconComponent = iconMap[category.iconName] || ShoppingCart;
 
             return (

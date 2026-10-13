@@ -11,6 +11,7 @@ import {
     Store,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAdminAuth } from '../auth/AdminAuthContext';
 
 interface StoreNotification {
     id: string;
@@ -57,6 +58,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     onMenuToggle,
     title = 'Account',
 }) => {
+    const { logout } = useAdminAuth();
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifications, setNotifications] = useState(defaultStoreNotifications);
@@ -85,26 +87,26 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     };
 
     return (
-        <header className="h-20 bg-white border-b border-slate-100 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30 transition-all">
+        <header className="h-16 sm:h-20 bg-white border-b border-slate-100 px-3 sm:px-8 flex items-center justify-between sticky top-0 z-30 transition-all">
             {/* Left side: Hamburger button + Title */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 <button
                     onClick={onMenuToggle}
-                    className="p-2 -ml-2 text-slate-600 hover:text-slate-900 lg:hidden rounded-lg hover:bg-slate-100 transition-colors"
+                    className="p-2 -ml-1 text-slate-600 hover:text-slate-900 lg:hidden rounded-lg hover:bg-slate-100 transition-colors shrink-0"
                     aria-label="Toggle navigation menu"
                 >
                     <Menu className="w-5 h-5" />
                 </button>
 
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+                <div className="min-w-0">
+                    <h1 className="text-base sm:text-2xl font-bold text-slate-800 tracking-tight truncate max-w-[150px] xs:max-w-xs sm:max-w-none">
                         {title}
                     </h1>
                 </div>
             </div>
 
             {/* Right side: Search + 2 badged icons + Avatar with dropdown */}
-            <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 {/* Search box */}
                 <div className="hidden md:flex items-center relative">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3" />
@@ -135,7 +137,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
 
                     {/* Notifications dropdown */}
                     {notificationsOpen && (
-                        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                        <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-sm sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                             <div className="px-4 pb-2 border-b border-slate-100 flex items-center justify-between">
                                 <span className="font-bold text-sm text-slate-800">
                                     Notifications ({unreadCount})
@@ -240,14 +242,17 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
                             </div>
 
                             <div className="border-t border-slate-100 pt-1">
-                                <Link
-                                    to="/"
-                                    onClick={() => setProfileOpen(false)}
-                                    className="flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 hover:bg-red-50 font-semibold"
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setProfileOpen(false);
+                                        logout();
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-600 hover:bg-red-50 font-semibold cursor-pointer text-left"
                                 >
                                     <LogOut className="w-3.5 h-3.5 text-red-500" />
                                     Exit Admin
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     )}

@@ -10,6 +10,9 @@ export const AdminLayout: React.FC = () => {
     // Determine current section title based on pathname
     const getPageTitle = () => {
         const path = location.pathname;
+        if (path.includes('/therapy/services')) return 'Therapy Pathways & Services';
+        if (path.includes('/therapy/pricing')) return 'Therapy Pricing & Packages';
+        if (path.includes('/therapy')) return 'Uburu Therapy Administration';
         if (path.includes('/categories')) return 'Uburu Home Categories';
         if (path.includes('/add-item')) return 'Add Item to Category';
         if (path.includes('/add-category')) return 'Create New Category';
@@ -34,7 +37,7 @@ export const AdminLayout: React.FC = () => {
                 />
 
                 {/* Body Content */}
-                <main className="flex-1 p-5 sm:p-7 lg:p-8 max-w-[1400px] w-full mx-auto">
+                <main className="flex-1 p-4 sm:p-7 lg:p-8 max-w-[1400px] w-full mx-auto">
                     <Outlet />
                 </main>
             </div>

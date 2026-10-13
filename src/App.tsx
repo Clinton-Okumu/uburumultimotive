@@ -32,6 +32,12 @@ import AdminCategories from './admin/pages/AdminCategories';
 import AdminItems from './admin/pages/AdminItems';
 import AdminAddItem from './admin/pages/AdminAddItem';
 import AdminAddCategory from './admin/pages/AdminAddCategory';
+import AdminTherapyDashboard from './admin/pages/AdminTherapyDashboard';
+import AdminTherapyServices from './admin/pages/AdminTherapyServices';
+import AdminTherapyPricing from './admin/pages/AdminTherapyPricing';
+import AdminLogin from './admin/pages/AdminLogin';
+import { AdminAuthProvider } from './admin/auth/AdminAuthContext';
+import AdminProtectedRoute from './admin/auth/AdminProtectedRoute';
 
 // Public layout wrapper (includes website Navbar, Footer, and Cart)
 function PublicSiteLayout() {
@@ -45,16 +51,33 @@ function PublicSiteLayout() {
 function App() {
     return (
         <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
-                {/* Dedicated Uburu Home Admin Panel routes - Standalone Layout */}
-                <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="categories" element={<AdminCategories />} />
-                    <Route path="items" element={<AdminItems />} />
-                    <Route path="add-item" element={<AdminAddItem />} />
-                    <Route path="add-category" element={<AdminAddCategory />} />
-                </Route>
+            <AdminAuthProvider>
+                <ScrollToTop />
+                <Routes>
+                    {/* Admin Login Route */}
+                    <Route path="/admin/login" element={<AdminLogin />} />
+
+                    {/* Dedicated Admin Panel routes - Protected Standalone Layout */}
+                    <Route
+                        path="/admin"
+                        element={
+                            <AdminProtectedRoute>
+                                <AdminLayout />
+                            </AdminProtectedRoute>
+                        }
+                    >
+                        {/* Uburu Home Store Admin Routes */}
+                        <Route index element={<AdminDashboard />} />
+                        <Route path="categories" element={<AdminCategories />} />
+                        <Route path="items" element={<AdminItems />} />
+                        <Route path="add-item" element={<AdminAddItem />} />
+                        <Route path="add-category" element={<AdminAddCategory />} />
+
+                        {/* Uburu Therapy Admin Routes */}
+                        <Route path="therapy" element={<AdminTherapyDashboard />} />
+                        <Route path="therapy/services" element={<AdminTherapyServices />} />
+                        <Route path="therapy/pricing" element={<AdminTherapyPricing />} />
+                    </Route>
 
 
                 {/* Public Website Routes */}
@@ -87,7 +110,8 @@ function App() {
                     <Route path="/pricing" element={<Pricing />} />
                 </Route>
             </Routes>
-        </BrowserRouter>
+        </AdminAuthProvider>
+    </BrowserRouter>
     );
 }
 

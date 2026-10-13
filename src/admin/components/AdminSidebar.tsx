@@ -13,8 +13,12 @@ import {
     FolderPlus,
     ChevronDown,
     ShieldCheck,
+    HeartPulse,
+    Brain,
+    DollarSign,
 } from 'lucide-react';
 import { getStoredCategories, HOME_CATALOG_EVENT } from '../data/homeAdminStorage';
+import { useAdminAuth } from '../auth/AdminAuthContext';
 
 interface AdminSidebarProps {
     isOpen: boolean;
@@ -22,12 +26,15 @@ interface AdminSidebarProps {
 }
 
 export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
+    const { logout } = useAdminAuth();
     const location = useLocation();
     const [categoryCount, setCategoryCount] = useState(0);
     const [itemCount, setItemCount] = useState(0);
 
     // Collapsible dropdown state for Uburu Home section
     const [isHomeOpen, setIsHomeOpen] = useState(true);
+    // Collapsible dropdown state for Uburu Therapy section
+    const [isTherapyOpen, setIsTherapyOpen] = useState(true);
 
     const refreshCounts = () => {
         const cats = getStoredCategories();
@@ -43,7 +50,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         return () => window.removeEventListener(HOME_CATALOG_EVENT, handler);
     }, []);
 
-    // Ensure Uburu Home stays open when active
+    // Ensure sections stay open when their routes are active
     useEffect(() => {
         const path = location.pathname;
         if (
@@ -54,6 +61,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
             path.startsWith('/admin/add-category')
         ) {
             setIsHomeOpen(true);
+        }
+        if (path.startsWith('/admin/therapy')) {
+            setIsTherapyOpen(true);
         }
     }, [location.pathname]);
 
@@ -70,6 +80,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         location.pathname.startsWith('/admin/items') ||
         location.pathname.startsWith('/admin/add-item') ||
         location.pathname.startsWith('/admin/add-category');
+
+    const isTherapyRouteActive = location.pathname.startsWith('/admin/therapy');
 
     return (
         <>
@@ -190,6 +202,63 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                             </nav>
                         )}
                     </div>
+
+                    {/* SECTION: UBURU THERAPY (Collapsible Dropdown Section) */}
+                    <div>
+                        <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                            CLINICAL & WELLBEING
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsTherapyOpen(!isTherapyOpen)}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                isTherapyRouteActive
+                                    ? 'bg-slate-800/90 text-yellow-400 ring-1 ring-slate-700/50'
+                                    : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                                    isTherapyRouteActive ? 'bg-yellow-400 text-slate-950' : 'bg-slate-800 text-yellow-400'
+                                }`}>
+                                    <HeartPulse className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="tracking-wide uppercase text-[11px]">UBURU THERAPY</span>
+                            </div>
+                            <ChevronDown
+                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                    isTherapyOpen ? 'rotate-180 text-yellow-400' : ''
+                                }`}
+                            />
+                        </button>
+
+                        {/* Dropdown Sub-Items for Uburu Therapy */}
+                        {isTherapyOpen && (
+                            <nav className="mt-1 ml-3 pl-3 border-l border-slate-800/80 space-y-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                                <NavLink to="/admin/therapy" end className={navItemClass} onClick={() => onClose()}>
+                                    <LayoutDashboard className="w-4 h-4 text-slate-400 group-hover:text-yellow-400 transition-colors" />
+                                    <span>Overview</span>
+                                </NavLink>
+
+                                <NavLink to="/admin/therapy/services" className={navItemClass} onClick={() => onClose()}>
+                                    <Brain className="w-4 h-4 text-slate-400 group-hover:text-yellow-400 transition-colors" />
+                                    <span className="flex-1">Pathways</span>
+                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-800 text-amber-400 rounded-full border border-slate-700">
+                                        3
+                                    </span>
+                                </NavLink>
+
+                                <NavLink to="/admin/therapy/pricing" className={navItemClass} onClick={() => onClose()}>
+                                    <DollarSign className="w-4 h-4 text-slate-400 group-hover:text-yellow-400 transition-colors" />
+                                    <span className="flex-1">Pricing & Plans</span>
+                                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-yellow-400 text-slate-950 rounded-md">
+                                        Rates
+                                    </span>
+                                </NavLink>
+                            </nav>
+                        )}
+                    </div>
                 </div>
 
                 {/* Bottom Footer Section */}
@@ -225,13 +294,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                                 Super Admin
                             </p>
                         </div>
-                        <Link
-                            to="/"
-                            title="Sign out / Exit"
-                            className="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-slate-800"
+                        <button
+                            type="button"
+                            onClick={() => logout()}
+                            title="Sign out / Exit Admin"
+                            className="p-1.5 text-slate-500 hover:text-red-400 transition-colors rounded-lg hover:bg-slate-800 cursor-pointer"
                         >
                             <LogOut className="w-4 h-4" />
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </aside>

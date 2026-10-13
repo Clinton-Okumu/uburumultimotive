@@ -29,9 +29,9 @@ import {
   ArrowRight,
 } from "lucide-react";
 import {
-  homeCategories,
   type HomeCategoryItem,
 } from "../../data/homeCategories";
+import { useHomeCategories } from "../../hooks/useHomeCategories";
 import {
   homeApparelColorOptions,
   homeLogoOptions,
@@ -135,6 +135,7 @@ const defaultHomeItemOption = {
 } as const;
 
 export const TakealotMarketplace: React.FC = () => {
+  const categories = useHomeCategories();
 
   // Navigation and Filter States
   const [searchQuery, setSearchQuery] = useState("");
@@ -192,8 +193,8 @@ export const TakealotMarketplace: React.FC = () => {
   const allProductsList = useMemo(() => {
     const list: HomeCategoryItem[] = [];
     const seen = new Set<string>();
-    homeCategories.forEach((cat) => {
-      cat.items.forEach((item) => {
+    categories.forEach((cat) => {
+      (cat.items || []).forEach((item) => {
         if (!seen.has(item.id)) {
           seen.add(item.id);
           list.push(item);
@@ -201,7 +202,7 @@ export const TakealotMarketplace: React.FC = () => {
       });
     });
     return list;
-  }, []);
+  }, [categories]);
 
   const { quantities, cartItemCount, updateQuantity, addToCart } =
     useStorefrontCheckout({
@@ -379,8 +380,8 @@ export const TakealotMarketplace: React.FC = () => {
 
   const activeCategoryObject = useMemo(() => {
     if (selectedCategorySlug === "all") return null;
-    return homeCategories.find((c) => c.slug === selectedCategorySlug);
-  }, [selectedCategorySlug]);
+    return categories.find((c) => c.slug === selectedCategorySlug);
+  }, [selectedCategorySlug, categories]);
 
   return (
     <div className="min-h-screen bg-[#fafbfc] text-neutral-900 flex flex-col font-sans pt-16 pb-16">
@@ -416,7 +417,7 @@ export const TakealotMarketplace: React.FC = () => {
                     <span>All Departments</span>
                     <span className="text-[10px] text-neutral-500 font-normal">({allProductsList.length})</span>
                   </div>
-                  {homeCategories.map((cat) => (
+                  {categories.map((cat) => (
                     <div
                       key={cat.id}
                       onClick={() => {
@@ -428,7 +429,7 @@ export const TakealotMarketplace: React.FC = () => {
                       }`}
                     >
                       <span className="line-clamp-1">{cat.name}</span>
-                      <span className="text-[10px] text-neutral-400 font-normal">({cat.items.length})</span>
+                      <span className="text-[10px] text-neutral-400 font-normal">({(cat.items || []).length})</span>
                     </div>
                   ))}
                 </div>
@@ -554,9 +555,9 @@ export const TakealotMarketplace: React.FC = () => {
               </div>
             </div>
 
-            {/* 12 Categories Grid Cards */}
+            {/* Categories Grid Cards */}
             <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {homeCategories.map((category) => {
+              {categories.map((category) => {
                 const IconComponent = categoryIconMap[category.iconName] || ShoppingCart;
                 const theme = categoryThemeMap[category.id] || {
                   gradient: "from-amber-100 to-yellow-50",
@@ -679,7 +680,7 @@ export const TakealotMarketplace: React.FC = () => {
                 >
                   All ({allProductsList.length})
                 </button>
-                {homeCategories.slice(0, 5).map((cat) => (
+                {categories.slice(0, 5).map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategorySlug(cat.slug)}
@@ -738,7 +739,7 @@ export const TakealotMarketplace: React.FC = () => {
                     <span className="text-[11px] text-neutral-500 font-normal">({allProductsList.length})</span>
                   </div>
 
-                  {(showAllCategories ? homeCategories : homeCategories.slice(0, 7)).map((cat) => (
+                  {(showAllCategories ? categories : categories.slice(0, 7)).map((cat) => (
                     <div
                       key={cat.id}
                       onClick={() => setSelectedCategorySlug(cat.slug)}
@@ -749,11 +750,11 @@ export const TakealotMarketplace: React.FC = () => {
                       }`}
                     >
                       <span className="line-clamp-1 text-xs">{cat.name}</span>
-                      <span className="text-[11px] text-neutral-400">({cat.items.length})</span>
+                      <span className="text-[11px] text-neutral-400">({(cat.items || []).length})</span>
                     </div>
                   ))}
 
-                  {homeCategories.length > 7 && (
+                  {categories.length > 7 && (
                     <button
                       onClick={() => setShowAllCategories(!showAllCategories)}
                       className="text-xs font-bold text-[#0b79bf] hover:underline pt-2 px-2 block"

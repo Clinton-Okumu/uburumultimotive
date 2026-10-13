@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import Button from "../shared/Button";
 import {
-  homeCategories,
   type HomeCategory,
   type HomeCategoryItem,
 } from "../../data/homeCategories";
+import { useHomeCategories } from "../../hooks/useHomeCategories";
 import { homeProducts } from "../../data/storefrontCatalog";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { ServiceInquiryModal } from "./ServiceInquiryModal";
@@ -28,9 +28,18 @@ export const CategoryShowcase: React.FC<CategoryShowcaseProps> = ({
   onCategoryChange,
 }) => {
   const navigate = useNavigate();
+  const categories = useHomeCategories();
   const [activeCategory, setActiveCategory] = useState<HomeCategory>(
-    selectedCategory || homeCategories[0]
+    selectedCategory || categories[0]
   );
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setActiveCategory(selectedCategory);
+    } else if (categories.length > 0 && !categories.some((c) => c.id === activeCategory?.id)) {
+      setActiveCategory(categories[0]);
+    }
+  }, [selectedCategory, categories]);
   const [selectedService, setSelectedService] = useState<HomeCategoryItem | null>(null);
   const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
 
@@ -118,7 +127,7 @@ export const CategoryShowcase: React.FC<CategoryShowcaseProps> = ({
 
         {/* Category Switcher Tabs */}
         <div className="mt-8 flex gap-2 overflow-x-auto pb-3 no-scrollbar" style={{ scrollbarWidth: "none" }}>
-          {homeCategories.map((cat) => {
+          {categories.map((cat) => {
             const isSelected = activeCategory.id === cat.id;
 
             return (

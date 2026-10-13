@@ -15,7 +15,8 @@ import {
   HardHat,
   ArrowRight,
 } from "lucide-react";
-import { homeCategories, type HomeCategory } from "../../data/homeCategories";
+import { type HomeCategory } from "../../data/homeCategories";
+import { useHomeCategories } from "../../hooks/useHomeCategories";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ShoppingCart,
@@ -116,6 +117,7 @@ export const CategoryRail: React.FC<CategoryRailProps> = ({
   activeCategorySlug,
 }) => {
   const navigate = useNavigate();
+  const categories = useHomeCategories();
 
   const handleCategoryClick = (category: HomeCategory) => {
     navigate(`/get/home/category/${category.slug}`);
@@ -136,16 +138,16 @@ export const CategoryRail: React.FC<CategoryRailProps> = ({
             <span>Marketplace Directory</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-neutral-900 tracking-tight">
-            Explore All <span className="bg-gradient-to-r from-amber-600 to-yellow-500 bg-clip-text text-transparent">12 Categories</span>
+            Explore All <span className="bg-gradient-to-r from-amber-600 to-yellow-500 bg-clip-text text-transparent">{categories.length} Categories</span>
           </h2>
           <p className="mt-3 text-sm sm:text-base font-medium text-neutral-600 leading-relaxed max-w-xl mx-auto">
             Choose a category below to browse curated goods, value hampers, local harvest produce, and skilled on-demand services.
           </p>
         </div>
 
-        {/* 4x3 Grid Layout (4 columns x 3 rows = 12 visible categories) */}
+        {/* Categories Grid Layout */}
         <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {homeCategories.map((category) => {
+          {categories.map((category) => {
             const IconComponent = iconMap[category.iconName] || ShoppingCart;
             const theme = categoryThemeMap[category.id] || {
               gradient: "from-amber-100 to-yellow-50",

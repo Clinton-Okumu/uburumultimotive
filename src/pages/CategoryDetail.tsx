@@ -25,10 +25,9 @@ import {
   Tag,
 } from "lucide-react";
 import {
-  homeCategories,
-  getCategoryBySlug,
   type HomeCategoryItem,
 } from "../data/homeCategories";
+import { useHomeCategories } from "../hooks/useHomeCategories";
 import {
   homeProducts,
   homeApparelColorOptions,
@@ -112,10 +111,16 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const CategoryDetail: React.FC = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
+  const categories = useHomeCategories();
 
   const category = useMemo(() => {
-    return categoryId ? getCategoryBySlug(categoryId) : undefined;
-  }, [categoryId]);
+    if (!categoryId) return undefined;
+    return categories.find(
+      (cat) =>
+        cat.slug.toLowerCase() === categoryId.toLowerCase() ||
+        cat.id.toLowerCase() === categoryId.toLowerCase()
+    );
+  }, [categoryId, categories]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
@@ -367,7 +372,7 @@ const CategoryDetail: React.FC = () => {
                   Marketplace Categories
                 </span>
                 <span className="rounded-full bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 text-[10px] font-bold text-neutral-600">
-                  {homeCategories.length} Departments
+                  {categories.length} Departments
                 </span>
               </div>
 
@@ -398,7 +403,7 @@ const CategoryDetail: React.FC = () => {
               className="flex items-center gap-2.5 overflow-x-auto no-scrollbar scroll-smooth py-1"
               style={{ scrollbarWidth: "none" }}
             >
-              {homeCategories.map((cat) => {
+              {categories.map((cat) => {
                 const TabIcon = iconMap[cat.iconName] || ShoppingCart;
                 const isActive = cat.id === category.id;
 

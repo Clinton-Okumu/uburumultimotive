@@ -337,8 +337,27 @@ export const homeCategories: HomeCategory[] = [
   },
 ];
 
-// Helper to get category by slug or ID
+// Helper to get category by slug or ID (supports both live stored categories and default definitions)
 export const getCategoryBySlug = (slugOrId: string): HomeCategory | undefined => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem('uburu_home_admin_catalog_v1');
+      if (raw) {
+        const stored = JSON.parse(raw);
+        if (Array.isArray(stored) && stored.length > 0) {
+          const match = stored.find(
+            (cat: HomeCategory) =>
+              cat.slug.toLowerCase() === slugOrId.toLowerCase() ||
+              cat.id.toLowerCase() === slugOrId.toLowerCase()
+          );
+          if (match) return match;
+        }
+      }
+    } catch {
+      // Fallback below
+    }
+  }
+
   return homeCategories.find(
     (cat) => cat.slug.toLowerCase() === slugOrId.toLowerCase() || cat.id.toLowerCase() === slugOrId.toLowerCase()
   );

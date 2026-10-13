@@ -1,9 +1,21 @@
+import { useState, useEffect } from "react";
 import { MessageSquare, Rocket, Stethoscope, ArrowRight, CheckCircle2 } from "lucide-react";
+import {
+  getStoredTherapyServices,
+  THERAPY_CONFIG_EVENT,
+  type TherapyServiceConfig,
+} from "../../admin/data/therapyAdminStorage";
 
 interface SupportOptionsSectionProps {
   onSelectService?: (serviceType: string) => void;
   activeService?: string;
 }
+
+const iconComponentMap = {
+  MessageSquare,
+  Rocket,
+  Stethoscope,
+};
 
 export type SupportOption = {
   id: string;
@@ -76,6 +88,24 @@ const SupportOptionsSection = ({
   onSelectService,
   activeService,
 }: SupportOptionsSectionProps) => {
+  const [services, setServices] = useState<TherapyServiceConfig[]>(() =>
+    getStoredTherapyServices()
+  );
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setServices(getStoredTherapyServices());
+    };
+    window.addEventListener(THERAPY_CONFIG_EVENT, handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener(THERAPY_CONFIG_EVENT, handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  const visibleServices = services.filter((s) => s.enabled);
+
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-neutral-50/60 relative overflow-hidden">
       {/* Background Decorative Accents */}
@@ -100,15 +130,35 @@ const SupportOptionsSection = ({
 
         {/* 3 Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-10">
-          {SUPPORT_OPTIONS.map((option) => {
-            const Icon = option.icon;
+          {visibleServices.map((option) => {
+            const Icon = (iconComponentMap as Record<string, React.ComponentType<{ className?: string }>>)[
+              option.iconName
+            ] || MessageSquare;
             const isSelected = activeService === option.serviceType;
+            const isCoaching = option.id === "coaching";
+            const isMedical = option.id === "medical";
+
+            const headerBg = isCoaching
+              ? "bg-neutral-900 group-hover:bg-black"
+              : isMedical
+              ? "bg-amber-100/60 group-hover:bg-amber-200/80"
+              : "bg-yellow-50/90 group-hover:bg-yellow-100/90";
+
+            const iconColor = isCoaching
+              ? "text-yellow-400"
+              : isMedical
+              ? "text-amber-800"
+              : "text-yellow-600";
+
+            const buttonBg = isCoaching
+              ? "bg-neutral-900 text-yellow-400 border border-yellow-500/30 hover:bg-black hover:text-yellow-300 hover:border-yellow-400"
+              : "bg-yellow-500 text-black hover:bg-yellow-400";
 
             return (
               <div
                 key={option.id}
                 onClick={() => onSelectService?.(option.serviceType)}
-                className={`group cursor-pointer rounded-[2.5rem] bg-white border border-neutral-200/80 shadow-xl shadow-yellow-500/5 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${option.borderColor} flex flex-col justify-between relative ${
+                className={`group cursor-pointer rounded-[2.5rem] bg-white border border-neutral-200/80 shadow-xl shadow-yellow-500/5 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl group-hover:border-yellow-400 flex flex-col justify-between relative ${
                   isSelected ? "ring-2 ring-yellow-400 border-yellow-400" : ""
                 }`}
               >
@@ -122,16 +172,16 @@ const SupportOptionsSection = ({
 
                 {/* Top Colored Banner Header */}
                 <div
-                  className={`${option.headerBg} ${option.headerHoverBg} py-12 flex flex-col items-center justify-center transition-colors duration-300 border-b border-neutral-100 relative`}
+                  className={`${headerBg} py-12 flex flex-col items-center justify-center transition-colors duration-300 border-b border-neutral-100 relative`}
                 >
                   <div
                     className={`p-4 rounded-2xl shadow-md group-hover:scale-110 transition-transform duration-300 ${
-                      option.id === "coaching"
+                      isCoaching
                         ? "bg-neutral-800 border border-yellow-500/30"
                         : "bg-white border border-neutral-100"
                     }`}
                   >
-                    <Icon className={`w-10 h-10 ${option.iconColor}`} />
+                    <Icon className={`w-10 h-10 ${iconColor}`} />
                   </div>
                 </div>
 
@@ -156,9 +206,9 @@ const SupportOptionsSection = ({
                       e.stopPropagation();
                       onSelectService?.(option.serviceType);
                     }}
-                    className={`w-full py-4 px-6 rounded-2xl font-black text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2.5 shadow-lg group-hover:shadow-xl group-hover:scale-[1.02] ${option.buttonBg} ${option.buttonHoverBg} ${option.shadowColor}`}
+                    className={`w-full py-4 px-6 rounded-2xl font-black text-sm tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2.5 shadow-lg group-hover:shadow-xl group-hover:scale-[1.02] ${buttonBg} shadow-yellow-500/20`}
                   >
-                    <span>Book Now</span>
+                    <span>{option.buttonText || "Book Now"}</span>
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>

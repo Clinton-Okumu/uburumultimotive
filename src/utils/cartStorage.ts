@@ -1,5 +1,5 @@
 import { homeProducts, ebookProducts, villageEvents, type StorefrontItem } from "../data/storefrontCatalog";
-import { homeCategories } from "../data/homeCategories";
+import { getStoredCategories } from "../admin/data/homeAdminStorage";
 
 export const HOME_CART_STORAGE_KEY = "uburu_home_cart";
 export const VILLAGE_CART_STORAGE_KEY = "uburu_village_cart";
@@ -18,8 +18,8 @@ export const getAllValidHomeProductsMap = (): Map<string, StorefrontItem> => {
   ebookProducts.forEach((p) => map.set(p.id, p));
 
   // Add category products and their folder sub-items
-  homeCategories.forEach((category) => {
-    category.items.forEach((item) => {
+  getStoredCategories().forEach((category) => {
+    (category.items || []).forEach((item) => {
       map.set(item.id, item);
       if (item.folderItems && Array.isArray(item.folderItems)) {
         item.folderItems.forEach((subItem) => map.set(subItem.id, subItem));

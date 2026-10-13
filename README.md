@@ -1,131 +1,178 @@
-# Uburu Multimove - Homeless Shelter NGO
+# Uburu Multimove - Digital Platform & Management System
 
-"Touching one homeless person at a time"
+> *"Touching one homeless person at a time"*
 
-A modern, responsive website for Uburu Multimove, a non-profit organization supporting homeless individuals through shelter, meals, and community outreach.
+A modern full-stack web platform built for **Uburu Multimove**, integrating charitable outreach, an e-commerce catalog (**Uburu Home**), cultural experiences (**Uburu Village**), a dedicated mental health and wellness booking engine (**Uburu Therapy**), an authenticated Admin Management Suite, and automated CI/CD deployment pipelines.
 
-## Features
+---
 
-- Home page with hero, causes, testimonials, and volunteer call-to-action
-- About page with mission and impact information
-- Causes, gallery, blog, and contact pages
-- Donations flow (DPO hosted payment page)
-- Responsive UI built with Tailwind CSS
+## 🌟 Platform Overview & Core Modules
 
-## Tech stack
+### 1. 🏠 Uburu Home (E-Commerce Storefront)
+- **Dynamic Marketplace**: Categorized shopping experience supporting apparel, merchandise, books, and lifestyle items.
+- **Cart & Checkout**: Persistent cart storage, delivery county calculation, pickup selection, and promo code support.
+- **Database Catalog**: Live synchronized catalog backed by MySQL (`/api/home/catalog.php`) with fallback local caching.
 
-- React 19 + TypeScript
-- Vite
-- Tailwind CSS
-- React Router
+### 2. 🧠 Uburu Therapy (Mental Health & Holistic Wellness)
+- **Support Pathways**:
+  - **Individual Therapy**: 1-to-1 virtual & physical counseling sessions.
+  - **Couples Counseling**: Relationship rebuilding and mediation.
+  - **Support Groups**: Group healing circles.
+  - **Life Coaching**: Personal growth and goal alignment roadmaps.
+  - **Medical Consultation**: Specialist psychiatric and holistic medical consultations.
+- **Dynamic Session Packages**: Fully configurable session tiers (1, 4, 6, 8, 10 sessions) with dual-currency support (KES & USD).
+- **Public Pricing**: Live rates synchronization across marketing pages (`/pricing`) and booking forms (`/get/therapy`).
 
-## Local development
+### 3. 🦒 Uburu Village (Experiences & Travel)
+- Cultural and therapeutic experiences (e.g., Maasai Mara packages, community outreach events).
+- Dynamic booking checkout and ticket generation.
 
-1. Clone and install:
+### 4. 🔐 Admin Management Panel (`/admin`)
+- **Authentication**: Protected admin session gate (`/admin/login`) with persistent session tokens and secure route guards.
+- **Uburu Home Management**:
+  - Add, edit, and organize product categories.
+  - Create and manage store items, stock status, pricing, and image uploads.
+- **Uburu Therapy Management**:
+  - **Therapy Dashboard** (`/admin/therapy`): Key metrics, live card previews, base rate breakdown.
+  - **Services Configurator** (`/admin/therapy/services`): Live visual editor for pathway badges, descriptions, icons, and visibility toggles.
+  - **Pricing Manager** (`/admin/therapy/pricing`): Multi-tier session packages, modality assignment (Online / In-Person), KES and USD pricing, and highlighted/popular badges.
+  - **Global Server Sync**: Changes made in Admin automatically persist to the server backend (`/api/therapy/config.php`) so all visitors and payment flows update in real time.
 
-```bash
-git clone <repository-url>
-cd uburumultimove
-npm install
-```
+---
 
-2. Start the dev server:
+## 💳 Payment Gateway Architecture
 
-```bash
-npm run dev
-```
+All transactions (Donations, Store purchases, Event tickets, and Therapy bookings) run through **Direct Pay Online (DPO Group)**:
 
-Open http://localhost:5173
+1. **Token Generation (`/api/dpo/create-token.php`)**:
+   - Dynamic pricing calculated in the React client is passed in the JSON payload.
+   - The backend creates a secure DPO payment token matching the exact amount and currency (`KES` / `USD`).
+2. **Gateway Redirection**:
+   - Customers complete payment via M-Pesa, Card, or mobile wallets on DPO's secure portal.
+3. **Payment Verification (`/api/dpo/verify-token.php`)**:
+   - Automatic return handling and receipt generation (`/donate/return` and `/purchase/return`).
 
-## Deployment (Truehost shared hosting)
+---
 
-This project is a Vite SPA plus a small set of PHP endpoints used for DPO payments.
+## 🛠️ Tech Stack
 
-1. Build:
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4, Framer Motion, Lucide Icons, React Router v7.
+- **Backend API**: PHP 8.x endpoints for MySQL catalog management, DPO payment gateway integration, form processing, and therapy configuration persistence.
+- **Database**: MySQL (for Uburu Home catalog and items) + server-side JSON storage.
+- **CI/CD & Hosting**: GitHub Actions, FTPS deployment via `SamKirkland/FTP-Deploy-Action`, Apache/cPanel (Truehost Cloud).
 
-```bash
-npm run build
-```
+---
 
-2. Upload frontend:
+## 🚀 Local Development Setup
 
-- Upload `dist/` to `public_html/`
+### Prerequisites
+- Node.js 20+ (recommended: Node 22)
+- npm or pnpm
 
-3. Upload payment endpoints:
+### Getting Started
 
-- Upload `public/api/dpo/create-token.php` to `public_html/api/dpo/create-token.php`
-- Upload `public/api/dpo/verify-token.php` to `public_html/api/dpo/verify-token.php`
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Clinton-Okumu/uburumultimotive.git
+   cd uburumultimotive
+   ```
 
-Upload form endpoints:
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-- Upload the entire `public/api/forms/` directory (includes shared helpers)
-- Upload `public/api/forms/contact.php` to `public_html/api/forms/contact.php`
-- Upload `public/api/forms/volunteer.php` to `public_html/api/forms/volunteer.php`
-- Upload `public/api/forms/donate-items.php` to `public_html/api/forms/donate-items.php`
-- Upload `public/api/forms/therapy.php` to `public_html/api/forms/therapy.php`
+3. **Run local development server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-4. Ensure rewrites do not break the API:
+4. **Verify TypeScript & Production Build:**
+   ```bash
+   npm run build
+   ```
 
-- Upload `.htaccess` to `public_html/`
-- Confirm it includes an API bypass rule (this repo uses `RewriteRule ^api/ - [L]`)
+---
 
-5. Configure DPO server-side settings (recommended outside `public_html`):
+## 🔄 Automated CI/CD Deployment (GitHub Actions to cPanel)
 
-- Copy `dpo_config.example.php` to a secure path, for example:
-  - `/home/<user>/dpo_config.php`
-- Set the hosting environment variable:
+The repository features an automated deployment pipeline in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Every push to `main` automatically runs typechecks, compiles production assets, verifies `.htaccess` and `/api/` endpoints, and deploys modified files over secure FTPS to cPanel.
+
+### GitHub Environment Secrets Configuration
+
+In your GitHub repository, navigate to **Settings &rarr; Environments &rarr; Production** and configure the following secrets:
+
+| Secret Name | Value / Description | Example |
+| :--- | :--- | :--- |
+| **`FTP_SERVER`** | Truehost server hostname matching the SSL certificate | `gra108.truehost.cloud` |
+| **`FTP_USERNAME`** | Full cPanel FTP account username | `deploy@uburumultimovehs.org` |
+| **`FTP_PASSWORD`** | Password created for this FTP account in cPanel | *(Your secure password)* |
+| **`FTP_SERVER_DIR`** | Target directory on the server (when FTP root is `public_html`) | `/` |
+| **`FTP_PORT`** | Optional (defaults to 21) | `21` |
+
+### Setting up the FTP Account in cPanel
+1. In cPanel, navigate to **FTP Accounts &rarr; Add FTP Account**.
+2. **Log In**: `deploy` (yielding `deploy@uburumultimovehs.org`).
+3. **Directory**: `/home/uburumul/public_html` *(points directly to the web root)*.
+4. **Quota**: `Unlimited`.
+5. Click **Create FTP Account**.
+
+---
+
+## 📁 Repository Structure
 
 ```text
-DPO_CONFIG_PATH=/home/<user>/dpo_config.php
+uburumultimotive/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml            # Automated build & FTPS cPanel deployment
+├── public/
+│   ├── .htaccess                 # Apache SPA rewrite and API passthrough
+│   └── api/
+│       ├── dpo/
+│       │   ├── create-token.php  # DPO payment token generation
+│       │   └── verify-token.php  # Payment callback verification
+│       ├── forms/                # Contact, Volunteer, & Donation PHP mailers
+│       ├── home/                 # MySQL endpoints for categories, items, and image upload
+│       │   ├── catalog.php
+│       │   ├── categories.php
+│       │   ├── items.php
+│       │   └── upload.php
+│       └── therapy/
+│           └── config.php        # Global server persistence for therapy pathways & pricing
+├── src/
+│   ├── admin/                    # Authenticated Admin Panel
+│   │   ├── auth/                 # AdminAuthContext & AdminProtectedRoute
+│   │   ├── components/           # AdminSidebar, AdminHeader, AdminLayout
+│   │   ├── data/                 # homeAdminStorage.ts & therapyAdminStorage.ts
+│   │   └── pages/                # AdminDashboard, Categories, Items, Therapy Config
+│   ├── components/
+│   │   ├── Layout/               # Public Navbar, Footer, Mobile Navigation
+│   │   ├── TherapyComponents/    # Dynamic booking forms (Therapy, Coaching, Medical)
+│   │   ├── UburuHomeComponents/  # Storefront categories, grid, rails, showcase
+│   │   └── shared/               # Reusable buttons, cards, modals
+│   ├── data/                     # Fallback initial catalogs and definitions
+│   ├── hooks/                    # useHomeCategories, useStorefrontCheckout
+│   ├── pages/                    # Public pages (Home, Therapy, Pricing, Checkout, etc.)
+│   ├── App.tsx                   # Central router & startup data synchronization
+│   └── main.tsx
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
 ```
 
-- Set `redirect_url` and `back_url` in your config to your live domain, for example:
+---
 
-```text
-https://yourdomain.com/donate/return
-```
+## 📜 Available NPM Scripts
 
-Notes:
+- `npm run dev` &mdash; Starts the local Vite development server with Hot Module Replacement (HMR).
+- `npm run build` &mdash; Runs strict TypeScript compilation (`tsc -b`) followed by Vite production bundling.
+- `npm run preview` &mdash; Runs a local preview server for testing production build artifacts.
+- `npm run lint` &mdash; Runs ESLint against the entire codebase.
 
-- `dpo_config.php` contains secrets and should not be committed.
-- The donation form supports these currencies (must be enabled on your DPO account): `KES`, `USD`.
+---
 
-## Form email delivery
+## 🛡️ License
 
-Contact, volunteer, donate-items, and therapy forms submit to PHP endpoints under `public/api/forms/`.
-
-Recommended setup is SMTP from the server.
-
-1. Copy `mail_config.example.php` to a secure path, for example:
-
-- `/home/<user>/mail_config.php`
-
-2. Set the hosting environment variable:
-
-```text
-MAIL_CONFIG_PATH=/home/<user>/mail_config.php
-```
-
-3. Update recipients in the config (`to.default`, and optionally per form: `to.contact`, `to.volunteer`, `to.donate_items`, `to.therapy`).
-
-## Available scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Typecheck and build production assets
-- `npm run preview` - Preview production build locally
-- `npm run lint` - Run ESLint
-
-## Project structure
-
-```text
-src/
-  assets/
-  components/
-  pages/
-  main.tsx
-public/
-  api/
-    dpo/
-      create-token.php
-      verify-token.php
-```
+This project is proprietary and maintained for **Uburu Multimove**. All rights reserved.

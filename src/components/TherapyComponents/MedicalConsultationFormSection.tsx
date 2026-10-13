@@ -31,44 +31,13 @@ type ContactMethod = "Phone Call" | "Video Call" | "Email" | "WhatsApp";
 
 type BestTime = "Morning" | "Afternoon" | "Evening" | "Anytime";
 
-export interface MedicalPricingPackage {
-  id: string;
-  sessions: number;
-  amount: number;
-  currency: "KES" | "USD";
-  mode: "Online" | "Physical";
-  label: string;
-}
+import {
+  getMedicalPricingPackages,
+  THERAPY_CONFIG_EVENT,
+  type FormMedicalPricingPackage as MedicalPricingPackage,
+} from "../../admin/data/therapyAdminStorage";
 
-export const MEDICAL_CONSULTATION_PRICING: MedicalPricingPackage[] = [
-  // Kenya - Online (Virtual)
-  {
-    id: "med-ke-online-1",
-    sessions: 1,
-    amount: 2500,
-    currency: "KES",
-    mode: "Online",
-    label: "Online Medical Consultation (1 Session) - KES 2,500",
-  },
-  // Kenya - Physical (In-Person)
-  {
-    id: "med-ke-physical-1",
-    sessions: 1,
-    amount: 3500,
-    currency: "KES",
-    mode: "Physical",
-    label: "Physical Medical Consultation (1 Session) - KES 3,500",
-  },
-  // International - Online (Virtual)
-  {
-    id: "med-int-online-1",
-    sessions: 1,
-    amount: 40,
-    currency: "USD",
-    mode: "Online",
-    label: "Online Medical Consultation (1 Session) - USD $40",
-  },
-];
+export type { MedicalPricingPackage };
 
 const formatAmount = (amount: number, currency: "KES" | "USD") => {
   return currency === "KES"
@@ -142,7 +111,27 @@ const MedicalConsultationFormSection = ({
   const userCurrency = isKenyan ? "KES" : "USD";
   const selectedMode = formData.consultationType === "In-person" ? "Physical" : "Online";
 
-  const availablePricingOptions = MEDICAL_CONSULTATION_PRICING.filter((option) => {
+  const [medicalPricingList, setMedicalPricingList] = useState<MedicalPricingPackage[]>(() =>
+    getMedicalPricingPackages(userCurrency)
+  );
+
+  useEffect(() => {
+    setMedicalPricingList(getMedicalPricingPackages(userCurrency));
+  }, [userCurrency]);
+
+  useEffect(() => {
+    const handleConfigChange = () => {
+      setMedicalPricingList(getMedicalPricingPackages(userCurrency));
+    };
+    window.addEventListener(THERAPY_CONFIG_EVENT, handleConfigChange);
+    window.addEventListener("storage", handleConfigChange);
+    return () => {
+      window.removeEventListener(THERAPY_CONFIG_EVENT, handleConfigChange);
+      window.removeEventListener("storage", handleConfigChange);
+    };
+  }, [userCurrency]);
+
+  const availablePricingOptions = medicalPricingList.filter((option) => {
     if (option.currency !== userCurrency) return false;
     if (!isKenyan) return option.mode === "Online";
     return option.mode === selectedMode;
@@ -1325,7 +1314,7 @@ const MedicalConsultationFormSection = ({
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Medical Consultation Pricing</h3>
                 <div className="space-y-4 text-sm">
                   {(() => {
-                    const displayOptions = MEDICAL_CONSULTATION_PRICING.filter((option) => {
+                    const displayOptions = medicalPricingList.filter((option) => {
                       if (option.currency !== userCurrency) return false;
                       if (isKenyan && formData.consultationType) {
                         return option.mode === selectedMode;

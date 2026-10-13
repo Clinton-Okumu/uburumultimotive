@@ -34,6 +34,7 @@ import {
   type StorefrontItem,
   type StorefrontSource,
 } from "../data/storefrontCatalog";
+import { getStoredCategories, HOME_CATALOG_EVENT } from "../admin/data/homeAdminStorage";
 
 type PaymentStatus = "idle" | "processing" | "success" | "error";
 
@@ -91,9 +92,28 @@ const SOURCE_BACK_LINK: Record<StorefrontSource, string> = {
   village: "/get/village",
 };
 
-const catalogBySource: Record<StorefrontSource, StorefrontItem[]> = {
-  home: homeProducts,
-  village: villageEvents,
+const getLiveHomeCatalog = (): StorefrontItem[] => {
+  const dynamicCategories = getStoredCategories();
+  const dynamicMap = new Map<string, StorefrontItem>();
+
+  homeProducts.forEach((item) => {
+    dynamicMap.set(item.id, { ...item });
+  });
+
+  dynamicCategories.forEach((cat) => {
+    cat.items.forEach((item) => {
+      dynamicMap.set(item.id, {
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        currency: (item.currency as CurrencyCode) || "KES",
+        tag: item.tag || cat.name,
+        image: item.image,
+      });
+    });
+  });
+
+  return Array.from(dynamicMap.values());
 };
 
 const KENYAN_COUNTIES = [
@@ -292,9 +312,23 @@ const Checkout: React.FC<CheckoutProps> = ({ forcedSource }) => {
     );
   }, [cart, activeSource]);
 
+  const [liveHomeCatalog, setLiveHomeCatalog] = useState<StorefrontItem[]>(() => getLiveHomeCatalog());
+
+  useEffect(() => {
+    const syncHomeCatalog = () => {
+      setLiveHomeCatalog(getLiveHomeCatalog());
+    };
+    window.addEventListener(HOME_CATALOG_EVENT, syncHomeCatalog);
+    window.addEventListener("storage", syncHomeCatalog);
+    return () => {
+      window.removeEventListener(HOME_CATALOG_EVENT, syncHomeCatalog);
+      window.removeEventListener("storage", syncHomeCatalog);
+    };
+  }, []);
+
   // Map and calculate items for THIS dedicated checkout
   const items: CartItem[] = useMemo(() => {
-    const catalog = catalogBySource[activeSource] || [];
+    const catalog = activeSource === "home" ? liveHomeCatalog : villageEvents;
     return catalog
       .map((item): CartItem | null => {
         const quantity = cart[item.id] ?? 0;
@@ -311,7 +345,7 @@ const Checkout: React.FC<CheckoutProps> = ({ forcedSource }) => {
         };
       })
       .filter((item): item is CartItem => item !== null);
-  }, [activeSource, cart]);
+  }, [activeSource, cart, liveHomeCatalog]);
 
   const uniqueCurrencies = useMemo(() => new Set(items.map((i) => i.currency)), [items]);
   const hasMixedCurrencies = uniqueCurrencies.size > 1;

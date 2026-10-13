@@ -39,37 +39,13 @@ type ContactMethod = "Phone Call" | "Video Call" | "Email" | "WhatsApp";
 
 type BestTime = "Morning" | "Afternoon" | "Evening" | "Anytime";
 
-export interface CoachingPricingPackage {
-  id: string;
-  sessions: number;
-  amount: number;
-  currency: "KES" | "USD";
-  mode: "Online" | "Physical";
-  label: string;
-}
+import {
+  getLifeCoachingPricingPackages,
+  THERAPY_CONFIG_EVENT,
+  type FormCoachingPricingPackage as CoachingPricingPackage,
+} from "../../admin/data/therapyAdminStorage";
 
-export const LIFE_COACHING_PRICING: CoachingPricingPackage[] = [
-  // Kenya - Online
-  { id: "lc-ke-online-1", sessions: 1, amount: 1600, currency: "KES", mode: "Online", label: "1 Session - KES 1,600" },
-  { id: "lc-ke-online-4", sessions: 4, amount: 5000, currency: "KES", mode: "Online", label: "4 Sessions - KES 5,000" },
-  { id: "lc-ke-online-6", sessions: 6, amount: 7500, currency: "KES", mode: "Online", label: "6 Sessions - KES 7,500" },
-  { id: "lc-ke-online-8", sessions: 8, amount: 10000, currency: "KES", mode: "Online", label: "8 Sessions - KES 10,000" },
-  { id: "lc-ke-online-10", sessions: 10, amount: 13000, currency: "KES", mode: "Online", label: "10 Sessions - KES 13,000" },
-
-  // Kenya - Physical
-  { id: "lc-ke-physical-1", sessions: 1, amount: 1800, currency: "KES", mode: "Physical", label: "1 Session - KES 1,800" },
-  { id: "lc-ke-physical-4", sessions: 4, amount: 6500, currency: "KES", mode: "Physical", label: "4 Sessions - KES 6,500" },
-  { id: "lc-ke-physical-6", sessions: 6, amount: 10000, currency: "KES", mode: "Physical", label: "6 Sessions - KES 10,000" },
-  { id: "lc-ke-physical-8", sessions: 8, amount: 12000, currency: "KES", mode: "Physical", label: "8 Sessions - KES 12,000" },
-  { id: "lc-ke-physical-10", sessions: 10, amount: 18000, currency: "KES", mode: "Physical", label: "10 Sessions - KES 18,000" },
-
-  // International - Online
-  { id: "lc-int-online-1", sessions: 1, amount: 25, currency: "USD", mode: "Online", label: "1 Session - USD $25" },
-  { id: "lc-int-online-3", sessions: 3, amount: 50, currency: "USD", mode: "Online", label: "3 Sessions - USD $50" },
-  { id: "lc-int-online-4", sessions: 4, amount: 65, currency: "USD", mode: "Online", label: "4 Sessions - USD $65" },
-  { id: "lc-int-online-6", sessions: 6, amount: 85, currency: "USD", mode: "Online", label: "6 Sessions - USD $85" },
-  { id: "lc-int-online-8", sessions: 8, amount: 120, currency: "USD", mode: "Online", label: "8 Sessions - USD $120" },
-];
+export type { CoachingPricingPackage };
 
 const formatAmount = (amount: number, currency: "KES" | "USD") => {
   return currency === "KES"
@@ -124,7 +100,27 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
   const userCurrency = isKenyan ? "KES" : "USD";
   const selectedMode = formData.coachingType === "In person coaching" ? "Physical" : "Online";
 
-  const availablePricingOptions = LIFE_COACHING_PRICING.filter((option) => {
+  const [coachingPricingList, setCoachingPricingList] = useState<CoachingPricingPackage[]>(() =>
+    getLifeCoachingPricingPackages(userCurrency)
+  );
+
+  useEffect(() => {
+    setCoachingPricingList(getLifeCoachingPricingPackages(userCurrency));
+  }, [userCurrency]);
+
+  useEffect(() => {
+    const handleConfigChange = () => {
+      setCoachingPricingList(getLifeCoachingPricingPackages(userCurrency));
+    };
+    window.addEventListener(THERAPY_CONFIG_EVENT, handleConfigChange);
+    window.addEventListener("storage", handleConfigChange);
+    return () => {
+      window.removeEventListener(THERAPY_CONFIG_EVENT, handleConfigChange);
+      window.removeEventListener("storage", handleConfigChange);
+    };
+  }, [userCurrency]);
+
+  const availablePricingOptions = coachingPricingList.filter((option) => {
     if (option.currency !== userCurrency) return false;
     if (!isKenyan) return option.mode === "Online";
     return option.mode === selectedMode;
@@ -1134,7 +1130,7 @@ const LifeCoachingFormSection = ({ onBack }: LifeCoachingFormSectionProps) => {
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Life Coaching Pricing</h3>
                 <div className="space-y-4 text-sm">
                   {(() => {
-                    const displayOptions = LIFE_COACHING_PRICING.filter((option) => {
+                    const displayOptions = coachingPricingList.filter((option) => {
                       if (option.currency !== userCurrency) return false;
                       if (!isKenyan) return option.mode === "Online";
                       return true;

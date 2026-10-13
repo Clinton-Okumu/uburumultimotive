@@ -3,238 +3,15 @@ import Button from "../shared/Button";
 import { Mail, Phone, User, CheckCircle, CreditCard, Send, ArrowLeft, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 
+import {
+  getTherapyFormPricingOptions,
+  getStoredTherapyPricing,
+  THERAPY_CONFIG_EVENT,
+  type FormTherapyPricingOption as TherapyPricingOption,
+} from "../../admin/data/therapyAdminStorage";
+
 type TherapyCategory = "Individual" | "Couples" | "Group";
 
-type TherapyPricingOption = {
-  id: string;
-  category: TherapyCategory;
-  mode: "Online" | "Physical";
-  sessions: number;
-  amount: number;
-  currency: "KES" | "USD";
-  label: string;
-};
-
-const THERAPY_PRICING_OPTIONS: TherapyPricingOption[] = [
-  // Kenya packages
-  {
-    id: "ke-individual-online-1",
-    category: "Individual",
-    mode: "Online",
-    sessions: 1,
-    amount: 1600,
-    currency: "KES",
-    label: "Online individual - 1 session (KES 1,600)",
-  },
-  {
-    id: "ke-individual-online-4",
-    category: "Individual",
-    mode: "Online",
-    sessions: 4,
-    amount: 5000,
-    currency: "KES",
-    label: "Online individual - 4 sessions (KES 5,000)",
-  },
-  {
-    id: "ke-individual-online-6",
-    category: "Individual",
-    mode: "Online",
-    sessions: 6,
-    amount: 7500,
-    currency: "KES",
-    label: "Online individual - 6 sessions (KES 7,500)",
-  },
-  {
-    id: "ke-individual-online-8",
-    category: "Individual",
-    mode: "Online",
-    sessions: 8,
-    amount: 10000,
-    currency: "KES",
-    label: "Online individual - 8 sessions (KES 10,000)",
-  },
-  {
-    id: "ke-individual-online-10",
-    category: "Individual",
-    mode: "Online",
-    sessions: 10,
-    amount: 13000,
-    currency: "KES",
-    label: "Online individual - 10 sessions (KES 13,000)",
-  },
-  {
-    id: "ke-individual-physical-1",
-    category: "Individual",
-    mode: "Physical",
-    sessions: 1,
-    amount: 1800,
-    currency: "KES",
-    label: "Physical individual - 1 session (KES 1,800)",
-  },
-  {
-    id: "ke-individual-physical-4",
-    category: "Individual",
-    mode: "Physical",
-    sessions: 4,
-    amount: 6500,
-    currency: "KES",
-    label: "Physical individual - 4 sessions (KES 6,500)",
-  },
-  {
-    id: "ke-individual-physical-6",
-    category: "Individual",
-    mode: "Physical",
-    sessions: 6,
-    amount: 10000,
-    currency: "KES",
-    label: "Physical individual - 6 sessions (KES 10,000)",
-  },
-  {
-    id: "ke-individual-physical-8",
-    category: "Individual",
-    mode: "Physical",
-    sessions: 8,
-    amount: 12000,
-    currency: "KES",
-    label: "Physical individual - 8 sessions (KES 12,000)",
-  },
-  {
-    id: "ke-individual-physical-10",
-    category: "Individual",
-    mode: "Physical",
-    sessions: 10,
-    amount: 18000,
-    currency: "KES",
-    label: "Physical individual - 10 sessions (KES 18,000)",
-  },
-  {
-    id: "ke-couples-online-1",
-    category: "Couples",
-    mode: "Online",
-    sessions: 1,
-    amount: 3000,
-    currency: "KES",
-    label: "Couples online - 1 session (KES 3,000)",
-  },
-  {
-    id: "ke-couples-online-4",
-    category: "Couples",
-    mode: "Online",
-    sessions: 4,
-    amount: 10000,
-    currency: "KES",
-    label: "Couples online - 4 sessions (KES 10,000)",
-  },
-  {
-    id: "ke-couples-physical-1",
-    category: "Couples",
-    mode: "Physical",
-    sessions: 1,
-    amount: 3500,
-    currency: "KES",
-    label: "Couples physical - 1 session (KES 3,500)",
-  },
-  {
-    id: "ke-couples-physical-4",
-    category: "Couples",
-    mode: "Physical",
-    sessions: 4,
-    amount: 12000,
-    currency: "KES",
-    label: "Couples physical - 4 sessions (KES 12,000)",
-  },
-  // International packages
-  {
-    id: "int-individual-online-1",
-    category: "Individual",
-    mode: "Online",
-    sessions: 1,
-    amount: 25,
-    currency: "USD",
-    label: "Online individual - 1 session (USD 25)",
-  },
-  {
-    id: "int-individual-online-3",
-    category: "Individual",
-    mode: "Online",
-    sessions: 3,
-    amount: 50,
-    currency: "USD",
-    label: "Online individual - 3 sessions (USD 50)",
-  },
-  {
-    id: "int-individual-online-4",
-    category: "Individual",
-    mode: "Online",
-    sessions: 4,
-    amount: 65,
-    currency: "USD",
-    label: "Online individual - 4 sessions (USD 65)",
-  },
-  {
-    id: "int-individual-online-6",
-    category: "Individual",
-    mode: "Online",
-    sessions: 6,
-    amount: 85,
-    currency: "USD",
-    label: "Online individual - 6 sessions (USD 85)",
-  },
-  {
-    id: "int-individual-online-8",
-    category: "Individual",
-    mode: "Online",
-    sessions: 8,
-    amount: 120,
-    currency: "USD",
-    label: "Online individual - 8 sessions (USD 120)",
-  },
-  {
-    id: "int-couples-online-1",
-    category: "Couples",
-    mode: "Online",
-    sessions: 1,
-    amount: 40,
-    currency: "USD",
-    label: "Couples online - 1 session (USD 40)",
-  },
-  {
-    id: "int-couples-online-3",
-    category: "Couples",
-    mode: "Online",
-    sessions: 3,
-    amount: 110,
-    currency: "USD",
-    label: "Couples online - 3 sessions (USD 110)",
-  },
-  {
-    id: "int-couples-online-4",
-    category: "Couples",
-    mode: "Online",
-    sessions: 4,
-    amount: 140,
-    currency: "USD",
-    label: "Couples online - 4 sessions (USD 140)",
-  },
-  {
-    id: "int-couples-online-6",
-    category: "Couples",
-    mode: "Online",
-    sessions: 6,
-    amount: 220,
-    currency: "USD",
-    label: "Couples online - 6 sessions (USD 220)",
-  },
-  {
-    id: "int-couples-online-8",
-    category: "Couples",
-    mode: "Online",
-    sessions: 8,
-    amount: 250,
-    currency: "USD",
-    label: "Couples online - 8 sessions (USD 250)",
-  },
-];
 
 const getPricingCategory = (assistanceType: string): TherapyCategory | null => {
   if (assistanceType.includes("Couple")) return "Couples";
@@ -363,7 +140,34 @@ const RequestFormSection = ({
   const requiresMode =
     isKenyan && pricingCategory !== null && pricingCategory !== "Group";
 
+  const [therapyPricingOptions, setTherapyPricingOptions] = useState<TherapyPricingOption[]>(() =>
+    getTherapyFormPricingOptions(userCurrency)
+  );
+
+  useEffect(() => {
+    setTherapyPricingOptions(getTherapyFormPricingOptions(userCurrency));
+  }, [userCurrency]);
+
+  useEffect(() => {
+    const handleConfigChange = () => {
+      setTherapyPricingOptions(getTherapyFormPricingOptions(userCurrency));
+    };
+    window.addEventListener(THERAPY_CONFIG_EVENT, handleConfigChange);
+    window.addEventListener("storage", handleConfigChange);
+    return () => {
+      window.removeEventListener(THERAPY_CONFIG_EVENT, handleConfigChange);
+      window.removeEventListener("storage", handleConfigChange);
+    };
+  }, [userCurrency]);
+
   const groupSizeNum = Math.max(0, parseInt(formData.groupSize, 10) || 0);
+  const groupPlan = getStoredTherapyPricing().find((p) => p.category === "Group" && p.isActive);
+  const groupRatePerPerson = groupPlan
+    ? userCurrency === "USD" && groupPlan.amountUsd
+      ? groupPlan.amountUsd
+      : groupPlan.amountKes
+    : 1500;
+
   const groupPricingOption: TherapyPricingOption | null =
     isKenyan && isGroup && groupSizeNum > 1
       ? {
@@ -371,13 +175,13 @@ const RequestFormSection = ({
           category: "Group",
           mode: "Physical",
           sessions: 1,
-          amount: groupSizeNum * 1500,
-          currency: "KES",
-          label: `Group therapy - ${groupSizeNum} people (KES ${(groupSizeNum * 1500).toLocaleString("en-KE")})`,
+          amount: groupSizeNum * groupRatePerPerson,
+          currency: userCurrency,
+          label: `Group therapy - ${groupSizeNum} people (${userCurrency} ${(groupSizeNum * groupRatePerPerson).toLocaleString()})`,
         }
       : null;
 
-  const availablePricingOptions = THERAPY_PRICING_OPTIONS.filter((option) => {
+  const availablePricingOptions = therapyPricingOptions.filter((option) => {
     if (option.currency !== userCurrency) return false;
     if (pricingCategory === null) return false;
     if (isGroup) return false;
@@ -1608,17 +1412,17 @@ const RequestFormSection = ({
                   {isGroup ? (
                     <div>
                       <p className="font-semibold text-gray-800">Group therapy</p>
-                      <p className="text-gray-600">KES 1,500 per person</p>
+                      <p className="text-gray-600">{userCurrency} {groupRatePerPerson.toLocaleString()} per person</p>
                       <p className="text-gray-500 text-xs">Must be greater than 1 person</p>
                       {groupSizeNum > 1 && (
                         <p className="text-yellow-700 font-bold mt-2 text-xs">
-                          Total for {groupSizeNum} persons: KES {(groupSizeNum * 1500).toLocaleString("en-KE")}
+                          Total for {groupSizeNum} persons: {userCurrency} {(groupSizeNum * groupRatePerPerson).toLocaleString()}
                         </p>
                       )}
                     </div>
                   ) : (
                     (() => {
-                      const displayOptions = THERAPY_PRICING_OPTIONS.filter((option) => {
+                      const displayOptions = therapyPricingOptions.filter((option) => {
                         if (option.currency !== userCurrency) return false;
                         if (pricingCategory && option.category !== pricingCategory) return false;
                         if (isKenyan && formData.sessionMode && option.mode !== formData.sessionMode) return false;

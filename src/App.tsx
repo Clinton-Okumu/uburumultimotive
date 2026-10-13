@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Route, Routes, Outlet } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import About from './pages/About';
@@ -38,6 +39,8 @@ import AdminTherapyPricing from './admin/pages/AdminTherapyPricing';
 import AdminLogin from './admin/pages/AdminLogin';
 import { AdminAuthProvider } from './admin/auth/AdminAuthContext';
 import AdminProtectedRoute from './admin/auth/AdminProtectedRoute';
+import { syncCatalogFromDatabase } from './admin/data/homeAdminStorage';
+import { syncTherapyFromDatabase } from './admin/data/therapyAdminStorage';
 
 // Public layout wrapper (includes website Navbar, Footer, and Cart)
 function PublicSiteLayout() {
@@ -49,6 +52,11 @@ function PublicSiteLayout() {
 }
 
 function App() {
+    useEffect(() => {
+        syncCatalogFromDatabase().catch(() => {});
+        syncTherapyFromDatabase().catch(() => {});
+    }, []);
+
     return (
         <BrowserRouter>
             <AdminAuthProvider>

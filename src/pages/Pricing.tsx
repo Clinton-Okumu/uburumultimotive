@@ -16,6 +16,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import {
+  getStoredTherapyPricing,
+  THERAPY_CONFIG_EVENT,
+  type TherapyPricingPlan,
+} from "../admin/data/therapyAdminStorage";
 
 type LocationMode = "kenya" | "international";
 
@@ -24,6 +29,37 @@ const Pricing = () => {
   const [detectedCountry, setDetectedCountry] = useState<string>("Kenya");
   const [isDetecting, setIsDetecting] = useState<boolean>(true);
   const [sessionTypeTab, setSessionTypeTab] = useState<"all" | "individual" | "couples" | "group">("all");
+  const [plans, setPlans] = useState<TherapyPricingPlan[]>(() => getStoredTherapyPricing());
+
+  useEffect(() => {
+    const handleSync = () => {
+      setPlans(getStoredTherapyPricing());
+    };
+    window.addEventListener(THERAPY_CONFIG_EVENT, handleSync);
+    window.addEventListener("storage", handleSync);
+    return () => {
+      window.removeEventListener(THERAPY_CONFIG_EVENT, handleSync);
+      window.removeEventListener("storage", handleSync);
+    };
+  }, []);
+
+  const getPrice = (
+    category: string,
+    mode: "Online" | "Physical",
+    sessions: number,
+    isUsd: boolean,
+    fallback: number
+  ) => {
+    const match = plans.find(
+      (p) =>
+        p.category === category &&
+        (p.mode === mode || p.mode === "Both") &&
+        p.sessions === sessions &&
+        p.isActive
+    );
+    if (!match) return fallback;
+    return isUsd && match.amountUsd ? match.amountUsd : match.amountKes;
+  };
 
   // Auto-detect country on mount
   useEffect(() => {
@@ -202,23 +238,23 @@ const Pricing = () => {
                         <ul className="space-y-1.5 text-xs text-neutral-700 font-medium">
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>1 Session</span>
-                            <span className="font-bold text-neutral-950">KES 1,600</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Online", 1, false, 1600).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>4 Sessions (Monthly)</span>
-                            <span className="font-bold text-neutral-950">KES 5,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Online", 4, false, 5000).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>6 Sessions</span>
-                            <span className="font-bold text-neutral-950">KES 7,500</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Online", 6, false, 7500).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>8 Sessions</span>
-                            <span className="font-bold text-neutral-950">KES 10,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Online", 8, false, 10000).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center pt-1">
                             <span>10 Sessions</span>
-                            <span className="font-bold text-neutral-950">KES 13,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Online", 10, false, 13000).toLocaleString()}</span>
                           </li>
                         </ul>
                       </div>
@@ -230,23 +266,23 @@ const Pricing = () => {
                         <ul className="space-y-1.5 text-xs text-neutral-700 font-medium">
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>1 Session</span>
-                            <span className="font-bold text-neutral-950">KES 1,800</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Physical", 1, false, 1800).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>4 Sessions</span>
-                            <span className="font-bold text-neutral-950">KES 6,500</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Physical", 4, false, 6500).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>6 Sessions</span>
-                            <span className="font-bold text-neutral-950">KES 10,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Physical", 6, false, 10000).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>8 Sessions</span>
-                            <span className="font-bold text-neutral-950">KES 12,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Physical", 8, false, 12000).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center pt-1">
                             <span>10 Sessions</span>
-                            <span className="font-bold text-neutral-950">KES 18,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Individual", "Physical", 10, false, 18000).toLocaleString()}</span>
                           </li>
                         </ul>
                       </div>
@@ -259,23 +295,23 @@ const Pricing = () => {
                       <ul className="space-y-2 text-xs text-neutral-700 font-medium">
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>1 Single Session</span>
-                          <span className="font-bold text-neutral-950">$25 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Individual", "Online", 1, true, 25)} USD</span>
                         </li>
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>3 Sessions</span>
-                          <span className="font-bold text-neutral-950">$50 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Individual", "Online", 3, true, 50)} USD</span>
                         </li>
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>4 Sessions</span>
-                          <span className="font-bold text-neutral-950">$65 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Individual", "Online", 4, true, 65)} USD</span>
                         </li>
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>6 Sessions</span>
-                          <span className="font-bold text-neutral-950">$85 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Individual", "Online", 6, true, 85)} USD</span>
                         </li>
                         <li className="flex justify-between items-center pt-1">
                           <span>8 Sessions</span>
-                          <span className="font-bold text-neutral-950">$120 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Individual", "Online", 8, true, 120)} USD</span>
                         </li>
                       </ul>
                     </div>
@@ -321,11 +357,11 @@ const Pricing = () => {
                         <ul className="space-y-1.5 text-xs text-neutral-700 font-medium">
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>1 Session</span>
-                            <span className="font-bold text-neutral-950">KES 3,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Couples", "Online", 1, false, 3000).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center pt-1">
                             <span>4 Sessions Bundle</span>
-                            <span className="font-bold text-neutral-950">KES 10,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Couples", "Online", 4, false, 10000).toLocaleString()}</span>
                           </li>
                         </ul>
                       </div>
@@ -337,11 +373,11 @@ const Pricing = () => {
                         <ul className="space-y-1.5 text-xs text-neutral-700 font-medium">
                           <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                             <span>1 Session</span>
-                            <span className="font-bold text-neutral-950">KES 3,500</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Couples", "Physical", 1, false, 3500).toLocaleString()}</span>
                           </li>
                           <li className="flex justify-between items-center pt-1">
                             <span>4 Sessions Bundle</span>
-                            <span className="font-bold text-neutral-950">KES 12,000</span>
+                            <span className="font-bold text-neutral-950">KES {getPrice("Couples", "Physical", 4, false, 12000).toLocaleString()}</span>
                           </li>
                         </ul>
                       </div>
@@ -354,23 +390,23 @@ const Pricing = () => {
                       <ul className="space-y-2 text-xs text-neutral-700 font-medium">
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>1 Single Session</span>
-                          <span className="font-bold text-neutral-950">$40 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Couples", "Online", 1, true, 40)} USD</span>
                         </li>
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>3 Sessions</span>
-                          <span className="font-bold text-neutral-950">$110 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Couples", "Online", 3, true, 110)} USD</span>
                         </li>
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>4 Sessions</span>
-                          <span className="font-bold text-neutral-950">$140 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Couples", "Online", 4, true, 140)} USD</span>
                         </li>
                         <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                           <span>6 Sessions</span>
-                          <span className="font-bold text-neutral-950">$220 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Couples", "Online", 6, true, 220)} USD</span>
                         </li>
                         <li className="flex justify-between items-center pt-1">
                           <span>8 Sessions</span>
-                          <span className="font-bold text-neutral-950">$250 USD</span>
+                          <span className="font-bold text-neutral-950">${getPrice("Couples", "Online", 8, true, 250)} USD</span>
                         </li>
                       </ul>
                     </div>
@@ -415,7 +451,9 @@ const Pricing = () => {
                       <div className="flex justify-between items-center text-xs text-neutral-700 font-medium">
                         <span>Group therapy session</span>
                         <span className="font-bold text-neutral-950">
-                          {isKenya ? "KES 1,500 / person" : "$20 USD / person"}
+                          {isKenya
+                            ? `KES ${getPrice("Group", "Physical", 1, false, 1500).toLocaleString()} / person`
+                            : `$${getPrice("Group", "Physical", 1, true, 20)} USD / person`}
                         </span>
                       </div>
                     </div>
@@ -429,17 +467,17 @@ const Pricing = () => {
                           <>
                             <li className="flex justify-between items-center py-1 border-b border-neutral-200/60">
                               <span>Physical (In-Person)</span>
-                              <span className="font-bold text-neutral-950">KES 3,500</span>
+                              <span className="font-bold text-neutral-950">KES {getPrice("Medical", "Physical", 1, false, 3500).toLocaleString()}</span>
                             </li>
                             <li className="flex justify-between items-center pt-1">
                               <span>Online (Virtual)</span>
-                              <span className="font-bold text-neutral-950">KES 2,500</span>
+                              <span className="font-bold text-neutral-950">KES {getPrice("Medical", "Online", 1, false, 2500).toLocaleString()}</span>
                             </li>
                           </>
                         ) : (
                           <li className="flex justify-between items-center py-1">
                             <span>Online / Virtual (1 Session)</span>
-                            <span className="font-bold text-neutral-950">$40 USD</span>
+                            <span className="font-bold text-neutral-950">${getPrice("Medical", "Online", 1, true, 40)} USD</span>
                           </li>
                         )}
                       </ul>

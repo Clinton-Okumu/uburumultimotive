@@ -36,11 +36,15 @@ import AdminAddCategory from './admin/pages/AdminAddCategory';
 import AdminTherapyDashboard from './admin/pages/AdminTherapyDashboard';
 import AdminTherapyServices from './admin/pages/AdminTherapyServices';
 import AdminTherapyPricing from './admin/pages/AdminTherapyPricing';
+import AdminVillageDashboard from './admin/pages/AdminVillageDashboard';
+import AdminVillageEvents from './admin/pages/AdminVillageEvents';
+import AdminAddVillageEvent from './admin/pages/AdminAddVillageEvent';
 import AdminLogin from './admin/pages/AdminLogin';
 import { AdminAuthProvider } from './admin/auth/AdminAuthContext';
 import AdminProtectedRoute from './admin/auth/AdminProtectedRoute';
 import { syncCatalogFromDatabase } from './admin/data/homeAdminStorage';
 import { syncTherapyFromDatabase } from './admin/data/therapyAdminStorage';
+import { syncVillageEventsFromDatabase } from './admin/data/villageAdminStorage';
 
 // Public layout wrapper (includes website Navbar, Footer, and Cart)
 function PublicSiteLayout() {
@@ -55,6 +59,7 @@ function App() {
     useEffect(() => {
         syncCatalogFromDatabase().catch(() => {});
         syncTherapyFromDatabase().catch(() => {});
+        syncVillageEventsFromDatabase().catch(() => {});
     }, []);
 
     return (
@@ -85,6 +90,11 @@ function App() {
                         <Route path="therapy" element={<AdminTherapyDashboard />} />
                         <Route path="therapy/services" element={<AdminTherapyServices />} />
                         <Route path="therapy/pricing" element={<AdminTherapyPricing />} />
+
+                        {/* Uburu Village Admin Routes */}
+                        <Route path="village" element={<AdminVillageDashboard />} />
+                        <Route path="village/events" element={<AdminVillageEvents />} />
+                        <Route path="village/add-event" element={<AdminAddVillageEvent />} />
                     </Route>
 
 

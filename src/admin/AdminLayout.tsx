@@ -10,6 +10,9 @@ export const AdminLayout: React.FC = () => {
     // Determine current section title based on pathname
     const getPageTitle = () => {
         const path = location.pathname;
+        if (path.includes('/village/add-event')) return 'Add Village Event';
+        if (path.includes('/village/events')) return 'Manage Village Events';
+        if (path.includes('/village')) return 'Uburu Village Administration';
         if (path.includes('/therapy/services')) return 'Therapy Pathways & Services';
         if (path.includes('/therapy/pricing')) return 'Therapy Pricing & Packages';
         if (path.includes('/therapy')) return 'Uburu Therapy Administration';

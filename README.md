@@ -37,6 +37,11 @@ A modern full-stack web platform built for **Uburu Multimove**, integrating char
   - **Services Configurator** (`/admin/therapy/services`): Live visual editor for pathway badges, descriptions, icons, and visibility toggles.
   - **Pricing Manager** (`/admin/therapy/pricing`): Multi-tier session packages, modality assignment (Online / In-Person), KES and USD pricing, and highlighted/popular badges.
   - **Global Server Sync**: Changes made in Admin automatically persist to the server backend (`/api/therapy/config.php`) so all visitors and payment flows update in real time.
+- **Uburu Village Management**:
+  - **Village Dashboard** (`/admin/village`): Event metrics, active/featured statistics, starting price tracker, and live storefront cards preview.
+  - **Events Manager** (`/admin/village/events`): Comprehensive searchable directory with status filters (active/inactive/featured), quick inline editor, live view links, and deletion.
+  - **Add Event Form** (`/admin/village/add-event`): Full event creator supporting photo upload, sample asset presets, pricing (KES/USD), schedule dates, min participants, inclusions, and dynamic highlight bullet points.
+  - **Live Synchronization**: Server persistence via `/api/village/events.php` with real-time updates propagating to the public Village showcase (`/get/village`), event detail views, and checkout cart.
 
 ---
 

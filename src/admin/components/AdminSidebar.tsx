@@ -16,8 +16,11 @@ import {
     HeartPulse,
     Brain,
     DollarSign,
+    Compass,
+    Calendar,
 } from 'lucide-react';
 import { getStoredCategories, HOME_CATALOG_EVENT } from '../data/homeAdminStorage';
+import { getStoredVillageEvents, VILLAGE_EVENTS_EVENT } from '../data/villageAdminStorage';
 import { useAdminAuth } from '../auth/AdminAuthContext';
 
 interface AdminSidebarProps {
@@ -30,24 +33,34 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
     const location = useLocation();
     const [categoryCount, setCategoryCount] = useState(0);
     const [itemCount, setItemCount] = useState(0);
+    const [villageEventCount, setVillageEventCount] = useState(0);
 
     // Collapsible dropdown state for Uburu Home section
     const [isHomeOpen, setIsHomeOpen] = useState(true);
     // Collapsible dropdown state for Uburu Therapy section
     const [isTherapyOpen, setIsTherapyOpen] = useState(true);
+    // Collapsible dropdown state for Uburu Village section
+    const [isVillageOpen, setIsVillageOpen] = useState(true);
 
     const refreshCounts = () => {
         const cats = getStoredCategories();
         setCategoryCount(cats.length);
         const totalItems = cats.reduce((sum, c) => sum + (c.items?.length || 0), 0);
         setItemCount(totalItems);
+
+        const vEvents = getStoredVillageEvents();
+        setVillageEventCount(vEvents.length);
     };
 
     useEffect(() => {
         refreshCounts();
         const handler = () => refreshCounts();
         window.addEventListener(HOME_CATALOG_EVENT, handler);
-        return () => window.removeEventListener(HOME_CATALOG_EVENT, handler);
+        window.addEventListener(VILLAGE_EVENTS_EVENT, handler);
+        return () => {
+            window.removeEventListener(HOME_CATALOG_EVENT, handler);
+            window.removeEventListener(VILLAGE_EVENTS_EVENT, handler);
+        };
     }, []);
 
     // Ensure sections stay open when their routes are active
@@ -64,6 +77,9 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         }
         if (path.startsWith('/admin/therapy')) {
             setIsTherapyOpen(true);
+        }
+        if (path.startsWith('/admin/village')) {
+            setIsVillageOpen(true);
         }
     }, [location.pathname]);
 
@@ -82,6 +98,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
         location.pathname.startsWith('/admin/add-category');
 
     const isTherapyRouteActive = location.pathname.startsWith('/admin/therapy');
+    const isVillageRouteActive = location.pathname.startsWith('/admin/village');
 
     return (
         <>
@@ -182,7 +199,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                                 <NavLink to="/admin/items" className={navItemClass} onClick={() => onClose()}>
                                     <Package className="w-4 h-4 text-slate-400 group-hover:text-yellow-400 transition-colors" />
                                     <span className="flex-1">Catalog Items</span>
-                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-800 text-emerald-400 rounded-full border border-slate-700">
+                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-800 text-amber-400 rounded-full border border-slate-700">
                                         {itemCount}
                                     </span>
                                 </NavLink>
@@ -256,6 +273,74 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                                         Rates
                                     </span>
                                 </NavLink>
+                            </nav>
+                        )}
+                    </div>
+
+                    {/* SECTION: UBURU VILLAGE (Collapsible Dropdown Section) */}
+                    <div>
+                        <div className="px-3 mb-2 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                            EXPERIENCES & TRAVEL
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setIsVillageOpen(!isVillageOpen)}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                isVillageRouteActive
+                                    ? 'bg-slate-800/90 text-yellow-400 ring-1 ring-slate-700/50'
+                                    : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
+                            }`}
+                        >
+                            <div className="flex items-center gap-2.5">
+                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${
+                                    isVillageRouteActive ? 'bg-yellow-400 text-slate-950' : 'bg-slate-800 text-yellow-400'
+                                }`}>
+                                    <Compass className="w-3.5 h-3.5" />
+                                </div>
+                                <span className="tracking-wide uppercase text-[11px]">UBURU VILLAGE</span>
+                            </div>
+                            <ChevronDown
+                                className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                    isVillageOpen ? 'rotate-180 text-yellow-400' : ''
+                                }`}
+                            />
+                        </button>
+
+                        {/* Dropdown Sub-Items for Uburu Village */}
+                        {isVillageOpen && (
+                            <nav className="mt-1 ml-3 pl-3 border-l border-slate-800/80 space-y-1 animate-in fade-in slide-in-from-top-1 duration-150">
+                                <NavLink to="/admin/village" end className={navItemClass} onClick={() => onClose()}>
+                                    <LayoutDashboard className="w-4 h-4 text-slate-400 group-hover:text-yellow-400 transition-colors" />
+                                    <span>Overview</span>
+                                </NavLink>
+
+                                <NavLink to="/admin/village/events" className={navItemClass} onClick={() => onClose()}>
+                                    <Calendar className="w-4 h-4 text-slate-400 group-hover:text-yellow-400 transition-colors" />
+                                    <span className="flex-1">Manage Events</span>
+                                    <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-800 text-amber-400 rounded-full border border-slate-700">
+                                        {villageEventCount}
+                                    </span>
+                                </NavLink>
+
+                                <NavLink to="/admin/village/add-event" className={navItemClass} onClick={() => onClose()}>
+                                    <PlusCircle className="w-4 h-4 text-amber-400 group-hover:text-yellow-300 transition-colors" />
+                                    <span className="flex-1 font-semibold text-amber-300">Add Event</span>
+                                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-yellow-400 text-slate-950 rounded-md">
+                                        Action
+                                    </span>
+                                </NavLink>
+
+                                <a
+                                    href="/get/village"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                                    onClick={() => onClose()}
+                                >
+                                    <ExternalLink className="w-4 h-4 text-slate-400" />
+                                    <span>Public Village</span>
+                                </a>
                             </nav>
                         )}
                     </div>

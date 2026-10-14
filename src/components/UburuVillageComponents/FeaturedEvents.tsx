@@ -1,16 +1,11 @@
-import { useState, type FormEvent, useMemo } from "react";
-import { Ticket, X, Maximize2, Share2, User, Phone, Mail, Users, CheckCircle, CreditCard, Send } from "lucide-react";
+import { useState, useEffect, type FormEvent, useMemo } from "react";
+import { Ticket, X, Maximize2, Share2, User, Phone, Mail, Users, CheckCircle, CreditCard, Send, Sparkles } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../shared/Button";
 import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { villageEventOptions, type VillageEventOption } from "../../data/storefrontCatalog";
-import olooluaNatureTrail from "../../assets/oloolua.webp";
-import kidsImage from "../../assets/kids.webp";
-import maa from "../../assets/maa.webp";
-import therapeuticTripImage from "../../assets/glassdoor2.webp";
-import paradiseLostImage from "../../assets/paradiselost.jpg";
-import kitengelaGlassImage from "../../assets/kitengelaglass.webp";
+import { getStoredVillageEvents, VILLAGE_EVENTS_EVENT, type VillageEvent } from "../../admin/data/villageAdminStorage";
 
 
 const PAYBILL_NO = "522522";
@@ -46,8 +41,51 @@ const FeaturedEvents = () => {
     return bookingEvent.price * Math.max(minPeople, bookingForm.peopleCount);
   }, [bookingEvent, bookingForm.peopleCount]);
 
+  const [storedEvents, setStoredEvents] = useState<VillageEvent[]>(() => getStoredVillageEvents());
+
+  useEffect(() => {
+    const handleSync = (e?: Event) => {
+      const customEvent = e as CustomEvent<VillageEvent[]>;
+      if (customEvent?.detail && Array.isArray(customEvent.detail)) {
+        setStoredEvents(customEvent.detail);
+      } else {
+        setStoredEvents(getStoredVillageEvents());
+      }
+    };
+    window.addEventListener(VILLAGE_EVENTS_EVENT, handleSync as EventListener);
+    window.addEventListener("storage", handleSync as EventListener);
+    return () => {
+      window.removeEventListener(VILLAGE_EVENTS_EVENT, handleSync as EventListener);
+      window.removeEventListener("storage", handleSync as EventListener);
+    };
+  }, []);
+
+  const dynamicCatalog = useMemo(() => {
+    const combined = [...villageEventOptions];
+    storedEvents.forEach((se) => {
+      const optId = se.optionId || `${se.id}-resident`;
+      if (!combined.some((c) => c.id === optId)) {
+        combined.push({
+          id: optId,
+          packageId: se.id,
+          campId: se.id,
+          campName: se.title,
+          residencyType: 'resident',
+          mealPlanLabel: se.datesText || 'All year',
+          availableMonths: ['july', 'august', 'september', 'october'],
+          name: se.title,
+          price: se.price,
+          currency: se.currency,
+          tag: se.tag,
+          image: se.image,
+        });
+      }
+    });
+    return combined.map(({ id, name, price }) => ({ id, name, price }));
+  }, [storedEvents]);
+
   const { cartItemCount, updateQuantity, addToCart } = useStorefrontCheckout({
-    catalog: villageEventOptions.map(({ id, name, price }) => ({ id, name, price })),
+    catalog: dynamicCatalog,
     context: "uburu_village",
     purchaseType: "event_purchase",
     emptyCartMessage: "Please add at least one package to your cart.",
@@ -201,58 +239,27 @@ const FeaturedEvents = () => {
     window.open(`https://wa.me/254718421205?text=${message}`, "_blank"); // Replace with actual admin number
   };
 
-  const events = [
-    {
-      id: "oloolua-nature-trail",
-      title: "Oloolua nature trail",
-      image: olooluaNatureTrail,
-      optionId: "oloolua-nature-trail-group",
-      tag: "Uburu Village",
-      priceLabel: "KES 4,000 each",
-      description: "Group bookings: min 5 people",
-      minPeople: 5,
-    },
-    {
-      id: "kids-outdoor-adventure",
-      title: "Kids Outdoor & Wellness Adventure",
-      image: kidsImage,
-      optionId: "kids-outdoor-adventure-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 3,500 each",
-      description: "Outdoor fun, arts & mindfulness for children",
-      minPeople: 1,
-    },
-    {
-      id: "therapeutic-trip",
-      title: "Therapeutic trip to (glassdoor Kitengela)",
-      image: therapeuticTripImage,
-      optionId: "therapeutic-trip-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 4,500 each",
-      description: "",
-      minPeople: 1,
-    },
-    {
-      id: "paradise-lost",
-      title: "Paradise Lost excursion",
-      image: paradiseLostImage,
-      optionId: "paradise-lost-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 3,500 each",
-      description: "",
-      minPeople: 1,
-    },
-    {
-      id: "kids-kitengela-glass",
-      title: "Kids Kitengela Glass Adventure",
-      image: kitengelaGlassImage,
-      optionId: "kids-kitengela-glass-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 4,500 each",
-      description: "Glass art, suspension bridge & mindfulness for kids",
-      minPeople: 1,
-    },
-  ];
+  const events = useMemo(() => {
+    return storedEvents
+      .filter((e) => e.isActive !== false)
+      .sort((a, b) => {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        return 0;
+      })
+      .map((e) => ({
+        id: e.id,
+        title: e.title,
+        image: e.image,
+        optionId: e.optionId || `${e.id}-resident`,
+        tag: e.tag || "Uburu Village",
+        priceLabel: e.priceLabel || `${e.currency} ${e.price.toLocaleString()} each`,
+        description: e.description,
+        minPeople: e.minPeople || 1,
+        isFeatured: e.isFeatured,
+        rawEvent: e,
+      }));
+  }, [storedEvents]);
 
   return (
     <section id="events" className="relative bg-[#f8fbff] px-6 py-20">
@@ -287,7 +294,20 @@ const FeaturedEvents = () => {
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {events.map((event) => {
-            const option = villageEventOptions.find(o => o.id === event.optionId);
+            const option: VillageEventOption = villageEventOptions.find(o => o.id === event.optionId) || {
+              id: event.optionId,
+              packageId: event.id,
+              campId: event.id,
+              campName: event.title,
+              residencyType: "resident",
+              mealPlanLabel: event.rawEvent?.datesText || "All year",
+              availableMonths: ["july", "august", "september", "october"],
+              name: event.title,
+              price: event.rawEvent?.price || 0,
+              currency: event.rawEvent?.currency || "KES",
+              tag: event.tag,
+              image: event.image,
+            };
             return (
               <div key={event.id} id={event.id} className="group flex flex-col overflow-hidden rounded-3xl border border-[#dbe7f3] bg-white shadow-lg transition-all hover:border-[#2f6f99]/50">
                 <div 
@@ -299,6 +319,14 @@ const FeaturedEvents = () => {
                     alt={event.title}
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  {event.isFeatured && (
+                    <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                      <span className="px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow-md">
+                        <Sparkles className="w-3 h-3" />
+                        Featured
+                      </span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
                     <div className="rounded-full bg-white/90 p-3 text-[#1c3b57] shadow-xl">
@@ -337,79 +365,35 @@ const FeaturedEvents = () => {
                   )}
 
                   <div className="mt-8 flex flex-col gap-2">
-                    <Button
-                      onClick={() => navigate(`/get/village/event/${event.id}`)}
-                      className="w-full bg-[#1c3b57] py-3 text-xs font-black uppercase tracking-[0.25em] text-white hover:bg-[#2a4d6e]"
-                    >
-                      View Event Details
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={() => option && openBooking(option)}
-                      className="w-full py-2 text-[11px] font-black uppercase tracking-widest text-[#2f6f99] hover:text-[#1c3b57] text-center"
-                    >
-                      Quick Book
-                    </button>
+                    {event.id === "maasai-mara" ? (
+                      <Button
+                        onClick={goToMaasaiPackage}
+                        className="w-full bg-[#f2c15d] py-3 text-xs font-black uppercase tracking-[0.24em] text-[#1c3b57] hover:bg-[#ffd886]"
+                      >
+                        View full package
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={() => navigate(`/get/village/event/${event.id}`)}
+                          className="w-full bg-[#1c3b57] py-3 text-xs font-black uppercase tracking-[0.25em] text-white hover:bg-[#2a4d6e]"
+                        >
+                          View Event Details
+                        </Button>
+                        <button
+                          type="button"
+                          onClick={() => option && openBooking(option)}
+                          className="w-full py-2 text-[11px] font-black uppercase tracking-widest text-[#2f6f99] hover:text-[#1c3b57] text-center"
+                        >
+                          Quick Book
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
             );
           })}
-
-          {/* Maasai Mara Migration Card */}
-          <div id="maasai-mara" className="group flex flex-col overflow-hidden rounded-3xl border border-[#e6eef7] bg-white shadow-lg transition-all hover:border-[#f2c15d]/50">
-            <div 
-              className="relative h-56 cursor-zoom-in overflow-hidden"
-              onClick={() => setActiveImage(maa)}
-            >
-              <img
-                src={maa}
-                alt="Maasai Mara Migration Season"
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20">
-                <div className="rounded-full bg-white/90 p-3 text-[#1c3b57] shadow-xl">
-                  <Maximize2 className="h-5 w-5" />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-grow flex-col p-6">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-2xl font-black text-[#1c3b57] flex items-center gap-2">
-                    Maasai Mara Migration
-                  </h3>
-                  <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-[#6a7c92]">Uburu Village</p>
-                </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="rounded-2xl bg-[#f2c15d]/20 px-3 py-2 text-xs font-black uppercase tracking-widest text-[#7a5d00]">
-                    From KES 27.5k
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleShareEvent("maasai-mara", "Maasai Mara Migration")}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#2f6f99]/20 bg-white px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#2f6f99] hover:bg-[#2f6f99]/5 transition-colors"
-                    title="Share event"
-                  >
-                    <Share2 className="h-3 w-3" />
-                    Share
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-2xl border border-[#dbe7f3] bg-[#f5f9ff] px-4 py-3 text-[10px] font-black uppercase tracking-[0.18em] text-[#5c6f86]">
-                Multiple camps & residency options.
-              </div>
-
-              <Button
-                onClick={goToMaasaiPackage}
-                className="mt-8 w-full bg-[#f2c15d] py-3 text-xs font-black uppercase tracking-[0.24em] text-[#1c3b57] hover:bg-[#ffd886]"
-              >
-                View full package
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
 

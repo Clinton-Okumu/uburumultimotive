@@ -1,4 +1,4 @@
-import { useState, type FormEvent, useMemo } from "react";
+import { useState, useEffect, type FormEvent, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   MapPin,
@@ -23,6 +23,7 @@ import toast from "react-hot-toast";
 import Button from "../shared/Button";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { villageEventOptions } from "../../data/storefrontCatalog";
+import { getStoredVillageEvents, VILLAGE_EVENTS_EVENT, type VillageEvent } from "../../admin/data/villageAdminStorage";
 
 import glassdoor2Image from "../../assets/glassdoor2.webp";
 import kidsImage from "../../assets/kids.webp";
@@ -213,9 +214,52 @@ interface EventDetailViewProps {
 
 export default function EventDetailView({ eventId = "therapeutic-trip", onClose }: EventDetailViewProps) {
   const navigate = useNavigate();
-  const event = uburuEventsDetailData[eventId] || uburuEventsDetailData["therapeutic-trip"];
 
-  const [peopleCount, setPeopleCount] = useState<number>(event.minPeople || 1);
+  const [storedList, setStoredList] = useState<VillageEvent[]>(() => getStoredVillageEvents());
+
+  useEffect(() => {
+    const handleSync = (e?: Event) => {
+      const customEvent = e as CustomEvent<VillageEvent[]>;
+      if (customEvent?.detail && Array.isArray(customEvent.detail)) {
+        setStoredList(customEvent.detail);
+      } else {
+        setStoredList(getStoredVillageEvents());
+      }
+    };
+    window.addEventListener(VILLAGE_EVENTS_EVENT, handleSync as EventListener);
+    window.addEventListener("storage", handleSync as EventListener);
+    return () => {
+      window.removeEventListener(VILLAGE_EVENTS_EVENT, handleSync as EventListener);
+      window.removeEventListener("storage", handleSync as EventListener);
+    };
+  }, []);
+
+  const event: EventDetailData = useMemo(() => {
+    const stored = storedList.find((e) => e.id === eventId);
+    if (stored) {
+      return {
+        id: stored.id,
+        optionId: stored.optionId || `${stored.id}-resident`,
+        title: stored.title,
+        image: stored.image,
+        location: stored.location,
+        datesText: stored.datesText || '',
+        availableDates: stored.availableDates || [],
+        host: stored.host || 'Uburu Village',
+        price: stored.price,
+        currency: stored.currency,
+        priceLabel: stored.priceLabel || `${stored.currency} ${stored.price.toLocaleString()} each`,
+        ticketName: stored.ticketName || `${stored.title} Ticket`,
+        ticketNote: stored.ticketNote || 'Includes event access & support for Uburu Village programs',
+        description: stored.description,
+        highlights: stored.highlights && stored.highlights.length > 0 ? stored.highlights : ['Exclusive experience hosted by Uburu Village'],
+        minPeople: stored.minPeople || 1,
+      };
+    }
+    return uburuEventsDetailData[eventId] || uburuEventsDetailData["therapeutic-trip"];
+  }, [storedList, eventId]);
+
+  const [peopleCount, setPeopleCount] = useState<number>(() => event.minPeople || 1);
 
   const [bookingForm, setBookingForm] = useState({
     fullName: "",
@@ -243,8 +287,16 @@ export default function EventDetailView({ eventId = "therapeutic-trip", onClose 
     return `${currency} ${amount.toLocaleString(locale)}`;
   };
 
+  const checkoutCatalog = useMemo(() => {
+    const list = villageEventOptions.map(({ id, name, price }) => ({ id, name, price }));
+    if (!list.some((item) => item.id === event.optionId)) {
+      list.push({ id: event.optionId, name: event.title, price: event.price });
+    }
+    return list;
+  }, [event]);
+
   const { addToCart, updateQuantity } = useStorefrontCheckout({
-    catalog: villageEventOptions.map(({ id, name, price }) => ({ id, name, price })),
+    catalog: checkoutCatalog,
     context: "uburu_village",
     purchaseType: "event_purchase",
     emptyCartMessage: "Please add at least one package to your cart.",

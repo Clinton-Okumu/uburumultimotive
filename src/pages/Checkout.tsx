@@ -35,6 +35,7 @@ import {
   type StorefrontSource,
 } from "../data/storefrontCatalog";
 import { getStoredCategories, HOME_CATALOG_EVENT } from "../admin/data/homeAdminStorage";
+import { getStoredVillageEvents, VILLAGE_EVENTS_EVENT } from "../admin/data/villageAdminStorage";
 
 type PaymentStatus = "idle" | "processing" | "success" | "error";
 
@@ -111,6 +112,31 @@ const getLiveHomeCatalog = (): StorefrontItem[] => {
         image: item.image,
       });
     });
+  });
+
+  return Array.from(dynamicMap.values());
+};
+
+const getLiveVillageCatalog = (): StorefrontItem[] => {
+  const dynamicVillageEvents = getStoredVillageEvents();
+  const dynamicMap = new Map<string, StorefrontItem>();
+
+  villageEvents.forEach((item) => {
+    dynamicMap.set(item.id, { ...item });
+  });
+
+  dynamicVillageEvents.forEach((event) => {
+    const itemOptionId = event.optionId || `${event.id}-resident`;
+    const item: StorefrontItem = {
+      id: itemOptionId,
+      name: event.title,
+      price: Number(event.price),
+      currency: (event.currency as CurrencyCode) || "KES",
+      tag: event.tag || "Uburu Village",
+      image: event.image,
+    };
+    dynamicMap.set(itemOptionId, item);
+    dynamicMap.set(event.id, { ...item, id: event.id });
   });
 
   return Array.from(dynamicMap.values());
@@ -313,22 +339,30 @@ const Checkout: React.FC<CheckoutProps> = ({ forcedSource }) => {
   }, [cart, activeSource]);
 
   const [liveHomeCatalog, setLiveHomeCatalog] = useState<StorefrontItem[]>(() => getLiveHomeCatalog());
+  const [liveVillageCatalog, setLiveVillageCatalog] = useState<StorefrontItem[]>(() => getLiveVillageCatalog());
 
   useEffect(() => {
     const syncHomeCatalog = () => {
       setLiveHomeCatalog(getLiveHomeCatalog());
     };
+    const syncVillageCatalog = () => {
+      setLiveVillageCatalog(getLiveVillageCatalog());
+    };
     window.addEventListener(HOME_CATALOG_EVENT, syncHomeCatalog);
+    window.addEventListener(VILLAGE_EVENTS_EVENT, syncVillageCatalog);
     window.addEventListener("storage", syncHomeCatalog);
+    window.addEventListener("storage", syncVillageCatalog);
     return () => {
       window.removeEventListener(HOME_CATALOG_EVENT, syncHomeCatalog);
+      window.removeEventListener(VILLAGE_EVENTS_EVENT, syncVillageCatalog);
       window.removeEventListener("storage", syncHomeCatalog);
+      window.removeEventListener("storage", syncVillageCatalog);
     };
   }, []);
 
   // Map and calculate items for THIS dedicated checkout
   const items: CartItem[] = useMemo(() => {
-    const catalog = activeSource === "home" ? liveHomeCatalog : villageEvents;
+    const catalog = activeSource === "home" ? liveHomeCatalog : liveVillageCatalog;
     return catalog
       .map((item): CartItem | null => {
         const quantity = cart[item.id] ?? 0;

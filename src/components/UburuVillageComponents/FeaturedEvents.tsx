@@ -5,7 +5,7 @@ import Button from "../shared/Button";
 import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { villageEventOptions, type VillageEventOption } from "../../data/storefrontCatalog";
-import { getStoredVillageExperiences, syncVillageFromDatabase, VILLAGE_CONFIG_EVENT, type VillageExperience } from "../../admin/data/villageAdminStorage";
+import { getStoredVillageExperiences, syncVillageFromDatabase, VILLAGE_CONFIG_EVENT, VILLAGE_EVENTS_EVENT, type VillageExperience } from "../../admin/data/villageAdminStorage";
 import maa from "../../assets/maa.webp";
 
 
@@ -210,21 +210,31 @@ const FeaturedEvents = () => {
       setStoredExperiences(getStoredVillageExperiences());
     };
     window.addEventListener(VILLAGE_CONFIG_EVENT, handler);
-    return () => window.removeEventListener(VILLAGE_CONFIG_EVENT, handler);
+    window.addEventListener(VILLAGE_EVENTS_EVENT, handler);
+    return () => {
+      window.removeEventListener(VILLAGE_CONFIG_EVENT, handler);
+      window.removeEventListener(VILLAGE_EVENTS_EVENT, handler);
+    };
   }, []);
 
   const events = useMemo(() => {
     return storedExperiences
       .filter((e) => e.isActive)
+      .sort((a, b) => {
+        if (a.isFeatured && !b.isFeatured) return -1;
+        if (!a.isFeatured && b.isFeatured) return 1;
+        return 0;
+      })
       .map((exp) => ({
         id: exp.id,
         title: exp.title,
         image: exp.image,
-        optionId: exp.optionId || exp.id,
+        optionId: exp.optionId || `${exp.id}-resident`,
         tag: exp.tag || "Uburu Village",
-        priceLabel: `KES ${exp.priceKes.toLocaleString()} each`,
+        priceLabel: exp.priceLabel || `KES ${(exp.price || exp.priceKes || 0).toLocaleString()} each`,
         description: exp.description || (exp.minPeople > 1 ? `Group bookings: min ${exp.minPeople} people` : ""),
         minPeople: exp.minPeople || 1,
+        isFeatured: exp.isFeatured,
       }));
   }, [storedExperiences]);
 

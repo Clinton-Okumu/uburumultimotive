@@ -271,7 +271,7 @@ export const AdminVillageDashboard: React.FC = () => {
                                 <div>
                                     <div className="text-[10px] uppercase font-bold text-slate-400">Rate</div>
                                     <div className="text-sm font-black text-slate-900">
-                                        KES {exp.priceKes.toLocaleString()}
+                                        KES {(exp.priceKes ?? exp.price ?? 0).toLocaleString()}
                                         {exp.priceUsd && (
                                             <span className="text-xs text-slate-500 font-medium ml-1">
                                                 / ${exp.priceUsd}

@@ -36,7 +36,7 @@
 </IfModule>
 
 # Protect Sensitive Configuration Files
-<FilesMatch "(^\.env|.*_config\.php|\.sql|therapy_config\.json|village_config\.json)$">
+<FilesMatch "(^\.env|.*_config\.php|\.sql|therapy_config\.json|village_config\.json|village_events\.json)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>

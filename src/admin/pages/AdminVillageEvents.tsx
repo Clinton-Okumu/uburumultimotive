@@ -106,8 +106,8 @@ export const AdminVillageEvents: React.FC = () => {
         setTag(exp.tag);
         setDescription(exp.description);
         setLocation(exp.location);
-        setDuration(exp.duration);
-        setPriceKes(exp.priceKes);
+        setDuration(exp.duration || '');
+        setPriceKes(exp.priceKes ?? exp.price ?? 0);
         setPriceUsd(exp.priceUsd || '');
         setMinPeople(exp.minPeople || 1);
         setIsActive(exp.isActive);
@@ -185,8 +185,10 @@ export const AdminVillageEvents: React.FC = () => {
             location: location.trim() || 'Kenya',
             duration: duration.trim() || 'Full Day',
             image: image || previewImage,
+            price: Number(priceKes),
             priceKes: Number(priceKes),
             priceUsd: priceUsd !== '' ? Number(priceUsd) : undefined,
+            currency: 'KES',
             minPeople: Number(minPeople) || 1,
             optionId: id,
             isActive,
@@ -399,7 +401,7 @@ export const AdminVillageEvents: React.FC = () => {
 
                                         {/* Price KES */}
                                         <td className="px-4 py-3.5 font-bold text-slate-900">
-                                            KES {exp.priceKes.toLocaleString()}
+                                            KES {(exp.priceKes ?? exp.price ?? 0).toLocaleString()}
                                         </td>
 
                                         {/* Price USD */}

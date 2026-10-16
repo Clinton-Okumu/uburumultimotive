@@ -5,22 +5,33 @@ import therapeuticTripImage from '../../assets/glassdoor2.webp';
 import paradiseLostImage from '../../assets/paradiselost.jpg';
 import kitengelaGlassImage from '../../assets/kitengelaglass.webp';
 
-export interface VillageExperience {
+export interface VillageEvent {
     id: string;
     title: string;
     tag: string;
     description: string;
     location: string;
-    duration: string;
+    duration?: string;
     image: string;
-    priceKes: number;
+    price: number;
+    priceKes?: number;
     priceUsd?: number;
+    currency: 'KES' | 'USD';
+    priceLabel?: string;
+    datesText?: string;
+    availableDates?: string[];
+    host?: string;
     minPeople: number;
-    optionId: string;
+    ticketName?: string;
+    ticketNote?: string;
+    highlights?: string[];
     isActive: boolean;
     isFeatured?: boolean;
-    highlights?: string[];
+    createdAt?: number;
+    optionId?: string;
 }
+
+export type VillageExperience = VillageEvent;
 
 export interface VillageCampRateConfig {
     campId: string;
@@ -34,10 +45,12 @@ export interface VillageCampRateConfig {
 }
 
 export const VILLAGE_EXPERIENCES_STORAGE_KEY = 'uburu_admin_village_experiences_v1';
+export const VILLAGE_EVENTS_STORAGE_KEY = 'uburu_admin_village_experiences_v1';
 export const VILLAGE_CAMPS_STORAGE_KEY = 'uburu_admin_village_camps_v1';
 export const VILLAGE_CONFIG_EVENT = 'uburu_village_config_updated';
+export const VILLAGE_EVENTS_EVENT = 'uburu_village_events_updated';
 
-export const INITIAL_VILLAGE_EXPERIENCES: VillageExperience[] = [
+export const INITIAL_VILLAGE_EXPERIENCES: VillageEvent[] = [
     {
         id: 'oloolua-nature-trail',
         title: 'Oloolua Nature Trail',
@@ -45,10 +58,17 @@ export const INITIAL_VILLAGE_EXPERIENCES: VillageExperience[] = [
         description: 'Guided scenic hike through waterfalls, caves, and indigenous forest canopy.',
         location: 'Karen, Nairobi',
         duration: 'Full Day (8:00 AM - 4:00 PM)',
+        datesText: 'All year',
+        availableDates: [],
         image: olooluaNatureTrail,
+        price: 4000,
         priceKes: 4000,
         priceUsd: 40,
+        currency: 'KES',
+        priceLabel: 'KES 4,000 each',
         minPeople: 5,
+        ticketName: 'Group Pass (Min 5 People)',
+        ticketNote: 'Group bookings: minimum 5 participants required',
         optionId: 'oloolua-nature-trail-group',
         isActive: true,
         isFeatured: true,
@@ -66,10 +86,17 @@ export const INITIAL_VILLAGE_EXPERIENCES: VillageExperience[] = [
         description: 'Outdoor fun, arts & mindfulness designed specifically for children.',
         location: 'Kitengela & Environs',
         duration: 'Day Program (9:00 AM - 3:30 PM)',
+        datesText: 'All year',
+        availableDates: [],
         image: kidsImage,
+        price: 3500,
         priceKes: 3500,
         priceUsd: 35,
+        currency: 'KES',
+        priceLabel: 'KES 3,500 each',
         minPeople: 1,
+        ticketName: 'Youth Explorer Ticket',
+        ticketNote: 'Covers guided games, workshop supplies & healthy snacks',
         optionId: 'kids-outdoor-adventure-resident',
         isActive: true,
         isFeatured: true,
@@ -87,10 +114,17 @@ export const INITIAL_VILLAGE_EXPERIENCES: VillageExperience[] = [
         description: 'Restorative excursion exploring mosaic art pathways, glass studios, and suspension bridges.',
         location: 'Kitengela Hot Glass',
         duration: 'Full Day Outing',
+        datesText: 'All year',
+        availableDates: [],
         image: therapeuticTripImage,
+        price: 4500,
         priceKes: 4500,
         priceUsd: 45,
+        currency: 'KES',
+        priceLabel: 'KES 4,500 each',
         minPeople: 1,
+        ticketName: 'Art & Healing Pass',
+        ticketNote: 'Includes studio admission, guide, and therapeutic reflection session',
         optionId: 'therapeutic-trip-resident',
         isActive: true,
         isFeatured: true,
@@ -108,10 +142,17 @@ export const INITIAL_VILLAGE_EXPERIENCES: VillageExperience[] = [
         description: 'Refreshing sanctuary with prehistoric caves, coffee farm walks, and tranquil lake.',
         location: 'Kiambu Road',
         duration: 'Day Retreat',
+        datesText: 'All year',
+        availableDates: [],
         image: paradiseLostImage,
+        price: 3500,
         priceKes: 3500,
         priceUsd: 35,
+        currency: 'KES',
+        priceLabel: 'KES 3,500 each',
         minPeople: 1,
+        ticketName: 'Sanctuary Retreat Ticket',
+        ticketNote: 'Includes park fees, cave entry and guided nature tour',
         optionId: 'paradise-lost-resident',
         isActive: true,
         isFeatured: false,
@@ -129,10 +170,17 @@ export const INITIAL_VILLAGE_EXPERIENCES: VillageExperience[] = [
         description: 'Glass art discovery, suspension bridge walk, creative crafts, and mindfulness for kids.',
         location: 'Kitengela Hot Glass',
         duration: 'Day Trip (9:00 AM - 4:00 PM)',
+        datesText: 'All year',
+        availableDates: [],
         image: kitengelaGlassImage,
+        price: 4500,
         priceKes: 4500,
         priceUsd: 45,
+        currency: 'KES',
+        priceLabel: 'KES 4,500 each',
         minPeople: 1,
+        ticketName: 'Junior Glass Discovery Pass',
+        ticketNote: 'Guided glass workshop, bridge walk & refreshments',
         optionId: 'kids-kitengela-glass-resident',
         isActive: true,
         isFeatured: false,
@@ -144,6 +192,8 @@ export const INITIAL_VILLAGE_EXPERIENCES: VillageExperience[] = [
         ],
     },
 ];
+
+export const INITIAL_VILLAGE_EVENTS = INITIAL_VILLAGE_EXPERIENCES;
 
 export const INITIAL_VILLAGE_CAMPS: VillageCampRateConfig[] = [
     {
@@ -235,17 +285,28 @@ export const INITIAL_VILLAGE_CAMPS: VillageCampRateConfig[] = [
 export const getStoredVillageExperiences = (): VillageExperience[] => {
     if (typeof window === 'undefined') return INITIAL_VILLAGE_EXPERIENCES;
     try {
-        const raw = localStorage.getItem(VILLAGE_EXPERIENCES_STORAGE_KEY);
+        const raw = localStorage.getItem(VILLAGE_EXPERIENCES_STORAGE_KEY) || localStorage.getItem('uburu_admin_village_events_v1');
         if (!raw) {
             localStorage.setItem(VILLAGE_EXPERIENCES_STORAGE_KEY, JSON.stringify(INITIAL_VILLAGE_EXPERIENCES));
             return INITIAL_VILLAGE_EXPERIENCES;
         }
         const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((item: any) => ({
+                ...item,
+                price: Number(item.price ?? item.priceKes ?? 0),
+                priceKes: Number(item.priceKes ?? item.price ?? 0),
+                currency: item.currency || 'KES',
+            }));
+        }
     } catch (e) {
         console.error('Failed to parse village experiences:', e);
     }
     return INITIAL_VILLAGE_EXPERIENCES;
+};
+
+export const getStoredVillageEvents = (): VillageEvent[] => {
+    return getStoredVillageExperiences();
 };
 
 /**
@@ -287,8 +348,14 @@ export const saveVillageExperiences = async (events: VillageExperience[]): Promi
 
     if (typeof window !== 'undefined') {
         localStorage.setItem(VILLAGE_EXPERIENCES_STORAGE_KEY, JSON.stringify(events));
+        localStorage.setItem('uburu_admin_village_events_v1', JSON.stringify(events));
         window.dispatchEvent(new CustomEvent(VILLAGE_CONFIG_EVENT, { detail: { events } }));
+        window.dispatchEvent(new CustomEvent(VILLAGE_EVENTS_EVENT, { detail: events }));
     }
+};
+
+export const saveVillageEvents = async (events: VillageEvent[]): Promise<void> => {
+    return saveVillageExperiences(events);
 };
 
 /**
@@ -421,5 +488,105 @@ export const resetVillageToDefault = async (): Promise<void> => {
                 detail: { events: INITIAL_VILLAGE_EXPERIENCES, camps: INITIAL_VILLAGE_CAMPS },
             })
         );
+        window.dispatchEvent(
+            new CustomEvent(VILLAGE_EVENTS_EVENT, {
+                detail: INITIAL_VILLAGE_EXPERIENCES,
+            })
+        );
     }
+};
+
+/**
+ * Updates an existing village event by ID.
+ */
+export const updateVillageEvent = async (
+    eventId: string,
+    updates: Partial<VillageEvent>
+): Promise<boolean> => {
+    const events = getStoredVillageExperiences();
+    const index = events.findIndex((e) => e.id === eventId);
+    if (index === -1) return false;
+
+    const current = events[index];
+    const updatedPrice = updates.price !== undefined ? updates.price : (updates.priceKes ?? current.price);
+    const updatedCurrency = updates.currency || current.currency;
+    const defaultLabel = `${updatedCurrency} ${Number(updatedPrice).toLocaleString()} each`;
+
+    events[index] = {
+        ...current,
+        ...updates,
+        price: updatedPrice,
+        priceKes: updates.priceKes ?? updatedPrice,
+        priceLabel: updates.priceLabel || (updates.price !== undefined ? defaultLabel : current.priceLabel),
+    };
+
+    await saveVillageExperiences(events);
+    return true;
+};
+
+/**
+ * Deletes a village event by ID.
+ */
+export const deleteVillageEvent = async (eventId: string): Promise<boolean> => {
+    return deleteVillageExperience(eventId);
+};
+
+/**
+ * Resets village events to defaults.
+ */
+export const resetVillageEventsToDefault = async (): Promise<VillageEvent[]> => {
+    await resetVillageToDefault();
+    return INITIAL_VILLAGE_EXPERIENCES;
+};
+
+/**
+ * Syncs village events from backend API.
+ */
+export const syncVillageEventsFromDatabase = async (): Promise<VillageEvent[]> => {
+    const res = await syncVillageFromDatabase();
+    return res.events;
+};
+
+/**
+ * Adds a new village event.
+ */
+export const addVillageEvent = async (
+    eventData: Omit<VillageEvent, 'id'> & { id?: string }
+): Promise<{ success: boolean; event: VillageEvent }> => {
+    const events = getStoredVillageExperiences();
+    const baseSlug = (eventData.id || eventData.title)
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '') || `village-event-${Date.now()}`;
+        
+    let slug = baseSlug;
+    let counter = 1;
+    while (events.some((e) => e.id === slug)) {
+        slug = `${baseSlug}-${counter++}`;
+    }
+
+    const price = Number(eventData.price || eventData.priceKes || 0);
+    const fullEvent: VillageEvent = {
+        ...eventData,
+        id: slug,
+        price,
+        priceKes: eventData.priceKes ?? price,
+        priceUsd: eventData.priceUsd ?? (eventData.currency === 'USD' ? price : Math.round(price / 130)),
+        currency: eventData.currency || 'KES',
+        priceLabel: eventData.priceLabel || `${eventData.currency || 'KES'} ${price.toLocaleString()} each`,
+        minPeople: eventData.minPeople !== undefined ? Math.max(1, Number(eventData.minPeople)) : 1,
+        ticketName: eventData.ticketName || `${eventData.title} Pass`,
+        ticketNote: eventData.ticketNote || 'Includes event access & support for Uburu Village',
+        highlights: eventData.highlights && eventData.highlights.length > 0 ? eventData.highlights : ['Exclusive experience hosted by Uburu Village'],
+        isActive: eventData.isActive !== undefined ? eventData.isActive : true,
+        isFeatured: eventData.isFeatured !== undefined ? eventData.isFeatured : true,
+        createdAt: Date.now(),
+        duration: eventData.duration || 'Full Day',
+        optionId: eventData.optionId || `${slug}-ticket`,
+    };
+
+    const updated = [fullEvent, ...events];
+    await saveVillageExperiences(updated);
+    return { success: true, event: fullEvent };
 };

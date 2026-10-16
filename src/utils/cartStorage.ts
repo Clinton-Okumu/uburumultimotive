@@ -1,5 +1,6 @@
 import { homeProducts, ebookProducts, villageEvents, type StorefrontItem } from "../data/storefrontCatalog";
 import { getStoredCategories } from "../admin/data/homeAdminStorage";
+import { getStoredVillageEvents } from "../admin/data/villageAdminStorage";
 
 export const HOME_CART_STORAGE_KEY = "uburu_home_cart";
 export const VILLAGE_CART_STORAGE_KEY = "uburu_village_cart";
@@ -36,6 +37,21 @@ export const getAllValidHomeProductsMap = (): Map<string, StorefrontItem> => {
 export const getAllValidVillageEventsMap = (): Map<string, StorefrontItem> => {
   const map = new Map<string, StorefrontItem>();
   villageEvents.forEach((event) => map.set(event.id, event));
+
+  getStoredVillageEvents().forEach((event) => {
+    const itemOptionId = event.optionId || `${event.id}-resident`;
+    const item: StorefrontItem = {
+      id: itemOptionId,
+      name: event.title,
+      price: event.price,
+      currency: event.currency,
+      image: event.image,
+      tag: event.tag,
+    };
+    map.set(itemOptionId, item);
+    map.set(event.id, { ...item, id: event.id });
+  });
+
   return map;
 };
 

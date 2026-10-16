@@ -319,6 +319,25 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) =
                                         {villageCount}
                                     </span>
                                 </NavLink>
+
+                                <NavLink to="/admin/village/add-event" className={navItemClass} onClick={() => onClose()}>
+                                    <PlusCircle className="w-4 h-4 text-amber-400 group-hover:text-yellow-300 transition-colors" />
+                                    <span className="flex-1 font-semibold text-amber-300">Add Event</span>
+                                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold uppercase bg-amber-400 text-slate-950 rounded-md">
+                                        Action
+                                    </span>
+                                </NavLink>
+
+                                <a
+                                    href="/get/village"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors"
+                                    onClick={() => onClose()}
+                                >
+                                    <ExternalLink className="w-4 h-4 text-slate-400" />
+                                    <span>Public Village</span>
+                                </a>
                             </nav>
                         )}
                     </div>

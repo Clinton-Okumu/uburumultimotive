@@ -38,6 +38,7 @@ import AdminTherapyServices from './admin/pages/AdminTherapyServices';
 import AdminTherapyPricing from './admin/pages/AdminTherapyPricing';
 import { AdminVillageDashboard } from './admin/pages/AdminVillageDashboard';
 import { AdminVillageEvents } from './admin/pages/AdminVillageEvents';
+import AdminAddVillageEvent from './admin/pages/AdminAddVillageEvent';
 import AdminLogin from './admin/pages/AdminLogin';
 import { AdminAuthProvider } from './admin/auth/AdminAuthContext';
 import AdminProtectedRoute from './admin/auth/AdminProtectedRoute';
@@ -93,6 +94,7 @@ function App() {
                         {/* Uburu Village Admin Routes */}
                         <Route path="village" element={<AdminVillageDashboard />} />
                         <Route path="village/events" element={<AdminVillageEvents />} />
+                        <Route path="village/add-event" element={<AdminAddVillageEvent />} />
                     </Route>
 
 

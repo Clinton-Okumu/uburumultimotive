@@ -69,15 +69,20 @@ export const AdminTherapyPricing: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleDelete = (id: string, title: string) => {
+    const handleDelete = async (id: string, title: string) => {
         if (confirm(`Are you sure you want to delete the plan "${title}"?`)) {
-            deletePricingPlan(id);
-            refreshData();
-            showNotify(`Plan "${title}" deleted.`);
+            try {
+                await deletePricingPlan(id);
+                refreshData();
+                showNotify(`Plan "${title}" deleted.`);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Failed to delete plan.';
+                alert(message);
+            }
         }
     };
 
-    const handleSavePlan = (e: React.FormEvent) => {
+    const handleSavePlan = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingPlan) return;
         if (!editingPlan.title.trim()) {
@@ -85,17 +90,27 @@ export const AdminTherapyPricing: React.FC = () => {
             return;
         }
 
-        savePricingPlan(editingPlan);
-        refreshData();
-        setIsModalOpen(false);
-        showNotify(`Plan "${editingPlan.title}" saved successfully!`);
+        try {
+            await savePricingPlan(editingPlan);
+            refreshData();
+            setIsModalOpen(false);
+            showNotify(`Plan "${editingPlan.title}" saved successfully!`);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to save plan.';
+            alert(message);
+        }
     };
 
-    const handleResetAll = () => {
+    const handleResetAll = async () => {
         if (confirm('Reset all therapy pricing plans to system defaults?')) {
-            resetTherapyToDefault();
-            refreshData();
-            showNotify('All pricing plans reset to original defaults.');
+            try {
+                await resetTherapyToDefault();
+                refreshData();
+                showNotify('All pricing plans reset to original defaults.');
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Failed to reset plans.';
+                alert(message);
+            }
         }
     };
 

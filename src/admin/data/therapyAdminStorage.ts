@@ -1,3 +1,5 @@
+import { getAdminAuthHeader } from '../auth/AdminAuthContext';
+
 export interface TherapyServiceConfig {
     id: string;
     title: string;
@@ -402,20 +404,24 @@ export const getStoredTherapyServices = (): TherapyServiceConfig[] => {
     return INITIAL_THERAPY_SERVICES;
 };
 
-export const saveTherapyServices = (services: TherapyServiceConfig[]): void => {
-    if (typeof window === 'undefined') return;
-    try {
+export const saveTherapyServices = async (services: TherapyServiceConfig[]): Promise<void> => {
+    const res = await fetch('/api/therapy/config.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeader(),
+        },
+        body: JSON.stringify({ services }),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Failed to save therapy services (HTTP ${res.status})`);
+    }
+
+    if (typeof window !== 'undefined') {
         localStorage.setItem(THERAPY_SERVICES_STORAGE_KEY, JSON.stringify(services));
         window.dispatchEvent(new CustomEvent(THERAPY_CONFIG_EVENT, { detail: { services } }));
-
-        // Asynchronously persist to server backend API
-        fetch('/api/therapy/config.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ services }),
-        }).catch((err) => console.warn('Could not sync therapy services to server:', err));
-    } catch (e) {
-        console.error('Failed to save therapy services:', e);
     }
 };
 
@@ -438,20 +444,24 @@ export const getStoredTherapyPricing = (): TherapyPricingPlan[] => {
     return INITIAL_THERAPY_PRICING;
 };
 
-export const saveTherapyPricing = (pricing: TherapyPricingPlan[]): void => {
-    if (typeof window === 'undefined') return;
-    try {
+export const saveTherapyPricing = async (pricing: TherapyPricingPlan[]): Promise<void> => {
+    const res = await fetch('/api/therapy/config.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeader(),
+        },
+        body: JSON.stringify({ pricing }),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Failed to save therapy pricing (HTTP ${res.status})`);
+    }
+
+    if (typeof window !== 'undefined') {
         localStorage.setItem(THERAPY_PRICING_STORAGE_KEY, JSON.stringify(pricing));
         window.dispatchEvent(new CustomEvent(THERAPY_CONFIG_EVENT, { detail: { pricing } }));
-
-        // Asynchronously persist to server backend API
-        fetch('/api/therapy/config.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pricing }),
-        }).catch((err) => console.warn('Could not sync therapy pricing to server:', err));
-    } catch (e) {
-        console.error('Failed to save therapy pricing:', e);
     }
 };
 
@@ -576,19 +586,19 @@ export const getMedicalPricingPackages = (userCurrency: 'KES' | 'USD' = 'KES'): 
 /**
  * Updates a specific therapy service pathway (e.g. Therapy, Life Coaching, Medical)
  */
-export const updateTherapyService = (id: string, updates: Partial<TherapyServiceConfig>): boolean => {
+export const updateTherapyService = async (id: string, updates: Partial<TherapyServiceConfig>): Promise<boolean> => {
     const services = getStoredTherapyServices();
     const index = services.findIndex((s) => s.id === id);
     if (index === -1) return false;
     services[index] = { ...services[index], ...updates };
-    saveTherapyServices(services);
+    await saveTherapyServices(services);
     return true;
 };
 
 /**
  * Creates or updates a pricing plan
  */
-export const savePricingPlan = (plan: TherapyPricingPlan): void => {
+export const savePricingPlan = async (plan: TherapyPricingPlan): Promise<void> => {
     const plans = getStoredTherapyPricing();
     const index = plans.findIndex((p) => p.id === plan.id);
     if (index >= 0) {
@@ -596,24 +606,38 @@ export const savePricingPlan = (plan: TherapyPricingPlan): void => {
     } else {
         plans.push(plan);
     }
-    saveTherapyPricing(plans);
+    await saveTherapyPricing(plans);
 };
 
 /**
  * Deletes a pricing plan
  */
-export const deletePricingPlan = (planId: string): boolean => {
+export const deletePricingPlan = async (planId: string): Promise<boolean> => {
     const plans = getStoredTherapyPricing();
     const filtered = plans.filter((p) => p.id !== planId);
     if (filtered.length === plans.length) return false;
-    saveTherapyPricing(filtered);
+    await saveTherapyPricing(filtered);
     return true;
 };
 
 /**
  * Reset all therapy data to defaults
  */
-export const resetTherapyToDefault = () => {
+export const resetTherapyToDefault = async (): Promise<void> => {
+    const res = await fetch('/api/therapy/config.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeader(),
+        },
+        body: JSON.stringify({ services: INITIAL_THERAPY_SERVICES, pricing: INITIAL_THERAPY_PRICING }),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Failed to reset therapy configuration (HTTP ${res.status})`);
+    }
+
     if (typeof window !== 'undefined') {
         localStorage.setItem(THERAPY_SERVICES_STORAGE_KEY, JSON.stringify(INITIAL_THERAPY_SERVICES));
         localStorage.setItem(THERAPY_PRICING_STORAGE_KEY, JSON.stringify(INITIAL_THERAPY_PRICING));
@@ -622,10 +646,5 @@ export const resetTherapyToDefault = () => {
                 detail: { services: INITIAL_THERAPY_SERVICES, pricing: INITIAL_THERAPY_PRICING },
             })
         );
-        fetch('/api/therapy/config.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ services: INITIAL_THERAPY_SERVICES, pricing: INITIAL_THERAPY_PRICING }),
-        }).catch(() => {});
     }
 };

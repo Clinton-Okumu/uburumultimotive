@@ -106,7 +106,7 @@ export const AdminAddItem: React.FC = () => {
         setFeatures(features.filter((_, i) => i !== idx));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrorMessage('');
         setSuccessMessage('');
@@ -136,7 +136,7 @@ export const AdminAddItem: React.FC = () => {
         }
 
         try {
-            addItemToCategory(selectedCategory, {
+            await addItemToCategory(selectedCategory, {
                 name: name.trim(),
                 price: numPrice,
                 originalPrice: numOriginalPrice,

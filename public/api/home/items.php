@@ -8,15 +8,16 @@
  */
 
 require_once __DIR__ . '/db.php';
+require_once dirname(__DIR__) . '/admin/auth_helper.php';
 set_cors_headers();
 
-$db = get_db();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 // ----------------------------------------------------
 // 1. GET: Fetch items
 // ----------------------------------------------------
 if ($method === 'GET') {
+    $db = get_db();
     $categorySlug = $_GET['category'] ?? '';
     $itemId = $_GET['id'] ?? '';
 
@@ -47,9 +48,10 @@ if ($method === 'GET') {
 }
 
 // ----------------------------------------------------
-// 2. POST: Add new item to a category
+// 2. POST: Add new item to a category (Admin only)
 // ----------------------------------------------------
 if ($method === 'POST') {
+    require_admin_auth();
     $input = get_json_input();
 
     $categorySlug = trim($input['categorySlug'] ?? '');
@@ -79,6 +81,7 @@ if ($method === 'POST') {
     $reviewCount = (int)($input['reviewCount'] ?? 1);
 
     try {
+        $db = get_db();
         $stmt = $db->prepare("
             INSERT INTO `home_items`
             (`id`, `category_slug`, `name`, `price`, `original_price`, `discount_percent`, `currency`, `brand`, `tag`, `image`, `type`, `in_stock`, `stock_location`, `description`, `features`, `rating`, `review_count`)
@@ -115,9 +118,10 @@ if ($method === 'POST') {
 }
 
 // ----------------------------------------------------
-// 3. DELETE: Remove item
+// 3. DELETE: Remove item (Admin only)
 // ----------------------------------------------------
 if ($method === 'DELETE') {
+    require_admin_auth();
     $itemId = $_GET['id'] ?? '';
     if ($itemId === '') {
         $input = json_decode(file_get_contents('php://input') ?: '', true);
@@ -129,6 +133,7 @@ if ($method === 'DELETE') {
     }
 
     try {
+        $db = get_db();
         $stmt = $db->prepare("DELETE FROM `home_items` WHERE `id` = ?");
         $stmt->execute([$itemId]);
         api_response(200, ['success' => true, 'message' => 'Item deleted successfully']);

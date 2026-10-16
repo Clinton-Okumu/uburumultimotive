@@ -54,9 +54,8 @@ export const AdminLogin: React.FC = () => {
 
         setIsLoading(true);
 
-        // Simulate a small, crisp verification delay for tactile feedback
-        setTimeout(() => {
-            const result = login(username, password);
+        try {
+            const result = await login(username, password);
 
             if (result.success) {
                 setLoginSuccess(true);
@@ -68,7 +67,10 @@ export const AdminLogin: React.FC = () => {
                 setError(result.error || 'Invalid credentials. Please verify your username and password.');
                 setIsLoading(false);
             }
-        }, 350);
+        } catch {
+            setError('An unexpected error occurred during authentication.');
+            setIsLoading(false);
+        }
     };
 
     return (

@@ -1,4 +1,5 @@
 import { homeCategories as initialCategories, type HomeCategory, type HomeCategoryItem } from '../../data/homeCategories';
+import { getAdminAuthHeader } from '../auth/AdminAuthContext';
 
 export const HOME_ADMIN_STORAGE_KEY = 'uburu_home_admin_catalog_v1';
 export const HOME_CATALOG_EVENT = 'uburu_home_catalog_updated';
@@ -66,15 +67,20 @@ export const syncCatalogFromDatabase = async (): Promise<HomeCategory[]> => {
  */
 export const uploadImageToServer = async (file: File | string): Promise<string> => {
     try {
+        const authHeaders = getAdminAuthHeader();
+
         if (typeof file === 'string' && file.startsWith('data:image/')) {
             // Base64 payload
             const res = await fetch('/api/home/upload.php', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeaders,
+                },
                 body: JSON.stringify({ image: file }),
             });
-            const data = await res.json();
-            if (data && data.success && data.url) {
+            const data = await res.json().catch(() => null);
+            if (res.ok && data?.success && data?.url) {
                 return data.url;
             }
         } else if (file instanceof File) {
@@ -83,10 +89,13 @@ export const uploadImageToServer = async (file: File | string): Promise<string> 
             formData.append('image', file);
             const res = await fetch('/api/home/upload.php', {
                 method: 'POST',
+                headers: {
+                    ...authHeaders,
+                },
                 body: formData,
             });
-            const data = await res.json();
-            if (data && data.success && data.url) {
+            const data = await res.json().catch(() => null);
+            if (res.ok && data?.success && data?.url) {
                 return data.url;
             }
         }
@@ -99,12 +108,12 @@ export const uploadImageToServer = async (file: File | string): Promise<string> 
 };
 
 /**
- * Adds a new item to a specific category and syncs to MySQL database.
+ * Adds a new item to a specific category, persisting to server first then updating local state.
  */
-export const addItemToCategory = (
+export const addItemToCategory = async (
     categorySlug: string,
     newItem: Omit<HomeCategoryItem, 'id' | 'categorySlug'> & { id?: string }
-): { success: boolean; item: HomeCategoryItem } => {
+): Promise<{ success: boolean; item: HomeCategoryItem }> => {
     const categories = getStoredCategories();
     const catIndex = categories.findIndex(
         (c) => c.slug.toLowerCase() === categorySlug.toLowerCase() || c.id.toLowerCase() === categorySlug.toLowerCase()
@@ -123,17 +132,30 @@ export const addItemToCategory = (
         inStock: newItem.inStock !== undefined ? newItem.inStock : true,
     };
 
-    categories[catIndex].items = [fullItem, ...(categories[catIndex].items || [])];
-    saveCategories(categories);
+    // Synchronously persist with MySQL backend
+    try {
+        const res = await fetch('/api/home/items.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAdminAuthHeader(),
+            },
+            body: JSON.stringify(fullItem),
+        });
 
-    // Asynchronously sync with MySQL
-    fetch('/api/home/items.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(fullItem),
-    }).catch(() => {
-        // Ignored; local storage already updated
-    });
+        if (!res.ok) {
+            const errData = await res.json().catch(() => null);
+            throw new Error(errData?.error || `Server responded with HTTP ${res.status}`);
+        }
+    } catch (err: unknown) {
+        console.error('Backend item persistence failed:', err);
+        const errMsg = err instanceof Error ? err.message : 'Backend connection error';
+        throw new Error(`Failed to save item to server: ${errMsg}`);
+    }
+
+    // Update local cache only on successful backend confirmation
+    categories[catIndex].items = [fullItem, ...(categories[catIndex].items || []).filter((i) => i.id !== itemId)];
+    saveCategories(categories);
 
     return { success: true, item: fullItem };
 };
@@ -141,11 +163,11 @@ export const addItemToCategory = (
 /**
  * Updates an existing item inside a category and syncs to MySQL.
  */
-export const updateItemInCategory = (
+export const updateItemInCategory = async (
     categorySlug: string,
     itemId: string,
     updates: Partial<HomeCategoryItem>
-): boolean => {
+): Promise<boolean> => {
     const categories = getStoredCategories();
     const catIndex = categories.findIndex(
         (c) => c.slug.toLowerCase() === categorySlug.toLowerCase() || c.id.toLowerCase() === categorySlug.toLowerCase()
@@ -160,14 +182,23 @@ export const updateItemInCategory = (
         ...categories[catIndex].items[itemIndex],
         ...updates,
     };
+
+    const res = await fetch('/api/home/items.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeader(),
+        },
+        body: JSON.stringify(updatedItem),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Failed to update item on server (HTTP ${res.status})`);
+    }
+
     categories[catIndex].items[itemIndex] = updatedItem;
     saveCategories(categories);
-
-    fetch('/api/home/items.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedItem),
-    }).catch(() => {});
 
     return true;
 };
@@ -175,7 +206,7 @@ export const updateItemInCategory = (
 /**
  * Deletes an item from a category and syncs to MySQL.
  */
-export const deleteItemFromCategory = (categorySlug: string, itemId: string): boolean => {
+export const deleteItemFromCategory = async (categorySlug: string, itemId: string): Promise<boolean> => {
     const categories = getStoredCategories();
     const catIndex = categories.findIndex(
         (c) => c.slug.toLowerCase() === categorySlug.toLowerCase() || c.id.toLowerCase() === categorySlug.toLowerCase()
@@ -183,12 +214,20 @@ export const deleteItemFromCategory = (categorySlug: string, itemId: string): bo
 
     if (catIndex === -1) return false;
 
+    const res = await fetch(`/api/home/items.php?id=${encodeURIComponent(itemId)}`, {
+        method: 'DELETE',
+        headers: {
+            ...getAdminAuthHeader(),
+        },
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Failed to delete item from server (HTTP ${res.status})`);
+    }
+
     categories[catIndex].items = categories[catIndex].items.filter((i) => i.id !== itemId);
     saveCategories(categories);
-
-    fetch(`/api/home/items.php?id=${encodeURIComponent(itemId)}`, {
-        method: 'DELETE',
-    }).catch(() => {});
 
     return true;
 };
@@ -196,9 +235,9 @@ export const deleteItemFromCategory = (categorySlug: string, itemId: string): bo
 /**
  * Creates a brand new category and syncs to MySQL.
  */
-export const createCategory = (
+export const createCategory = async (
     categoryData: Omit<HomeCategory, 'items'> & { items?: HomeCategoryItem[] }
-): HomeCategory => {
+): Promise<HomeCategory> => {
     const categories = getStoredCategories();
     const slug = categoryData.slug.toLowerCase().trim().replace(/\s+/g, '-');
 
@@ -212,14 +251,22 @@ export const createCategory = (
         items: categoryData.items || [],
     };
 
+    const res = await fetch('/api/home/categories.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAdminAuthHeader(),
+        },
+        body: JSON.stringify(newCat),
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Failed to create category on server (HTTP ${res.status})`);
+    }
+
     const updated = [...categories, newCat];
     saveCategories(updated);
-
-    fetch('/api/home/categories.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCat),
-    }).catch(() => {});
 
     return newCat;
 };
@@ -227,7 +274,7 @@ export const createCategory = (
 /**
  * Deletes a category by slug or id and syncs to MySQL.
  */
-export const deleteCategory = (categorySlug: string): boolean => {
+export const deleteCategory = async (categorySlug: string): Promise<boolean> => {
     const categories = getStoredCategories();
     const filtered = categories.filter(
         (c) => c.slug.toLowerCase() !== categorySlug.toLowerCase() && c.id.toLowerCase() !== categorySlug.toLowerCase()
@@ -235,11 +282,19 @@ export const deleteCategory = (categorySlug: string): boolean => {
 
     if (filtered.length === categories.length) return false;
 
-    saveCategories(filtered);
-
-    fetch(`/api/home/categories.php?slug=${encodeURIComponent(categorySlug)}`, {
+    const res = await fetch(`/api/home/categories.php?slug=${encodeURIComponent(categorySlug)}`, {
         method: 'DELETE',
-    }).catch(() => {});
+        headers: {
+            ...getAdminAuthHeader(),
+        },
+    });
+
+    if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || `Failed to delete category from server (HTTP ${res.status})`);
+    }
+
+    saveCategories(filtered);
 
     return true;
 };

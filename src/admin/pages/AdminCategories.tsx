@@ -43,10 +43,15 @@ export const AdminCategories: React.FC = () => {
         c.slug.toLowerCase().includes(search.toLowerCase())
     );
 
-    const handleDelete = (slug: string, name: string) => {
+    const handleDelete = async (slug: string, name: string) => {
         if (confirm(`Are you sure you want to delete the department "${name}" and its items?`)) {
-            deleteCategory(slug);
-            refresh();
+            try {
+                await deleteCategory(slug);
+                refresh();
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Failed to delete category.';
+                alert(message);
+            }
         }
     };
 

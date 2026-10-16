@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, useEffect, type FormEvent } from "react";
 import { Ticket, User, Phone, Mail, CheckCircle, CreditCard, Send, ArrowLeft } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../shared/Button";
@@ -10,6 +10,12 @@ import {
   type VillageResidencyType,
   type VillageTravelMonth,
 } from "../../data/storefrontCatalog";
+import {
+  getStoredVillageCamps,
+  syncVillageFromDatabase,
+  VILLAGE_CONFIG_EVENT,
+  type VillageCampRateConfig,
+} from "../../admin/data/villageAdminStorage";
 
 const PAYBILL_NO = "522522";
 const ACCOUNT_NO = "1346356009";
@@ -39,7 +45,24 @@ type BookingStep = "register" | "payment" | "mpesa_instructions";
 
 const MaasaiMaraPackageDetails = () => {
   const navigate = useNavigate();
-  const [selectedCampId, setSelectedCampId] = useState(villageCampRates[0]?.campId ?? "");
+  const [camps, setCamps] = useState<VillageCampRateConfig[]>(() => getStoredVillageCamps());
+
+  useEffect(() => {
+    syncVillageFromDatabase().then((res) => {
+      if (res && res.camps && res.camps.length > 0) {
+        setCamps(res.camps);
+      }
+    });
+
+    const handler = () => {
+      setCamps(getStoredVillageCamps());
+    };
+    window.addEventListener(VILLAGE_CONFIG_EVENT, handler);
+    return () => window.removeEventListener(VILLAGE_CONFIG_EVENT, handler);
+  }, []);
+
+  const activeCamps = useMemo(() => camps.filter((c) => c.isActive), [camps]);
+  const [selectedCampId, setSelectedCampId] = useState(() => getStoredVillageCamps()[0]?.campId ?? "");
   const [residencyType, setResidencyType] = useState<VillageResidencyType>("resident");
   const [travelMonth, setTravelMonth] = useState<VillageTravelMonth>("july");
   const [peopleCount, setPeopleCount] = useState(1);
@@ -67,8 +90,8 @@ const MaasaiMaraPackageDetails = () => {
   });
 
   const selectedCamp = useMemo(
-    () => villageCampRates.find((camp) => camp.campId === selectedCampId) ?? villageCampRates[0],
-    [selectedCampId],
+    () => activeCamps.find((camp) => camp.campId === selectedCampId) ?? activeCamps[0] ?? villageCampRates[0],
+    [activeCamps, selectedCampId],
   );
 
   const selectedOption = useMemo(
@@ -82,8 +105,10 @@ const MaasaiMaraPackageDetails = () => {
 
   const selectedMonthIsAllowed =
     !!selectedCamp && selectedCamp.availableMonths.includes(travelMonth);
-  const currency = selectedOption?.currency ?? "KES";
-  const unitPrice = selectedOption?.price ?? 0;
+  const currency = (selectedOption?.currency || (residencyType === "non_resident" ? "USD" : "KES")) as "KES" | "USD";
+  const unitPrice = selectedCamp
+    ? (residencyType === "resident" ? selectedCamp.residentPriceKes : selectedCamp.nonResidentPriceUsd)
+    : (selectedOption?.price ?? 0);
   const totalAmount = unitPrice * peopleCount;
 
   const goToCheckout = () => {
@@ -91,7 +116,7 @@ const MaasaiMaraPackageDetails = () => {
   };
 
   const handleCampChange = (nextCampId: string) => {
-    const nextCamp = villageCampRates.find((camp) => camp.campId === nextCampId);
+    const nextCamp = activeCamps.find((camp) => camp.campId === nextCampId);
     if (!nextCamp) {
       return;
     }
@@ -210,7 +235,7 @@ const MaasaiMaraPackageDetails = () => {
                       onChange={(event) => handleCampChange(event.target.value)}
                       className="w-full rounded-xl border border-[#dbe7f3] bg-white px-3 py-2 text-sm font-semibold text-[#1c3b57] focus:outline-none focus:ring-2 focus:ring-[#2f6f99]/40"
                     >
-                      {villageCampRates.map((camp) => (
+                      {activeCamps.map((camp) => (
                         <option key={camp.campId} value={camp.campId}>
                           {camp.campName}
                         </option>
@@ -467,7 +492,7 @@ const MaasaiMaraPackageDetails = () => {
             </p>
 
             <div className="mt-4 space-y-3">
-              {villageCampRates.map((camp) => (
+              {activeCamps.map((camp) => (
                 <div key={camp.campId} className="rounded-2xl border border-[#e5edf6] bg-[#f8fbff] p-3">
                   <p className="text-sm font-black text-[#1c3b57]">{camp.campName}</p>
                   <p className="mt-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#6a7c92]">

@@ -26,3 +26,5 @@ dist-ssr
 dpo_config.php
 mail_config.php
 db_config.php
+admin_config.php
+

@@ -1,20 +1,37 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface AdminUser {
     username: string;
     role: string;
     name: string;
     loggedInAt: number;
+    token?: string;
 }
 
 interface AdminAuthContextType {
     user: AdminUser | null;
     isAuthenticated: boolean;
-    login: (username: string, password: string) => { success: boolean; error?: string };
+    login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
 }
 
 const STORAGE_KEY = 'uburu_admin_auth_session';
+
+export const getAdminAuthHeader = (): Record<string, string> => {
+    if (typeof window === 'undefined') return {};
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.token) {
+                return { Authorization: `Bearer ${parsed.token}` };
+            }
+        }
+    } catch {
+        // Fall through
+    }
+    return {};
+};
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
@@ -31,26 +48,67 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return null;
     });
 
-    const login = (usernameInput: string, passwordInput: string) => {
+    // Check token validity on mount
+    useEffect(() => {
+        if (user?.token) {
+            fetch('/api/admin/verify.php', {
+                headers: { Authorization: `Bearer ${user.token}` },
+            })
+                .then((res) => {
+                    if (res.status === 401) {
+                        logout();
+                    }
+                })
+                .catch(() => {
+                    // Ignore offline network errors
+                });
+        }
+    }, []);
+
+    const login = async (usernameInput: string, passwordInput: string): Promise<{ success: boolean; error?: string }> => {
         const cleanUser = usernameInput.trim();
         const cleanPass = passwordInput.trim();
 
-        if (cleanUser === 'admin' && cleanPass === '1234') {
-            const sessionUser: AdminUser = {
-                username: 'admin',
-                role: 'Super Admin',
-                name: 'Uburu Admin',
-                loggedInAt: Date.now(),
+        if (!cleanUser || !cleanPass) {
+            return {
+                success: false,
+                error: 'Please enter both your username and password.',
             };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionUser));
-            setUser(sessionUser);
-            return { success: true };
         }
 
-        return {
-            success: false,
-            error: 'Invalid credentials. Please verify your username and password.',
-        };
+        try {
+            const res = await fetch('/api/admin/login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: cleanUser, password: cleanPass }),
+            });
+
+            const data = await res.json().catch(() => null);
+
+            if (res.ok && data?.success && data?.token) {
+                const sessionUser: AdminUser = {
+                    username: data.user?.username || cleanUser,
+                    role: data.user?.role || 'Super Admin',
+                    name: data.user?.name || 'Uburu Admin',
+                    loggedInAt: Date.now(),
+                    token: data.token,
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionUser));
+                setUser(sessionUser);
+                return { success: true };
+            }
+
+            return {
+                success: false,
+                error: data?.error || 'Invalid credentials. Please verify your username and password.',
+            };
+        } catch (err) {
+            console.error('Admin login request failed:', err);
+            return {
+                success: false,
+                error: 'Failed to connect to authentication server. Please check backend status.',
+            };
+        }
     };
 
     const logout = () => {

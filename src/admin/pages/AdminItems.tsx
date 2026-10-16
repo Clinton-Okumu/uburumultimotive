@@ -63,10 +63,15 @@ export const AdminItems: React.FC = () => {
         return matchesCategory && matchesSearch && matchesStatus;
     });
 
-    const handleDeleteItem = (catSlug: string, itemId: string, itemName: string) => {
+    const handleDeleteItem = async (catSlug: string, itemId: string, itemName: string) => {
         if (confirm(`Are you sure you want to remove "${itemName}" from the store?`)) {
-            deleteItemFromCategory(catSlug, itemId);
-            refresh();
+            try {
+                await deleteItemFromCategory(catSlug, itemId);
+                refresh();
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Failed to delete item.';
+                alert(message);
+            }
         }
     };
 

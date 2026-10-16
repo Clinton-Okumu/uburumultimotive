@@ -1,16 +1,12 @@
-import { useState, type FormEvent, useMemo } from "react";
+import { useState, type FormEvent, useMemo, useEffect } from "react";
 import { Ticket, X, Maximize2, Share2, User, Phone, Mail, Users, CheckCircle, CreditCard, Send } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import Button from "../shared/Button";
 import toast from "react-hot-toast";
 import { useStorefrontCheckout } from "../../hooks/useStorefrontCheckout";
 import { villageEventOptions, type VillageEventOption } from "../../data/storefrontCatalog";
-import olooluaNatureTrail from "../../assets/oloolua.webp";
-import kidsImage from "../../assets/kids.webp";
+import { getStoredVillageExperiences, syncVillageFromDatabase, VILLAGE_CONFIG_EVENT, type VillageExperience } from "../../admin/data/villageAdminStorage";
 import maa from "../../assets/maa.webp";
-import therapeuticTripImage from "../../assets/glassdoor2.webp";
-import paradiseLostImage from "../../assets/paradiselost.jpg";
-import kitengelaGlassImage from "../../assets/kitengelaglass.webp";
 
 
 const PAYBILL_NO = "522522";
@@ -201,58 +197,36 @@ const FeaturedEvents = () => {
     window.open(`https://wa.me/254718421205?text=${message}`, "_blank"); // Replace with actual admin number
   };
 
-  const events = [
-    {
-      id: "oloolua-nature-trail",
-      title: "Oloolua nature trail",
-      image: olooluaNatureTrail,
-      optionId: "oloolua-nature-trail-group",
-      tag: "Uburu Village",
-      priceLabel: "KES 4,000 each",
-      description: "Group bookings: min 5 people",
-      minPeople: 5,
-    },
-    {
-      id: "kids-outdoor-adventure",
-      title: "Kids Outdoor & Wellness Adventure",
-      image: kidsImage,
-      optionId: "kids-outdoor-adventure-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 3,500 each",
-      description: "Outdoor fun, arts & mindfulness for children",
-      minPeople: 1,
-    },
-    {
-      id: "therapeutic-trip",
-      title: "Therapeutic trip to (glassdoor Kitengela)",
-      image: therapeuticTripImage,
-      optionId: "therapeutic-trip-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 4,500 each",
-      description: "",
-      minPeople: 1,
-    },
-    {
-      id: "paradise-lost",
-      title: "Paradise Lost excursion",
-      image: paradiseLostImage,
-      optionId: "paradise-lost-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 3,500 each",
-      description: "",
-      minPeople: 1,
-    },
-    {
-      id: "kids-kitengela-glass",
-      title: "Kids Kitengela Glass Adventure",
-      image: kitengelaGlassImage,
-      optionId: "kids-kitengela-glass-resident",
-      tag: "Uburu Village",
-      priceLabel: "KES 4,500 each",
-      description: "Glass art, suspension bridge & mindfulness for kids",
-      minPeople: 1,
-    },
-  ];
+  const [storedExperiences, setStoredExperiences] = useState<VillageExperience[]>(() => getStoredVillageExperiences());
+
+  useEffect(() => {
+    syncVillageFromDatabase().then((res) => {
+      if (res && res.events) {
+        setStoredExperiences(res.events);
+      }
+    });
+
+    const handler = () => {
+      setStoredExperiences(getStoredVillageExperiences());
+    };
+    window.addEventListener(VILLAGE_CONFIG_EVENT, handler);
+    return () => window.removeEventListener(VILLAGE_CONFIG_EVENT, handler);
+  }, []);
+
+  const events = useMemo(() => {
+    return storedExperiences
+      .filter((e) => e.isActive)
+      .map((exp) => ({
+        id: exp.id,
+        title: exp.title,
+        image: exp.image,
+        optionId: exp.optionId || exp.id,
+        tag: exp.tag || "Uburu Village",
+        priceLabel: `KES ${exp.priceKes.toLocaleString()} each`,
+        description: exp.description || (exp.minPeople > 1 ? `Group bookings: min ${exp.minPeople} people` : ""),
+        minPeople: exp.minPeople || 1,
+      }));
+  }, [storedExperiences]);
 
   return (
     <section id="events" className="relative bg-[#f8fbff] px-6 py-20">

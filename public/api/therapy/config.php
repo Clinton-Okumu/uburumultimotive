@@ -4,6 +4,8 @@
  * Handles global persistence for Uburu Therapy services and pricing configuration.
  */
 
+require_once dirname(__DIR__) . '/admin/auth_helper.php';
+
 // Handle CORS
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
 header("Access-Control-Allow-Origin: {$origin}");
@@ -44,8 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
-// POST: Save configuration
+// POST: Save configuration (Admin only)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_admin_auth();
     $rawInput = file_get_contents('php://input');
     $payload = json_decode($rawInput, true);
 
@@ -76,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'updated_at' => date('c'),
     ];
 
-    $saved = @file_put_contents($storageFile, json_encode($toSave, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $saved = @file_put_contents($storageFile, json_encode($toSave, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
 
     if ($saved === false) {
         http_response_code(500);

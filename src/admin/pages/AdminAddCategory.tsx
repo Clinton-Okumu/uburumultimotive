@@ -64,7 +64,7 @@ export const AdminAddCategory: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setErrorMessage('');
         setSuccessMessage('');
@@ -83,7 +83,7 @@ export const AdminAddCategory: React.FC = () => {
         }
 
         try {
-            createCategory({
+            await createCategory({
                 id: slug.trim(),
                 slug: slug.trim(),
                 name: name.trim(),

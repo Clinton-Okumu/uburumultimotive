@@ -46,18 +46,28 @@ export const AdminTherapyServices: React.FC = () => {
         );
     };
 
-    const handleSaveAll = () => {
-        saveTherapyServices(services);
-        setSavedNotification(true);
-        setTimeout(() => setSavedNotification(false), 3000);
-    };
-
-    const handleReset = () => {
-        if (confirm('Reset therapy pathways to original system defaults?')) {
-            resetTherapyToDefault();
-            setServices(getStoredTherapyServices());
+    const handleSaveAll = async () => {
+        try {
+            await saveTherapyServices(services);
             setSavedNotification(true);
             setTimeout(() => setSavedNotification(false), 3000);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Failed to save therapy services.';
+            alert(message);
+        }
+    };
+
+    const handleReset = async () => {
+        if (confirm('Reset therapy pathways to original system defaults?')) {
+            try {
+                await resetTherapyToDefault();
+                setServices(getStoredTherapyServices());
+                setSavedNotification(true);
+                setTimeout(() => setSavedNotification(false), 3000);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : 'Failed to reset therapy services.';
+                alert(message);
+            }
         }
     };
 

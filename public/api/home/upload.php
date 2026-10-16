@@ -7,11 +7,15 @@
  */
 
 require_once __DIR__ . '/db.php';
+require_once dirname(__DIR__) . '/admin/auth_helper.php';
 set_cors_headers();
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     api_response(405, ['success' => false, 'error' => 'Method not allowed']);
 }
+
+// Require authenticated admin session for file uploads
+require_admin_auth();
 
 // Determine uploads directory
 $uploadDir = dirname(__DIR__, 2) . '/uploads';
@@ -27,12 +31,11 @@ if (!is_writable($uploadDir)) {
 }
 
 $allowedMimes = [
-    'image/jpeg'    => 'jpg',
-    'image/jpg'     => 'jpg',
-    'image/png'     => 'png',
-    'image/webp'    => 'webp',
-    'image/gif'     => 'gif',
-    'image/svg+xml' => 'svg',
+    'image/jpeg' => 'jpg',
+    'image/jpg'  => 'jpg',
+    'image/png'  => 'png',
+    'image/webp' => 'webp',
+    'image/gif'  => 'gif',
 ];
 
 // ----------------------------------------------------

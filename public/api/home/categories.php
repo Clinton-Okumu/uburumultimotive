@@ -7,9 +7,9 @@
  */
 
 require_once __DIR__ . '/db.php';
+require_once dirname(__DIR__) . '/admin/auth_helper.php';
 set_cors_headers();
 
-$db = get_db();
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 // ----------------------------------------------------
@@ -17,6 +17,7 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 // ----------------------------------------------------
 if ($method === 'GET') {
     try {
+        $db = get_db();
         $stmt = $db->query("SELECT * FROM `home_categories` ORDER BY `name` ASC");
         $categories = $stmt->fetchAll();
         api_response(200, ['success' => true, 'categories' => $categories]);
@@ -26,9 +27,10 @@ if ($method === 'GET') {
 }
 
 // ----------------------------------------------------
-// 2. POST: Create or Update category
+// 2. POST: Create or Update category (Admin only)
 // ----------------------------------------------------
 if ($method === 'POST') {
+    require_admin_auth();
     $input = get_json_input();
 
     $name = trim($input['name'] ?? '');
@@ -51,6 +53,7 @@ if ($method === 'POST') {
     $accentColor = trim($input['accentColor'] ?? 'from-amber-500 to-yellow-400');
 
     try {
+        $db = get_db();
         $stmt = $db->prepare("
             INSERT INTO `home_categories`
             (`id`, `slug`, `name`, `short_name`, `tagline`, `description`, `type`, `icon_name`, `accent_color`, `highlight_image`)
@@ -82,9 +85,10 @@ if ($method === 'POST') {
 }
 
 // ----------------------------------------------------
-// 3. DELETE: Remove category
+// 3. DELETE: Remove category (Admin only)
 // ----------------------------------------------------
 if ($method === 'DELETE') {
+    require_admin_auth();
     $slug = $_GET['slug'] ?? '';
     if ($slug === '') {
         $input = json_decode(file_get_contents('php://input') ?: '', true);
@@ -96,6 +100,7 @@ if ($method === 'DELETE') {
     }
 
     try {
+        $db = get_db();
         $stmt = $db->prepare("DELETE FROM `home_categories` WHERE `slug` = ?");
         $stmt->execute([$slug]);
         api_response(200, ['success' => true, 'message' => 'Category deleted successfully']);
